@@ -1,3 +1,11 @@
 # These installs require an Apple Account signed in to the Mac App Store.
+mas "Apple Developer", id: 640199958
+mas "Helm for App Store Connect", id: 6479357934
+mas "TestFlight", id: 899247664
 mas "Xcode", id: 497799835
 mas "RocketSim for Xcode Simulator", id: 1504940162
+
+# Personal productivity apps purchased through the Mac App Store.
+mas "Folder Quick Look", id: 6753110395
+mas "Notability", id: 360593530
+mas "Obsidian Web Clipper", id: 6720708363
