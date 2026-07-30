@@ -1,0 +1,19 @@
+# Reproducible global agent-skill profile.
+#
+# Format:
+#   pinned GitHub tree URL|space-separated skill names
+#
+# Every source is pinned to a full commit SHA.
+# Update a source deliberately, review its changed SKILL.md files, then replace
+# the SHA here.
+
+https://github.com/vercel-labs/skills/tree/7cb7db64dc1201052dea305e508a2fc490f7e5e2|find-skills
+https://github.com/vercel-labs/agent-browser/tree/6dcea79b4b567a5671f1e1164807204f69542a5c|agent-browser
+https://github.com/vercel-labs/agent-skills/tree/7c180d9044c9ae2b442b567aad4e42a28dd5ed62|deploy-to-vercel vercel-composition-patterns vercel-react-best-practices vercel-react-native-skills web-design-guidelines
+https://github.com/anthropics/skills/tree/b29e7cf65e5cb78a5ac33d582270551bc74a14eb|frontend-design skill-creator webapp-testing
+https://github.com/getsentry/cli/tree/26ef23d81ee0c6fdfc6e873aa0f5160a1f8ed408/plugins/sentry-cli/skills/sentry-cli|sentry-cli
+https://github.com/expo/skills/tree/b1ec56fc67ab61528f80652ae7cd5b8c94f88e2c|eas-app-stores eas-observe eas-simulator eas-workflows expo-data-fetching expo-dev-client expo-dom expo-native-ui expo-project-structure expo-router expo-tailwind-setup expo-ui expo-upgrade expo-web-to-native
+https://github.com/software-mansion/argent/tree/7189333ac428a52febe82e5fee87c493ca4dc22b|argent-android-emulator-setup argent-create-flow argent-device-interact argent-ios-simulator-setup argent-lens argent-metro-debugger argent-native-profiler argent-react-native-app-workflow argent-react-native-optimization argent-react-native-profiler argent-screen-recording argent-screenshot-diff argent-settings-permissions argent-test-ui-flow
+https://github.com/aidenybai/react-doctor/tree/5dc936e111fda0d77bc7a8a36ece3b1ec6b9bf27/skills/improve-react|improve-react
+https://github.com/aidenybai/react-doctor/tree/5dc936e111fda0d77bc7a8a36ece3b1ec6b9bf27/skills/react-doctor|react-doctor
+https://github.com/emilkowalski/skills/tree/70744e3816f1d93eafb697161a8b880a7384c5ff|animation-vocabulary apple-design emil-design-eng find-animation-opportunities improve-animations review-animations

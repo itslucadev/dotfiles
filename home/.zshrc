@@ -18,7 +18,7 @@ if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
 fi
 
-export EDITOR="nvim"
+export EDITOR="cursor --wait"
 export VISUAL="$EDITOR"
 export DEV_HOME="$HOME/Developer"
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
@@ -96,9 +96,3 @@ alias gc="git commit"
 alias gd="git diff"
 alias gl="git log --graph --decorate --oneline"
 alias gp="git push"
-
-# Machine-specific settings may be placed here.
-# The secrets backend is intentionally undecided and will be configured separately.
-if [[ -f "$HOME/.zshrc.local" ]]; then
-  source "$HOME/.zshrc.local"
-fi

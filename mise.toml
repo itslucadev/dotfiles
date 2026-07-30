@@ -2,6 +2,8 @@ min_version = "2026.7.17"
 
 [settings]
 lockfile = true
+lockfile_platforms = ["macos-arm64"]
+minimum_release_age = "7d"
 dotfiles.root = "~/github/phoenix-error/dotfiles/home"
 dotfiles.default_mode = "symlink"
 
@@ -20,6 +22,7 @@ uv = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:@native-sdk/cli" = "latest"
 "npm:@playwright/cli" = "latest"
+"npm:@posthog/cli" = "latest"
 "npm:@swmansion/argent" = "latest"
 "npm:@tobilu/qmd" = "latest"
 "npm:agent-device" = "latest"
@@ -44,15 +47,13 @@ _.path = [
 ]
 
 [dotfiles]
-"~/AGENTS.md" = { source = "home/AGENTS.md" }
-"~/.agents/AGENTS.md" = { source = "home/AGENTS.md" }
+"~/.agents.md" = { source = "home/AGENTS.md" }
 "~/.claude/CLAUDE.md" = { source = "home/AGENTS.md" }
 "~/.claude/settings.json" = {}
 "~/.claude/statusline.ts" = {}
 "~/.config/git/ignore" = {}
 "~/.config/ghostty" = {}
 "~/.config/herdr/config.toml" = {}
-"~/.config/nvim" = {}
 "~/.homebrew/Brewfile" = { source = "Brewfile" }
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}
@@ -87,25 +88,34 @@ tap_to_click = true
 
 [bootstrap.macos.defaults]
 NSGlobalDomain = { AppleInterfaceStyle = "Dark", AppleShowAllExtensions = true, _HIHideMenuBar = true }
+"com.apple.HIToolbox" = { AppleFnUsageType = 0 }
 "com.apple.desktopservices" = { DSDontWriteNetworkStores = true, DSDontWriteUSBStores = true }
 "com.apple.finder" = { AppleShowAllExtensions = true, CreateDesktop = false }
 "com.apple.screencapture" = { "disable-shadow" = true }
 
-[tasks.apply]
-description = "Apply the complete setup to an already bootstrapped Mac"
-run = "./apply.sh"
+[tasks.setup]
+description = "Run the complete setup, from Homebrew through the setup doctor"
+run = "./bootstrap.sh"
 
 [tasks."apps:mas"]
-description = "Install Xcode and RocketSim from the Mac App Store"
-run = "brew bundle --file Brewfile.mas"
+description = "Install the managed Mac App Store applications"
+run = "./scripts/install-mas-apps.sh"
 
 [tasks."apps:raycast-beta"]
 description = "Install Raycast v2 Beta from the official signed disk image"
 run = "./scripts/install-raycast-beta.sh"
 
+[tasks."agents:skills"]
+description = "Install the pinned global skills for Claude Code and Cursor"
+run = "./scripts/install-agent-skills.sh"
+
 [tasks."editors:extensions"]
 description = "Install the managed VS Code and Cursor extensions"
 run = "./scripts/install-editor-extensions.sh"
+
+[tasks."github:ssh"]
+description = "Configure one SSH key for GitHub authentication and commit signing"
+run = "./scripts/setup-github-ssh.sh"
 
 [tasks.doctor]
 description = "Report setup status and remaining manual actions"

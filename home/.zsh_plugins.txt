@@ -7,3 +7,4 @@ MichaelAquilina/zsh-you-should-use
 fdellwing/zsh-bat
 zsh-users/zsh-syntax-highlighting
 zsh-users/zsh-history-substring-search
+sunlei/zsh-ssh

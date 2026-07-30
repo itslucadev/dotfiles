@@ -1,5 +1,7 @@
-[include]
-	path = ~/.gitconfig.local
+[user]
+	name = phoenix-error
+	email = 42442490+phoenix-error@users.noreply.github.com
+	signingkey = ~/.ssh/id_ed25519.pub
 
 [init]
 	defaultBranch = main
@@ -9,6 +11,9 @@
 
 [gpg "ssh"]
 	allowedSignersFile = ~/.ssh/allowed_signers
+
+[commit]
+	gpgsign = true
 
 [credential]
 	helper = osxkeychain
@@ -36,3 +41,9 @@
 
 [core]
 	excludesFile = ~/.config/git/ignore
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

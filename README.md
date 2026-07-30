@@ -8,13 +8,19 @@ Homebrew installs formulae, desktop applications, and fonts.
 
 mise installs Node.js, Bun, Python, Java, native developer tools, and global npm-backed CLIs, with Bun acting as the npm package manager.
 
+The lockfile targets Apple Silicon macOS only, and fuzzy versions must be at least seven days old before mise selects them.
+
+This limits exposure to brand-new supply-chain releases while the committed lockfile keeps accepted versions reproducible.
+
 ## Status
 
 The repository is prepared on the current Mac without running the setup there.
 
-The first complete acceptance test must happen on a separate new Mac.
+No real setup command has been run on the current Mac while preparing this repository.
 
-Only after that test succeeds should the current Mac be reset.
+The recommended first complete acceptance test is a disposable macOS VM or a spare Mac.
+
+The current Mac can also be used for a final rehearsal immediately before it is erased, after a verified backup exists.
 
 ## Quick Start on a New Mac
 
@@ -44,6 +50,8 @@ The fixed clone path allows the repository `mise.toml` to serve as the global mi
 
 The setup is idempotent and can be rerun after resolving a manual prerequisite.
 
+After the command finishes, open the offline [interactive setup guide](docs/setup-guide.html) to complete permissions, remaining application logins, and application onboarding.
+
 ## What the Bootstrap Does
 
 The bootstrap:
@@ -52,39 +60,70 @@ The bootstrap:
 - Ensures the Xcode Command Line Tools are available.
 - Installs Homebrew when necessary.
 - Applies `Brewfile`.
+- Removes Homebrew formulae, casks, and taps that are not required by `Brewfile`.
 - Installs GitHub CLI and the remaining native command-line tools.
 - Installs locked mise runtimes and global CLIs.
-- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Neovim, Git, SSH, editor, Claude, and global agent dotfiles.
+- Installs the commit-pinned global skills for Claude Code and Cursor through BunX.
+- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Git, SSH, editor, Claude, and global agent dotfiles.
+- Creates or reuses one Ed25519 key for GitHub authentication and commit signing, loads it through the macOS Keychain, and maintains the local allowed signers file.
 - Installs the saved VS Code and Cursor extensions through their native command-line interfaces.
 - Links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Creates `~/Developer` as the shared project directory.
 - Applies the confirmed macOS defaults.
 - Reserves shortcuts for Raycast and CleanShot.
 - Installs the signed Raycast v2 Beta beside Raycast v1.
-- Attempts to install Xcode and RocketSim from the Mac App Store.
+- Installs the managed Mac App Store applications after any required App Store interaction is complete.
 - Runs the setup doctor.
 
-The bootstrap never runs Homebrew cleanup, uninstalls unmanaged applications, or writes directly to the macOS privacy database.
+The Homebrew reconciliation uses regular cask uninstall behavior and never passes `--zap`, so application data and shared support files are preserved.
+
+It does not remove manually installed applications outside Homebrew or write directly to the macOS privacy database.
+
+## Manual interaction gates
+
+The bootstrap treats every manual prerequisite for a later automated stage as a gate.
+
+In an interactive terminal, it pauses at the gate, explains the required action, waits for completion, verifies the result, and only then continues.
+
+In a non-interactive environment, it stops with Exit code 2 and prints the command that must be rerun after the action is complete.
+
+The gated interactions are:
+
+- Finishing the Xcode Command Line Tools installer.
+- Choosing the passphrase for a newly generated SSH key.
+- Completing GitHub CLI browser login and approving the key-management scopes.
+- Comparing and accepting GitHub's SSH host fingerprint on the first connection.
+- Signing in to the Mac App Store and claiming applications that the Apple Account has never downloaded.
+- Entering the administrator password when a signed application must be installed into `/Applications`.
+
+The final success message is printed only after all of these gates and their dependent automated stages have completed.
+
+Privacy permissions, application-specific logins, Xcode onboarding, Android Studio onboarding, and smoke tests have no dependent bootstrap stage.
+They remain explicitly documented in the offline guide and are reported by `mise run doctor` where they can be detected.
 
 ## Declarative Ownership
 
 The repository keeps configuration in the native declarative format of the tool that owns it:
 
-- `Brewfile` owns Homebrew formulae, casks, fonts, and Homebrew 6 trust declarations.
+- `Brewfile` owns the exact desired top-level Homebrew formulae, casks, taps, fonts, and Homebrew 6 trust declarations.
 - `Brewfile.mas` owns Mac App Store applications.
 - `mise.toml` owns runtimes, Bun-backed global CLIs, dotfile symlinks, tasks, and scalar macOS defaults.
 - `mise.lock` contains the resolved mise tool versions and is generated only by mise.
 - `home/` contains public configuration that mise symlinks into the home directory.
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
-- `home/.config/nvim/lua/plugins/` is the only source of Neovim plugins.
 
-Only five setup entry points can change the Mac:
+`bootstrap.sh` is the only setup entry point.
 
-- `bootstrap.sh` installs the first dependencies needed before mise is available.
-- `apply.sh` runs the setup in the required order because Homebrew must install mise before mise can orchestrate the remaining stages.
+It installs the first dependencies needed before mise is available, then runs the remaining stages in the required order, because Homebrew must install mise before mise can orchestrate the rest.
+
+It calls six helper scripts that can change the Mac or connected accounts:
+
 - `scripts/configure-macos.sh` owns the dynamic screenshot path and nested `AppleSymbolicHotKeys` dictionary that mise macOS defaults cannot represent correctly.
+- `scripts/install-agent-skills.sh` reconciles the pinned global skill profile for Claude Code and Cursor through BunX.
 - `scripts/install-editor-extensions.sh` installs the declarative extension inventories through the native VS Code and Cursor CLIs.
+- `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
 - `scripts/install-raycast-beta.sh` installs and verifies Raycast Beta because it has no official Homebrew cask.
+- `scripts/setup-github-ssh.sh` configures the local SSH identity and registers its public key with GitHub for authentication and signing.
 
 The read-only `scripts/doctor.sh` and `tests/test.sh` inspect the result without configuring the Mac.
 
@@ -94,23 +133,30 @@ mise 2026.7.17 does not render templates inside raw macOS default values, so the
 
 ## Reapply Changes
 
-After pulling repository changes, run:
+After pulling repository changes, run the same command as on a new Mac:
 
 ```sh
-./apply.sh
+./bootstrap.sh
 ```
 
-The equivalent mise task is:
+Every stage is idempotent, so desired packages, applied dotfiles, and applied macOS defaults are left alone.
+
+Homebrew formulae, casks, and taps that are neither declared nor required as dependencies are removed.
+
+The equivalent repository task is:
 
 ```sh
-mise run apply
+mise run setup
 ```
+
+The task is deliberately named `setup`.
+
+mise reserves the `bootstrap` name for its built-in bootstrap pipeline and automatically runs a task with that name afterward, so using the same name here would repeat the repository setup.
 
 Inspect the setup without changing the Mac:
 
 ```sh
 ./bootstrap.sh --dry-run
-./apply.sh --dry-run
 ```
 
 ## Managed Applications
@@ -121,22 +167,45 @@ Homebrew installs:
 - Android Studio
 - Aqua Voice
 - Caffeine
+- ChatGPT
+- Claude Desktop
 - CleanMyMac
 - CleanShot
+- CurseForge
 - Cursor
+- Dia
+- Expo Orbit
+- FluxMarkdown
 - Ghostty
+- Google Chrome
+- Hack Nerd Font
+- Hoppscotch
+- IINA
+- ImageOptim
+- LocalSend
+- Minecraft
+- MultiViewer
+- OpenUsage
+- Pear Desktop for YouTube Music
 - Proton VPN
 - Raycast v1
+- Spark
 - Tailscale
 - Visual Studio Code
 - WezTerm
-- Hack Nerd Font
+- WhatsApp
 
-The Mac App Store installs stable Xcode and RocketSim.
+Homebrew also installs Fastlane, Git LFS, the Infisical CLI, the Maestro CLI, the Sentry CLI, Tmux, and YouTube-DLP.
+
+The Mac App Store installs Actions, Apple Developer, Folder Quick Look, Helm, Notability, Obsidian Web Clipper, RocketSim, TestFlight, Timepage, and stable Xcode.
 
 Raycast v2 Beta comes from Raycast's official signed disk image because no official Homebrew cask exists.
 
-KeepingYouAwake, Magnet, Parsec, Stats, and Xcode Beta are intentionally excluded.
+The bootstrap installs Rosetta 2 when necessary because the current Minecraft launcher is still built for Intel Macs.
+
+GatherOS, Maestro Studio, Recordly, and SimCam are direct-download applications covered by the manual setup checklist.
+
+Affinity Designer, Affinity Photo, Affinity Publisher, Arc, Figma, GitHub Desktop, KeepingYouAwake, Linear, Magnet, Obsidian, Parsec, Proton Pass, Sentry Spotlight, Slack, Stats, Stremio, TextMate, Tower, and Xcode Beta are intentionally excluded.
 
 ## Managed Runtimes and Global CLIs
 
@@ -159,6 +228,7 @@ mise manages:
 - OpenSrc
 - Pi Coding Agent
 - Playwright CLI
+- PostHog CLI
 - Prettier
 - Pyright
 - QMD
@@ -170,15 +240,23 @@ mise manages:
 
 All npm-backed CLIs, including Biome and Prettier, are installed by Bun through mise.
 
+mise's seven-day minimum release age also applies to supported npm package resolution, including transitive npm dependencies.
+
 Python, uv, and Ruff are installed directly by mise.
 
 The global `UV_PYTHON` setting points uv at the Python interpreter selected by the active mise configuration, so a project-level mise version can still override the global Python 3.12 default.
 
 Codex CLI, Portless, Higgsfield CLI, SnapAI, and Firecrawl CLI are intentionally excluded.
 
-YouTube-DLP is no longer used and is intentionally excluded.
+YouTube-DLP and the new Sentry CLI are installed through Homebrew because they are native command-line tools rather than project runtimes.
+
+YouTube-DLP has no managed configuration in this repository.
 
 Global `npm` and `undici` are not installed as separate tools.
+
+Fastlane is installed through Homebrew for iOS and Android release automation.
+
+XcodeGen is intentionally not installed because React Native does not require it and no managed project currently uses an XcodeGen `project.yml` specification.
 
 ## Shell and Terminal
 
@@ -205,7 +283,9 @@ Antidote loads:
 - Zsh Syntax Highlighting
 - Zsh History Substring Search
 
-The shell also configures FZF, Eza, Zoxide, Bat, Neovim, Android SDK paths, and mise activation.
+The shell also configures FZF, Eza, Zoxide, Bat, Android SDK paths, and mise activation.
+
+Starship uses the official Rose Pine Moon palette so the prompt matches WezTerm, Ghostty, Herdr, VS Code, and Cursor.
 
 The `dev` alias opens `~/Developer`.
 
@@ -227,15 +307,13 @@ Its panel background is reset so it inherits opacity and blur from the host term
 
 The repository manages only Herdr's onboarding, agent-panel, notification, and theme settings.
 
-## Neovim
-
-mise symlinks the complete Neovim configuration directory.
-
-Lazy.nvim owns Neovim plugins, including Rose Pine, Snacks, Oil, Neogit, Gitsigns, Diffview, and Which Key.
-
-The setup does not install Neovim plugins through Homebrew or another bootstrap script.
-
 ## VS Code and Cursor
+
+Cursor is the primary editor.
+
+`EDITOR` and `VISUAL` point at `cursor --wait`, so Git and other command-line tools open Cursor and wait for the file to close.
+
+Neovim is intentionally not part of this setup.
 
 Homebrew installs both Visual Studio Code and Cursor.
 
@@ -291,13 +369,12 @@ Zed is not installed or configured.
 
 One public `home/AGENTS.md` file is symlinked to:
 
-- `~/AGENTS.md`
-- `~/.agents/AGENTS.md`
+- `~/.agents.md`
 - `~/.claude/CLAUDE.md`
 
 This gives the supported agents the same global working rules without maintaining duplicate files.
 
-`~/.claude/CLAUDE.md` is a symlink to the same repository source as the global `~/AGENTS.md`.
+`~/.claude/CLAUDE.md` is a symlink to the same repository source as the global `~/.agents.md`.
 
 OpenCode is not part of the setup.
 
@@ -305,34 +382,102 @@ Claude Code also receives the public `settings.json` and Bun-powered status line
 
 Claude Code is installed as a Bun-backed npm tool through mise.
 
-The Claude configuration intentionally retains Lucas's personal `bypassPermissions` default and skipped permission prompts.
+Claude agent teams use Tmux split panes.
 
-Review that choice before using the setup on another account or an untrusted machine.
+Herdr remains the primary multiplexer for persistent agent sessions.
+
+Tmux is installed as a dedicated dependency for Claude's split-pane team display and does not currently have a managed configuration file.
+
+Claude Code starts in Auto mode, which runs tasks without routine permission prompts while retaining Claude's background safety checks.
+
+Auto mode availability depends on the active Claude plan, model, provider, and organization settings.
+
+The Pyright and TypeScript LSP plugins remain enabled so Claude receives diagnostics, type information, definitions, and references while editing supported projects.
 
 Claude authentication, caches, conversation history, local settings, and generated plugin state are not tracked.
 
-Codex configuration and Codex CLI are not part of this setup.
+The [ChatGPT desktop application](https://learn.chatgpt.com/docs/app) includes the Codex desktop experience.
+
+The standalone Codex CLI and its configuration are not part of this setup.
+
+The Claude Codex plugin and its marketplace are also excluded.
+
+The global agent instructions tell agents to use PostHog CLI for deterministic PostHog work without storing its credentials in the repository.
+
+## Global Agent Skills
+
+The global skill profile is declared in `home/.config/skills/default-skills.txt`.
+
+Every source is pinned to a full Git commit so a new Mac receives reviewed skill contents instead of whatever happens to be on a moving default branch.
+
+The installer uses `bunx --bun skills@1.5.21`, never `npx`, and links the selected skills through the central `~/.agents/skills` store for Claude Code and Cursor.
+
+The profile contains selected Vercel, Anthropic, Sentry, Expo, Software Mansion Argent, React Doctor, Apple design, interface design, and animation skills.
+
+Ponytail, Understand Anything, Karpathy skills, Codex skills, and OpenCode skills are intentionally excluded.
+
+Reconcile the profile after changing the inventory:
+
+```sh
+mise run agents:skills
+```
+
+To update a source, review the upstream `SKILL.md` changes, replace its full commit SHA in the inventory, run the installer, and run the repository tests.
+
+The repository does not copy local plugin caches or private skill folders.
 
 ## Git and SSH
 
-The public `~/.gitconfig` manages portable global behavior such as the default branch, rebase-based pulls, automatic upstream creation, pruning, conflict presentation, rerere, SSH signing, and macOS Keychain credentials.
+The public `~/.gitconfig` manages the GitHub Noreply identity, the standard SSH signing key path, SSH commit signing, and the default branch.
 
-Personal identity and the signing key stay in the ignored `~/.gitconfig.local` file.
+The public SSH config loads the same `~/.ssh/id_ed25519` key through the macOS Keychain for GitHub authentication.
 
-This keeps the public repository reusable without publishing an email address or tying every clone to one identity.
+Using the public GitHub Noreply address keeps the personal email address private without requiring a separate local Git configuration.
 
-The public SSH config contains only generic macOS Keychain behavior, connection keepalive settings, and the standard GitHub host definition.
+`scripts/setup-github-ssh.sh` follows GitHub's documented macOS flow and owns the local key setup.
 
-It includes an ignored `~/.ssh/config.local` file for private host aliases, work servers, jump hosts, alternate users, and additional identity files.
+It creates the Ed25519 key only when neither key file exists, asks interactively for a new passphrase, and prompts to unlock an existing encrypted key when required.
+It sets restrictive permissions, loads the key into the native SSH agent and macOS Keychain, and maintains `~/.ssh/allowed_signers`.
+
+The helper pauses for GitHub CLI browser authentication when needed and requests only the scopes required to manage authentication and signing keys.
+
+It registers the same public key as both an Authentication Key and a Signing Key.
+
+It checks GitHub before each upload, so rerunning `mise run github:ssh` does not create duplicate registrations.
+
+The helper also runs `ssh -T git@github.com`.
+On the first connection it waits while the user compares GitHub's published host fingerprint and accepts it.
+The bootstrap does not continue until local setup, both GitHub registrations, and SSH authentication have been verified.
+
+This implements the official [Connecting to GitHub with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) workflow.
 
 SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authentication state are never copied into this repository.
+
+## Secrets with Infisical
+
+Infisical manages project and environment secrets without placing plaintext values in the public dotfiles repository.
+
+The CLI stores its interactive login session in the system keyring and injects selected secrets only into the child process:
+
+```sh
+infisical login
+infisical run -- bun run dev
+```
+
+Run `infisical init` inside an individual project when that project should be connected to an Infisical project.
+
+The generated project reference can live in that project's repository when its visibility is appropriate, but it does not belong in these global dotfiles.
+
+Do not source exported secrets globally from `.zshrc`, write them into this repository, or use Infisical as storage for SSH private keys.
+
+GitHub CLI, Claude, EAS, Sentry, and similar tools keep using their own authentication stores.
 
 ## Manual Setup Checklist
 
 ### Apple Account and Mac App Store
 
 - [ ] Sign in to the Mac App Store.
-- [ ] Claim stable Xcode and RocketSim if the account has never downloaded them.
+- [ ] Claim each managed App Store application once if the Apple Account has never downloaded it.
 - [ ] Run `mise run apps:mas`.
 
 ### Xcode
@@ -345,34 +490,58 @@ SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authe
 
 ### Android Studio
 
-- [ ] Complete the Android Studio setup wizard.
-- [ ] Install Android SDK Platform 35 for Android 15.
-- [ ] Install Android SDK Build-Tools 36.0.0.
-- [ ] Install Android SDK Command-line Tools latest.
-- [ ] Install Android Emulator and Platform Tools.
-- [ ] Create an Apple Silicon Google APIs ARM 64 virtual device.
-- [ ] Confirm that the SDK is stored at `~/Library/Android/sdk`.
+- [ ] Launch Android Studio and complete its setup wizard.
+- [ ] Let Android Studio install the Android SDK, Android SDK Platform, and Android Virtual Device components.
+- [ ] Follow the current [React Native Android environment guide](https://reactnative.dev/docs/set-up-your-environment?platform=android) in Android Studio.
+- [ ] Confirm that Android Studio uses `~/Library/Android/sdk`.
+- [ ] Create and start the required Android Virtual Device through Android Studio.
+- [ ] Enable Developer options and USB debugging on any physical Android test device.
 
 The shell configuration exposes `ANDROID_HOME`, `emulator`, and `platform-tools`.
 
 mise exposes `JAVA_HOME` for Zulu JDK 17 when its shell activation is active.
 
+The repository does not install Android SDK packages, accept Android licenses, or create an emulator.
+
+Android Studio owns that state and provides the SDK Manager and Device Manager used by the official React Native instructions.
+
+[React Native currently recommends Zulu JDK 17](https://reactnative.dev/docs/set-up-your-environment?platform=android).
+
+[mise installs that JDK and automatically points `JAVA_HOME` at the active Java installation](https://mise.jdx.dev/lang/java.html), so the separate Homebrew `zulu@17` cask is intentionally unnecessary.
+
+### Direct-download Applications
+
+- [ ] Download [GatherOS](https://www.gatheros.co/) and move it to `/Applications`.
+- [ ] Download [Maestro Studio](https://docs.maestro.dev/get-started/quickstart) for macOS and move it to `/Applications`.
+- [ ] Download [Recordly](https://recordly.dev/) for macOS and move it to `/Applications`.
+- [ ] Download [SimCam](https://simcam.swmansion.com/) and move it to `/Applications`.
+- [ ] Grant GatherOS the capture permissions requested by the features that are used.
+- [ ] Select a workspace in Maestro Studio and verify that it can see an iOS Simulator and Android emulator.
+- [ ] Grant Recordly Screen Recording, Microphone, Camera, and System Audio permissions as needed.
+- [ ] Complete the SimCam trial or license activation and approve its camera components when prompted.
+
+These applications have no suitable Homebrew cask or Mac App Store entry in the managed setup.
+
+### Additional Application Onboarding
+
+- [ ] Sign in to Dia and choose whether browser data should sync.
+- [ ] Link WhatsApp to the existing account.
+- [ ] Sign in to Spark and add the required mail accounts.
+- [ ] Sign in to CurseForge if account-backed mod synchronization is needed.
+- [ ] Grant LocalSend Local Network access.
+- [ ] Launch OpenUsage and review which local developer tools it may inspect.
+- [ ] Verify that FluxMarkdown provides Finder Quick Look previews for Markdown files.
+
 ### Git and GitHub
 
-- [ ] Configure the Git name with `git config --file ~/.gitconfig.local user.name "Your Name"`.
-- [ ] Configure the Git email with `git config --file ~/.gitconfig.local user.email "you@example.com"`.
-- [ ] Generate an SSH key with `ssh-keygen -t ed25519 -C "you@example.com"`.
-- [ ] Add the key to the macOS Keychain with `ssh-add --apple-use-keychain ~/.ssh/id_ed25519`.
-- [ ] Configure the signing key with `git config --file ~/.gitconfig.local user.signingkey ~/.ssh/id_ed25519.pub`.
-- [ ] Enable commit signing with `git config --file ~/.gitconfig.local commit.gpgsign true`.
-- [ ] Create `~/.ssh/allowed_signers` with `printf '%s %s\n' "you@example.com" "$(cat ~/.ssh/id_ed25519.pub)" > ~/.ssh/allowed_signers`.
-- [ ] Add the public key from `~/.ssh/id_ed25519.pub` to GitHub.
-- [ ] Test SSH with `ssh -T git@github.com`.
-- [ ] Authenticate GitHub CLI with `gh auth login`.
+- [ ] Confirm that bootstrap created `~/.ssh/id_ed25519` and prompted for a secure passphrase.
+- [ ] Confirm that bootstrap paused for GitHub CLI browser login when authentication was missing.
+- [ ] Confirm that bootstrap registered `~/.ssh/id_ed25519.pub` as both an Authentication Key and a Signing Key.
+- [ ] Confirm the complete local and GitHub state with `./scripts/setup-github-ssh.sh --status`.
+- [ ] Confirm that the first connection fingerprint was compared with GitHub's published fingerprint and `ssh -T git@github.com` succeeds.
+- [ ] Push a signed commit and confirm that GitHub displays it as verified.
 
-Add private SSH hosts only to `~/.ssh/config.local`.
-
-Never commit the Git identity file, SSH private key, SSH host inventory, or GitHub CLI authentication files.
+Never commit an alternate Git identity file, SSH private key, private SSH host inventory, or GitHub CLI authentication files.
 
 ### VS Code and Cursor
 
@@ -424,6 +593,8 @@ The setup disables the corresponding native screenshot shortcuts.
 - [ ] Grant Accessibility access when requested.
 - [ ] Set the Fn or Globe key as push-to-talk.
 
+The setup configures macOS so pressing Fn or Globe has no native action, leaving the key available to Aqua Voice.
+
 ### CleanMyMac
 
 - [ ] Activate the existing CleanMyMac license.
@@ -444,8 +615,15 @@ The setup disables the corresponding native screenshot shortcuts.
 
 ### Agent and Developer Logins
 
+- [ ] Authenticate Infisical with `infisical login`.
+- [ ] Confirm the stored session with `infisical login status`.
+- [ ] Launch ChatGPT, sign in, and select Codex when doing local software development.
+- [ ] Launch Claude Desktop and sign in.
 - [ ] Run Claude Code and complete its login.
-- [ ] Review the managed Claude `bypassPermissions` policy before opening untrusted repositories.
+- [ ] Confirm that Claude Auto mode is available for the active plan and model.
+- [ ] Confirm that the Pyright and TypeScript LSP plugins are active.
+- [ ] Authenticate PostHog CLI with `posthog-cli login`.
+- [ ] Authenticate Sentry CLI with `sentry auth login`.
 - [ ] Authenticate EAS with `eas login`.
 - [ ] Authenticate Vercel with `vercel login`.
 - [ ] Authenticate AgentMail if it is used.
@@ -469,6 +647,24 @@ The setup disables the corresponding native screenshot shortcuts.
 - [ ] Build and launch one React Native project on an iOS Simulator.
 - [ ] Build and launch one React Native project on the Android emulator.
 - [ ] Reboot once and verify login items, shortcuts, VPNs, and permissions.
+
+## Safe Test Strategy
+
+The repository can be tested on the current Mac later, but that is not equivalent to a clean-machine test because Homebrew packages, applications, Keychain entries, permissions, and caches already exist.
+
+Use this order:
+
+1. Run `./tests/test.sh` and `./bootstrap.sh --dry-run` while preparing the repository.
+2. Use a disposable macOS virtual machine for a clean bootstrap when possible.
+3. Use a separate macOS user only for per-user dotfiles and defaults, remembering that `/Applications` and Homebrew remain shared.
+4. If desired, run the real bootstrap on the current user only immediately before the planned erase and only after verifying a Time Machine or equivalent backup.
+5. Perform the final acceptance test on the new Mac before erasing the old one.
+
+The bootstrap uninstalls unmanaged Homebrew formulae and casks, untaps unmanaged taps, installs managed applications, links dotfiles, applies macOS defaults, and reserves keyboard shortcuts.
+
+It preserves recursive formula dependencies, formula dependencies required by managed casks, Mac App Store applications, editor extensions, and application data belonging to removed casks.
+
+For that reason, the dry-run and virtual-machine stages should happen before any live rehearsal on the current user.
 
 ## Keyboard Shortcuts
 
@@ -494,13 +690,15 @@ mise symlinks the root `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 
 Official Homebrew taps require no additional trust.
 
-Any future third-party formula, cask, or command must declare the narrowest possible `trusted` option in `Brewfile`.
+The Infisical CLI, Maestro CLI, Sentry CLI, Pear Desktop, and FluxMarkdown come from third-party taps.
+
+Each of those packages declares item-scoped `trusted: true` in `Brewfile`, so the repository does not trust the rest of its tap.
+
+Any future third-party formula, cask, or command must follow the same narrow trust policy.
 
 The generated `~/.homebrew/trust.json` file is runtime state and is intentionally ignored.
 
 The existing Mac's trust file is not copied because it contains stale entries for tools that this setup no longer manages, including Oh My Posh and the old Homebrew Bun installation.
-
-The current target inventory uses only official Homebrew sources, so it has no third-party trust declarations yet.
 
 ## Updating Tool Versions
 
@@ -517,6 +715,7 @@ Update Homebrew packages:
 brew update
 brew upgrade
 brew bundle --file Brewfile
+brew bundle cleanup --force --formula --cask --tap --file Brewfile
 ```
 
 Refresh locked mise versions without installing them:
@@ -527,7 +726,15 @@ MISE_SAFE=1 mise lock --bump
 
 Review and commit `mise.lock` after testing.
 
-Do not run `brew bundle cleanup` as part of this repository.
+The repository does not enable mise's strict `locked` mode yet because every managed backend must first have a complete macOS artifact URL and checksum in `mise.lock`.
+
+Homebrew Bundle computes the recursive dependency closure of the managed formulae and the formula dependencies required by managed casks before cleanup.
+
+It also preserves taps that provide a managed formula, cask, or retained dependency.
+
+The cleanup is deliberately limited to Homebrew formulae, casks, and taps.
+
+It does not use `--zap` and does not manage Mac App Store applications, editor extensions, or other package ecosystems.
 
 ## Repository Validation
 
@@ -537,9 +744,9 @@ Run:
 ./tests/test.sh
 ```
 
-The tests check shell, TOML, JSON, TypeScript, Lua, and Brewfile syntax when their validators are available.
+The tests check shell, TOML, JSON, TypeScript, and Brewfile syntax when their validators are available.
 
-They also check executable permissions, managed files, dry-run paths, package-manager ownership, editor inventories, Git and SSH ownership, Homebrew trust ownership, excluded packages, destructive commands, common secret patterns, typography, and whitespace.
+They also check executable permissions, managed files, dry-run paths, package-manager ownership, the constrained Homebrew reconciliation, editor inventories, Git and SSH ownership, Homebrew trust ownership, excluded packages, unsupported destructive commands, common secret patterns, typography, and whitespace.
 
 When mise is available, they create an isolated temporary home and verify task discovery plus every dotfile source path.
 
@@ -562,7 +769,7 @@ Never commit:
 - Application databases, caches, or machine identifiers
 - Generated Homebrew trust state
 
-Use `~/.zshrc.local` for non-secret machine-specific shell settings.
+Git, SSH, and Zsh each use one managed configuration file and do not load separate local configuration fragments.
 
 The repository does not yet prescribe a secrets backend.
 

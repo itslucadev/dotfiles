@@ -4,14 +4,10 @@
     "CLAUDE_CODE_DISABLE_FAST_MODE": "1",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "ENABLE_LSP_TOOL": "1",
-    "EDITOR": "nvim"
+    "EDITOR": "cursor --wait"
   },
   "permissions": {
-    "allow": [
-      "Bash",
-      "mcp__argent"
-    ],
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "auto"
   },
   "model": "opus",
   "statusLine": {
@@ -20,24 +16,16 @@
   },
   "enabledPlugins": {
     "agent-sdk-dev@claude-plugins-official": true,
-    "andrej-karpathy-skills@karpathy-skills": true,
     "claude-code-setup@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
-    "codex@openai-codex": true,
-    "commit-commands@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
-    "hookify@claude-plugins-official": true,
-    "ponytail@ponytail": true,
     "pyright-lsp@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": true,
     "react-native-best-practices@callstack-agent-skills": true,
     "security-guidance@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
-    "understand-anything@understand-anything": true,
     "vercel@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
@@ -52,36 +40,11 @@
         "source": "github",
         "repo": "anthropics/claude-plugins-official"
       }
-    },
-    "karpathy-skills": {
-      "source": {
-        "source": "github",
-        "repo": "forrestchang/andrej-karpathy-skills"
-      }
-    },
-    "openai-codex": {
-      "source": {
-        "source": "github",
-        "repo": "openai/codex-plugin-cc"
-      }
-    },
-    "ponytail": {
-      "source": {
-        "source": "github",
-        "repo": "DietrichGebert/ponytail"
-      }
-    },
-    "understand-anything": {
-      "source": {
-        "source": "github",
-        "repo": "Lum1104/Understand-Anything"
-      }
     }
   },
   "effortLevel": "xhigh",
   "tui": "fullscreen",
   "autoDreamEnabled": true,
-  "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
   "teammateMode": "tmux",

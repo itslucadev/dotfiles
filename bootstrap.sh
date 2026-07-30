@@ -4,6 +4,7 @@ set -Eeuo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly EXPECTED_REPO_ROOT="${HOME}/github/phoenix-error/dotfiles"
+readonly MANUAL_ACTION_EXIT=2
 
 DRY_RUN=false
 
@@ -20,6 +21,33 @@ run() {
   fi
 
   "$@"
+}
+
+# Scripts that implement their own --dry-run handling.
+run_script() {
+  local script="$1"
+
+  if [[ "$DRY_RUN" == true ]]; then
+    "$script" --dry-run
+  else
+    "$script"
+  fi
+}
+
+wait_for_manual_action() {
+  local instruction="$1"
+  local rerun_command="$2"
+
+  printf '\nManual action required: %s\n' "$instruction"
+
+  if [[ ! -t 0 ]]; then
+    printf 'An interactive terminal is required.\n' >&2
+    printf 'Complete the action, then run: %s\n' "$rerun_command" >&2
+    exit "$MANUAL_ACTION_EXIT"
+  fi
+
+  printf 'Press Return after completing the action. The setup will verify it before continuing.\n'
+  read -r
 }
 
 usage() {
@@ -62,9 +90,12 @@ if ! xcode-select -p >/dev/null 2>&1; then
   if [[ "$DRY_RUN" == true ]]; then
     run xcode-select --install
   else
-    xcode-select --install
-    printf 'Finish the Command Line Tools installation and run bootstrap.sh again.\n'
-    exit 2
+    xcode-select --install || true
+    until xcode-select -p >/dev/null 2>&1; do
+      wait_for_manual_action \
+        "Finish the Xcode Command Line Tools installation." \
+        "./bootstrap.sh"
+    done
   fi
 fi
 
@@ -89,9 +120,71 @@ if [[ "$DRY_RUN" != true ]] && ! command -v brew >/dev/null 2>&1; then
   exit 1
 fi
 
-log "Applying repository setup"
-if [[ "$DRY_RUN" == true ]]; then
-  run "$REPO_ROOT/apply.sh" --dry-run
-else
-  exec "$REPO_ROOT/apply.sh"
+cd "$REPO_ROOT"
+
+log "Checking Rosetta 2 for Minecraft"
+if ! pkgutil --pkg-info com.apple.pkg.RosettaUpdateAuto >/dev/null 2>&1; then
+  run softwareupdate --install-rosetta --agree-to-license
 fi
+
+log "Installing Homebrew formulae and casks"
+run brew bundle --file "$REPO_ROOT/Brewfile"
+
+log "Removing unmanaged Homebrew formulae, casks, and taps"
+run brew bundle cleanup \
+  --force \
+  --formula \
+  --cask \
+  --tap \
+  --file "$REPO_ROOT/Brewfile"
+
+if [[ "$DRY_RUN" != true ]] && ! command -v mise >/dev/null 2>&1; then
+  printf 'mise was not found after applying Brewfile.\n' >&2
+  exit 1
+fi
+
+log "Trusting the repository mise configuration"
+run mise trust "$REPO_ROOT/mise.toml"
+
+log "Installing locked runtimes and global CLIs"
+run mise install
+
+log "Installing the pinned global agent skills"
+if [[ "$DRY_RUN" == true ]]; then
+  "$REPO_ROOT/scripts/install-agent-skills.sh" --dry-run
+else
+  mise exec -- "$REPO_ROOT/scripts/install-agent-skills.sh"
+fi
+
+log "Applying managed dotfiles"
+run mise bootstrap dotfiles apply --yes
+
+log "Configuring GitHub SSH authentication and commit signing"
+run_script "$REPO_ROOT/scripts/setup-github-ssh.sh"
+
+log "Installing managed editor extensions"
+run_script "$REPO_ROOT/scripts/install-editor-extensions.sh"
+
+log "Applying macOS defaults"
+run mkdir -p "$HOME/Developer/appzudio"
+run mise bootstrap macos defaults apply --yes
+
+log "Applying dynamic and nested macOS settings"
+run_script "$REPO_ROOT/scripts/configure-macos.sh"
+
+log "Installing Raycast v2 Beta"
+run_script "$REPO_ROOT/scripts/install-raycast-beta.sh"
+
+log "Installing Mac App Store applications"
+run_script "$REPO_ROOT/scripts/install-mas-apps.sh"
+
+log "Setup status"
+if [[ "$DRY_RUN" == true ]]; then
+  run "$REPO_ROOT/scripts/doctor.sh"
+else
+  mise exec -- "$REPO_ROOT/scripts/doctor.sh" || true
+fi
+
+printf '\nRepository setup finished.\n'
+printf 'Open docs/setup-guide.html and complete the manual checklist.\n'
+printf 'Then run: mise run doctor\n'

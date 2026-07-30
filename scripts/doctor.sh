@@ -4,6 +4,27 @@ set -uo pipefail
 
 failures=0
 warnings=0
+STRICT=false
+
+usage() {
+  printf 'Usage: %s [--strict]\n' "${0##*/}"
+}
+
+for argument in "$@"; do
+  case "$argument" in
+    --strict)
+      STRICT=true
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      exit 64
+      ;;
+  esac
+done
 
 pass() {
   printf 'PASS  %s\n' "$1"
@@ -37,6 +58,15 @@ check_app() {
   fi
 }
 
+check_manual_app() {
+  local application_name="$1"
+  if [[ -d "/Applications/${application_name}.app" ]]; then
+    pass "Manual application installed: $application_name"
+  else
+    warn "Manual application missing: $application_name"
+  fi
+}
+
 check_editor_extensions() {
   local editor="$1"
   local extension_file="$2"
@@ -62,6 +92,50 @@ check_editor_extensions() {
   done <"$extension_file"
 }
 
+check_agent_skills() {
+  local inventory="$HOME/github/phoenix-error/dotfiles/home/.config/skills/default-skills.txt"
+  local source_url=""
+  local skill_names=""
+  local skill=""
+  local target_directory=""
+  local skill_count=0
+  local -a skills=()
+  local -a missing=()
+  local -a target_directories=(
+    "$HOME/.agents/skills"
+    "$HOME/.claude/skills"
+    "$HOME/.cursor/skills"
+  )
+
+  if [[ ! -r "$inventory" ]]; then
+    fail "Agent skill inventory is missing"
+    return
+  fi
+
+  while IFS='|' read -r source_url skill_names ||
+    [[ -n "$source_url$skill_names" ]]; do
+    if [[ -z "$source_url" || "$source_url" == \#* ]]; then
+      continue
+    fi
+
+    read -r -a skills <<<"$skill_names"
+    for skill in "${skills[@]}"; do
+      skill_count=$((skill_count + 1))
+      for target_directory in "${target_directories[@]}"; do
+        if [[ ! -f "$target_directory/$skill/SKILL.md" ]]; then
+          missing+=("${target_directory/#$HOME/\~}/$skill")
+        fi
+      done
+    done
+  done <"$inventory"
+
+  if [[ "${#missing[@]}" -eq 0 ]]; then
+    pass "$skill_count managed agent skills are linked for Claude Code and Cursor"
+  else
+    fail "Managed agent skill links missing: ${missing[*]}"
+  fi
+}
+
 printf 'Mac setup doctor\n\n'
 
 if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then
@@ -73,6 +147,7 @@ fi
 for command_name in \
   brew \
   mise \
+  antidote \
   node \
   bun \
   python \
@@ -80,16 +155,31 @@ for command_name in \
   ruff \
   pyright \
   biome \
+  bat \
+  eza \
+  fd \
   prettier \
   gh \
+  git \
+  git-lfs \
+  jq \
+  mas \
+  posthog-cli \
+  rg \
+  sentry \
+  yt-dlp \
+  zoxide \
   java \
   watchman \
   pod \
-  nvim \
+  maestro \
+  fastlane \
   lazygit \
   fzf \
   herdr \
+  infisical \
   starship \
+  tmux \
   agent-device \
   argent \
   eas \
@@ -101,6 +191,40 @@ for command_name in \
   check_command "$command_name"
 done
 
+if command -v brew >/dev/null 2>&1 &&
+  brew bundle check --no-upgrade \
+    --file "$HOME/github/phoenix-error/dotfiles/Brewfile" >/dev/null 2>&1; then
+  pass "Homebrew formulae and casks satisfy Brewfile"
+else
+  fail "Homebrew formulae or casks do not satisfy Brewfile"
+fi
+
+if command -v brew >/dev/null 2>&1 &&
+  brew bundle cleanup \
+    --formula \
+    --cask \
+    --tap \
+    --file "$HOME/github/phoenix-error/dotfiles/Brewfile" \
+    </dev/null >/dev/null 2>&1; then
+  pass "No unmanaged Homebrew formulae, casks, or taps are installed"
+else
+  fail "Unmanaged Homebrew formulae, casks, or taps are installed"
+fi
+
+if command -v mise >/dev/null 2>&1 &&
+  mise bootstrap dotfiles status --missing >/dev/null 2>&1; then
+  pass "Managed dotfiles are in sync"
+else
+  fail "Managed dotfiles are missing or differ"
+fi
+
+if command -v mise >/dev/null 2>&1 &&
+  mise bootstrap macos defaults status --missing >/dev/null 2>&1; then
+  pass "Managed macOS defaults are in sync"
+else
+  fail "Managed macOS defaults are missing or differ"
+fi
+
 if command -v python >/dev/null 2>&1 &&
   [[ "$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)" == "3.12" ]]; then
   pass "Managed Python version is 3.12"
@@ -108,24 +232,97 @@ else
   fail "Managed Python version is not 3.12"
 fi
 
+if [[ -n "${JAVA_HOME:-}" && -x "$JAVA_HOME/bin/java" ]] &&
+  java -version 2>&1 | head -n 1 | grep -Eq 'version "17\.|openjdk version "17\.'; then
+  pass "Managed Zulu JDK 17 and JAVA_HOME are active"
+else
+  fail "Managed Zulu JDK 17 or JAVA_HOME is unavailable"
+fi
+
+if find "$HOME/Library/Fonts" /Library/Fonts \
+  -maxdepth 1 \
+  -type f \
+  -iname '*Hack*Nerd*Font*' \
+  -print -quit 2>/dev/null | grep -q .; then
+  pass "Hack Nerd Font is installed"
+else
+  fail "Hack Nerd Font is missing"
+fi
+
+if [[ "$(defaults read com.apple.HIToolbox AppleFnUsageType 2>/dev/null)" == "0" ]]; then
+  pass "Fn or Globe is free for Aqua Voice"
+else
+  fail "Fn or Globe still has a native macOS action"
+fi
+
+if command -v jq >/dev/null 2>&1 &&
+  jq -e '
+    .permissions.defaultMode == "auto" and
+    .env.ENABLE_LSP_TOOL == "1" and
+    .teammateMode == "tmux" and
+    .enabledPlugins["pyright-lsp@claude-plugins-official"] == true and
+    .enabledPlugins["typescript-lsp@claude-plugins-official"] == true
+  ' "$HOME/.claude/settings.json" >/dev/null 2>&1; then
+  pass "Claude Auto mode, Tmux teams, and LSP plugins are configured"
+else
+  fail "Claude Auto mode, Tmux teams, or LSP plugins differ"
+fi
+
 for application_name in \
   "AltTab" \
   "Android Studio" \
   "Aqua Voice" \
   "Caffeine" \
+  "ChatGPT" \
+  "Claude" \
   "CleanMyMac" \
   "CleanShot X" \
+  "CurseForge" \
   "Cursor" \
+  "Developer" \
+  "Dia" \
+  "Expo Orbit" \
+  "FluxMarkdown" \
+  "Folder Quick Look" \
   "Ghostty" \
+  "Google Chrome" \
+  "Helm" \
+  "Hoppscotch" \
+  "IINA" \
+  "ImageOptim" \
+  "LocalSend" \
+  "Minecraft" \
+  "MultiViewer" \
+  "Notability" \
+  "Obsidian Web Clipper" \
+  "OpenUsage" \
   "ProtonVPN" \
   "Raycast" \
   "Raycast Beta" \
   "RocketSim" \
+  "Spark Desktop" \
   "Tailscale" \
+  "TestFlight" \
   "Visual Studio Code" \
   "WezTerm" \
+  "WhatsApp" \
+  "YouTube Music" \
   "Xcode"; do
   check_app "$application_name"
+done
+
+for application_name in \
+  "Actions" \
+  "Timepage"; do
+  check_app "$application_name"
+done
+
+for application_name in \
+  "GatherOS" \
+  "Maestro Studio" \
+  "Recordly" \
+  "SimCam"; do
+  check_manual_app "$application_name"
 done
 
 check_editor_extensions \
@@ -141,11 +338,26 @@ check_editor_extensions \
   cursor \
   "$HOME/github/phoenix-error/dotfiles/home/.config/editors/cursor/extensions.txt"
 
-if [[ -d "$HOME/Library/Android/sdk" ]]; then
-  pass "Android SDK directory exists"
+if [[ "${ANDROID_HOME:-}" == "$HOME/Library/Android/sdk" ]]; then
+  pass "ANDROID_HOME points to the standard macOS Android SDK"
 else
-  warn "Android SDK is not configured yet"
+  fail "ANDROID_HOME does not point to ~/Library/Android/sdk"
 fi
+
+if [[ ":${PATH:-}:" == *":$HOME/Library/Android/sdk/emulator:"* ]] &&
+  [[ ":${PATH:-}:" == *":$HOME/Library/Android/sdk/platform-tools:"* ]]; then
+  pass "Android emulator and platform-tools directories are on PATH"
+else
+  fail "Android emulator or platform-tools directory is missing from PATH"
+fi
+
+if [[ -d "$HOME/Library/Android/sdk" ]]; then
+  pass "Android SDK was installed manually through Android Studio"
+else
+  warn "Complete Android Studio onboarding to install the Android SDK"
+fi
+
+check_agent_skills
 
 if xcode-select -p 2>/dev/null | grep -Fq "/Applications/Xcode.app/"; then
   pass "Stable Xcode is the active developer directory"
@@ -167,10 +379,15 @@ else
   warn "Git SSH commit signing is not enabled with a signing key"
 fi
 
-if find "$HOME/.ssh" -maxdepth 1 -type f -name '*.pub' -print -quit 2>/dev/null | grep -q .; then
-  pass "At least one SSH public key exists"
+github_ssh_status="$(
+  "$HOME/github/phoenix-error/dotfiles/scripts/setup-github-ssh.sh" \
+    --status 2>&1 || true
+)"
+
+if grep -Fq 'GitHub SSH key is configured locally.' <<<"$github_ssh_status"; then
+  pass "GitHub SSH key is configured locally"
 else
-  warn "No SSH public key was found"
+  warn "GitHub SSH key or allowed signers file is missing"
 fi
 
 if ssh -G github.com >/dev/null 2>&1; then
@@ -185,10 +402,25 @@ else
   warn "GitHub CLI is not authenticated"
 fi
 
+if grep -Fq \
+  'GitHub SSH key is registered for authentication and signing.' \
+  <<<"$github_ssh_status"; then
+  pass "GitHub SSH key is registered for authentication and signing"
+else
+  warn "GitHub SSH authentication or signing registration is incomplete"
+fi
+
+if command -v infisical >/dev/null 2>&1 &&
+  infisical login status >/dev/null 2>&1; then
+  pass "Infisical CLI is authenticated"
+else
+  warn "Infisical CLI is not authenticated"
+fi
+
 printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
 printf 'Review the manual checklist in README.md for permissions and logins.\n'
 
-if [[ "${1:-}" == "--strict" && "$failures" -gt 0 ]]; then
+if [[ "$STRICT" == true && "$failures" -gt 0 ]]; then
   exit 1
 fi
 
