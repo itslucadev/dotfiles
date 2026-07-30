@@ -1,0 +1,3 @@
+# These installs require an Apple Account signed in to the Mac App Store.
+mas "Xcode", id: 497799835
+mas "RocketSim for Xcode Simulator", id: 1504940162

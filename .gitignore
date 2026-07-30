@@ -1,1 +1,39 @@
 .worktrees/
+
+# macOS
+.DS_Store
+
+# Local mise overrides
+mise.local.toml
+mise.local.lock
+mise.*.local.toml
+mise.*.local.lock
+
+# Local shell configuration and history
+*.local
+.zsh_history
+.zsh_sessions/
+
+# Environment files and package-manager credentials
+.env
+.env.*
+!.env.example
+.npmrc
+.yarnrc
+
+# Application exports and authentication state
+*.rayconfig
+home/.config/gh/hosts.yml
+home/.config/configstore/
+home/.claude/.credentials.json
+home/.codex/auth.json
+
+# Keys and certificates
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub

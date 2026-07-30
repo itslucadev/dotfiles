@@ -1,0 +1,96 @@
+min_version = "2026.7.17"
+
+[settings]
+lockfile = true
+dotfiles.root = "{{ env.HOME }}/github/phoenix-error/dotfiles/home"
+dotfiles.default_mode = "symlink"
+
+[settings.npm]
+package_manager = "bun"
+
+[tools]
+bun = "latest"
+java = "zulu-17"
+node = "lts"
+"npm:@earendil-works/pi-coding-agent" = "latest"
+"npm:@native-sdk/cli" = "latest"
+"npm:@playwright/cli" = "latest"
+"npm:@swmansion/argent" = "latest"
+"npm:@tobilu/qmd" = "latest"
+"npm:agent-device" = "latest"
+"npm:agentmail-cli" = "latest"
+"npm:eas-cli" = "latest"
+"npm:notebooklm-cli" = "latest"
+"npm:opensrc" = "latest"
+"npm:pyright" = "latest"
+"npm:react-doctor" = "latest"
+"npm:turbo" = "latest"
+"npm:typescript" = "latest"
+"npm:typescript-language-server" = "latest"
+"npm:vercel" = "latest"
+
+[env]
+ANDROID_HOME = "{{ env.HOME }}/Library/Android/sdk"
+_.path = [
+  "{{ env.HOME }}/Library/Android/sdk/emulator",
+  "{{ env.HOME }}/Library/Android/sdk/platform-tools",
+]
+
+[dotfiles]
+"~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
+"~/.zprofile" = {}
+"~/.zshrc" = {}
+
+[bootstrap.macos.dock]
+autohide = true
+orientation = "left"
+tilesize = 36
+show_recents = false
+
+[bootstrap.macos.finder]
+show_pathbar = true
+show_status_bar = true
+show_extensions_warning = false
+preferred_view_style = "list"
+
+[bootstrap.macos.keyboard]
+key_repeat = 2
+initial_key_repeat = 15
+press_and_hold = false
+
+[bootstrap.macos.trackpad]
+tap_to_click = true
+
+[bootstrap.macos.defaults]
+NSGlobalDomain = { AppleInterfaceStyle = "Dark", AppleShowAllExtensions = true, _HIHideMenuBar = true }
+"com.apple.desktopservices" = { DSDontWriteNetworkStores = true, DSDontWriteUSBStores = true }
+"com.apple.finder" = { AppleShowAllExtensions = true, CreateDesktop = false }
+"com.apple.screencapture" = { "disable-shadow" = true }
+
+[tasks.apply]
+description = "Apply the complete setup to an already bootstrapped Mac"
+run = "./apply.sh"
+
+[tasks."apps:mas"]
+description = "Install Xcode and RocketSim from the Mac App Store"
+run = "./scripts/install-mas-apps.sh"
+
+[tasks."apps:raycast-beta"]
+description = "Install Raycast v2 Beta from the official signed disk image"
+run = "./scripts/install-raycast-beta.sh"
+
+[tasks.doctor]
+description = "Report setup status and remaining manual actions"
+run = "./scripts/doctor.sh"
+
+[tasks."macos:shortcuts"]
+description = "Disable native shortcuts reserved for Raycast and CleanShot"
+run = "./scripts/configure-shortcuts.sh"
+
+[tasks."macos:extras"]
+description = "Apply dynamic macOS preferences that are not scalar mise defaults"
+run = "./scripts/configure-macos-extras.sh"
+
+[tasks.test]
+description = "Run repository validation without changing the Mac"
+run = "./tests/test.sh"
