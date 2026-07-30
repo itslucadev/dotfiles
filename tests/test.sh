@@ -101,6 +101,24 @@ for forbidden in \
   fi
 done
 
+printf 'Checking Zsh plugin ownership\n'
+if grep -En 'brew "(zsh-autosuggestions|zsh-syntax-highlighting|zsh-history-substring-search|zsh-autopair|fzf-tab|forgit)"' Brewfile; then
+  printf 'Zsh plugins must be managed by Antidote, not Homebrew.\n' >&2
+  exit 1
+fi
+
+for required_plugin in \
+  "Aloxaf/fzf-tab" \
+  "hlissner/zsh-autopair" \
+  "zsh-users/zsh-autosuggestions" \
+  "zsh-users/zsh-history-substring-search" \
+  "zsh-users/zsh-syntax-highlighting"; do
+  if ! grep -Fq "$required_plugin" home/.zsh_plugins.txt; then
+    printf 'Required Antidote plugin missing: %s\n' "$required_plugin" >&2
+    exit 1
+  fi
+done
+
 printf 'Checking destructive package-manager operations\n'
 if grep -REn 'brew bundle cleanup|brew uninstall|mise prune' \
   --exclude-dir=.git \

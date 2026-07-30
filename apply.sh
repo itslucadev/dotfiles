@@ -77,7 +77,7 @@ run mise bootstrap dotfiles apply --yes
 
 log "Applying macOS defaults"
 run mkdir -p "$HOME/Pictures/Screenshots"
-run mkdir -p "$HOME/Developer"
+run mkdir -p "$HOME/Developer/appzudio"
 run mise bootstrap macos defaults apply --yes
 
 log "Applying dynamic macOS preferences"

@@ -1,7 +1,9 @@
 zsh-users/zsh-completions kind:fpath path:src
 mattmc3/ez-compinit
 Aloxaf/fzf-tab
+hlissner/zsh-autopair
 zsh-users/zsh-autosuggestions
 MichaelAquilina/zsh-you-should-use
 fdellwing/zsh-bat
 zsh-users/zsh-syntax-highlighting
+zsh-users/zsh-history-substring-search

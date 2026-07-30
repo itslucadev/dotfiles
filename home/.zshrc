@@ -9,13 +9,6 @@ setopt hist_ignore_all_dups
 setopt hist_ignore_space
 setopt share_history
 
-# Search history using the command prefix already entered.
-autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
-zle -N up-line-or-beginning-search
-zle -N down-line-or-beginning-search
-bindkey "^[[A" up-line-or-beginning-search
-bindkey "^[[B" down-line-or-beginning-search
-
 # Homebrew must be available before the remaining shell tools initialize.
 if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -48,6 +41,18 @@ if [[ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ]]; then
 fi
 
 bindkey "^f" autosuggest-accept
+
+HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
+if (( $+widgets[history-substring-search-up] )); then
+  bindkey "^[[A" history-substring-search-up
+  bindkey "^[[B" history-substring-search-down
+else
+  autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+  zle -N up-line-or-beginning-search
+  zle -N down-line-or-beginning-search
+  bindkey "^[[A" up-line-or-beginning-search
+  bindkey "^[[B" down-line-or-beginning-search
+fi
 
 zstyle ":completion:*" matcher-list "m:{a-zA-Z}={A-Za-z}"
 zstyle ":completion:*" menu no

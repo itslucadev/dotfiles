@@ -153,16 +153,24 @@ Antidote loads:
 - Zsh Completions
 - ez-compinit
 - FZF Tab
+- Zsh Autopair
 - Zsh Autosuggestions
 - Zsh You Should Use
 - Zsh Bat
 - Zsh Syntax Highlighting
+- Zsh History Substring Search
 
 The shell also configures FZF, Eza, Zoxide, Bat, Neovim, Android SDK paths, and mise activation.
 
 The `dev` alias opens `~/Developer`.
 
-The `appzudio` alias opens `~/Developer/appzudio`.
+The bootstrap creates `~/Developer/appzudio` as the shared parent directory for all AppZudio projects.
+
+The `appzudio` alias opens that parent directory.
+
+Zsh plugins are managed only by Antidote through `home/.zsh_plugins.txt`.
+
+Repository agent instructions explicitly prohibit installing individual Zsh plugins through Homebrew, Oh My Zsh, or manual clones.
 
 WezTerm starts from Kun Chen's Rose Pine Moon styling with Hack Nerd Font, transparency, blur, minimal tabs, and resize-only window decorations.
 
