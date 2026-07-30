@@ -161,6 +161,65 @@ done
 
 grep -Fq 'mvllow.rose-pine' home/.config/editors/extensions.txt
 
+printf 'Checking Python and React editor setup\n'
+for runtime in \
+  'python = "3.12"' \
+  'uv = "latest"' \
+  'ruff = "latest"' \
+  '"npm:@biomejs/biome" = "latest"' \
+  '"npm:prettier" = "latest"'; do
+  grep -Fq "$runtime" mise.toml
+done
+
+grep -Fq 'UV_PYTHON = { value = "{{ tools.python.path }}", tools = true }' mise.toml
+
+if grep -Eq 'brew "(python(@3\.12)?|uv|ruff|biome|prettier)"' Brewfile; then
+  printf 'Python and formatter tooling must be managed by mise, not Homebrew.\n' >&2
+  exit 1
+fi
+
+if grep -Eq '^vscode ' Brewfile; then
+  printf 'Editor extensions must use the shared cross-editor installer.\n' >&2
+  exit 1
+fi
+
+grep -Fq -- '--list-extensions' scripts/install-editor-extensions.sh
+grep -Fq 'Already installed for %s: %s' scripts/install-editor-extensions.sh
+
+for extension in \
+  'biomejs.biome' \
+  'bradlc.vscode-tailwindcss' \
+  'charliermarsh.ruff' \
+  'dbaeumer.vscode-eslint' \
+  'esbenp.prettier-vscode' \
+  'expo.vscode-expo-tools' \
+  'yoavbls.pretty-ts-errors'; do
+  grep -Fq "$extension" home/.config/editors/extensions.txt
+done
+
+for editor in cursor vscode; do
+  if ! LC_ALL=C sort -c "home/.config/editors/${editor}/extensions.txt" ||
+    [[ -n "$(sort \
+      home/.config/editors/extensions.txt \
+      "home/.config/editors/${editor}/extensions.txt" | uniq -d)" ]]; then
+    printf '%s extension inventories must be sorted and non-overlapping.\n' "$editor" >&2
+    exit 1
+  fi
+done
+
+LC_ALL=C sort -c home/.config/editors/extensions.txt
+
+for settings_file in \
+  home/.config/editors/cursor/settings.json \
+  home/.config/editors/vscode/settings.json; do
+  grep -Fq '"editor.defaultFormatter": "charliermarsh.ruff"' "$settings_file"
+  grep -Fq '"editor.defaultFormatter": "biomejs.biome"' "$settings_file"
+  grep -Fq '"editor.defaultFormatter": "esbenp.prettier-vscode"' "$settings_file"
+  grep -Fq '"source.fixAll.ruff": "explicit"' "$settings_file"
+  grep -Fq '"source.organizeImports.ruff": "explicit"' "$settings_file"
+  grep -Fq '"python-envs.alwaysUseUv": true' "$settings_file"
+done
+
 if grep -RFqi 'graphite' home/.config/editors; then
   printf 'Graphite must not be part of the managed editor setup.\n' >&2
   exit 1

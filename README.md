@@ -6,7 +6,7 @@ mise is the central orchestrator.
 
 Homebrew installs formulae, desktop applications, and fonts.
 
-mise installs Node.js, Bun, Java, and global npm-backed CLIs, with Bun acting as their package manager.
+mise installs Node.js, Bun, Python, Java, native developer tools, and global npm-backed CLIs, with Bun acting as the npm package manager.
 
 ## Status
 
@@ -78,11 +78,12 @@ The repository keeps configuration in the native declarative format of the tool 
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
 - `home/.config/nvim/lua/plugins/` is the only source of Neovim plugins.
 
-Only four setup entry points can change the Mac:
+Only five setup entry points can change the Mac:
 
 - `bootstrap.sh` installs the first dependencies needed before mise is available.
 - `apply.sh` runs the setup in the required order because Homebrew must install mise before mise can orchestrate the remaining stages.
 - `scripts/configure-macos.sh` owns the dynamic screenshot path and nested `AppleSymbolicHotKeys` dictionary that mise macOS defaults cannot represent correctly.
+- `scripts/install-editor-extensions.sh` installs the declarative extension inventories through the native VS Code and Cursor CLIs.
 - `scripts/install-raycast-beta.sh` installs and verifies Raycast Beta because it has no official Homebrew cask.
 
 The read-only `scripts/doctor.sh` and `tests/test.sh` inspect the result without configuring the Mac.
@@ -143,10 +144,14 @@ mise manages:
 
 - Node.js LTS
 - Bun
+- Python 3.12
+- uv
+- Ruff
 - Zulu JDK 17
 - Agent Device
 - AgentMail CLI
 - Argent
+- Biome
 - Claude Code
 - EAS CLI
 - Native SDK CLI
@@ -154,6 +159,7 @@ mise manages:
 - OpenSrc
 - Pi Coding Agent
 - Playwright CLI
+- Prettier
 - Pyright
 - QMD
 - React Doctor
@@ -162,7 +168,11 @@ mise manages:
 - TypeScript Language Server
 - Vercel CLI
 
-All npm-backed CLIs are installed by Bun through mise.
+All npm-backed CLIs, including Biome and Prettier, are installed by Bun through mise.
+
+Python, uv, and Ruff are installed directly by mise.
+
+The global `UV_PYTHON` setting points uv at the Python interpreter selected by the active mise configuration, so a project-level mise version can still override the global Python 3.12 default.
 
 Codex CLI, Portless, Higgsfield CLI, SnapAI, and Firecrawl CLI are intentionally excluded.
 
@@ -235,11 +245,35 @@ Both editors use Hack Nerd Font Mono, Rosé Pine Moon, automatic import updates,
 
 Cursor keeps its Cursor-specific composer and terminal preferences in its own settings file.
 
+The shared Python setup includes the Microsoft Python and debugger extensions, Python Environments, Ruff, uv-backed environment management, and the editor-specific Pyright or Pylance language server.
+
+Ruff formats Python, applies safe fixes, and organizes imports on save.
+
+Project-level `pyproject.toml` or `ruff.toml` settings take priority over the global editor defaults.
+
+The shared React and React Native setup includes Biome, Prettier, ESLint, Tailwind CSS IntelliSense, Pretty TypeScript Errors, and the official Expo Tools extension.
+
+Biome formats JavaScript, JSX, TypeScript, TSX, JSON, and JSONC on save.
+
+Prettier formats CSS, SCSS, HTML, GraphQL, Markdown, and YAML on save.
+
+Each project should still declare its own Biome, Prettier, and ESLint dependencies and configuration so the repository controls exact tool versions and rules.
+
 Common extensions have one shared inventory.
 
 VS Code and Cursor each have a second inventory for editor-specific extensions.
 
 `scripts/install-editor-extensions.sh` is the single adapter that reads those declarative inventories and invokes each editor's native `--install-extension` command.
+
+mise has no native VS Code extension backend.
+
+Homebrew Bundle supports `vscode` entries, but it uses only the first supported editor CLI found on `PATH`.
+
+With both applications installed, it would configure VS Code through `code` and leave Cursor unsynchronized.
+
+The repository therefore keeps one shared manifest plus editor-specific additions and lets the mise task drive both native CLIs explicitly.
+
+The installer reads each editor's installed extension list once and installs only missing entries.
 
 Run the extension installer through mise after changing either inventory:
 
@@ -247,7 +281,7 @@ Run the extension installer through mise after changing either inventory:
 mise run editors:extensions
 ```
 
-The inventories were captured from the current Mac.
+The inventories start from the current Mac and add the confirmed shared Python, React, and React Native tooling.
 
 The Graphite extension was deliberately removed.
 
@@ -345,6 +379,8 @@ Never commit the Git identity file, SSH private key, SSH host inventory, or GitH
 - [ ] Launch VS Code and confirm that Rosé Pine Moon and Hack Nerd Font Mono load.
 - [ ] Launch Cursor and sign in.
 - [ ] Confirm that Rosé Pine Moon and Hack Nerd Font Mono load in Cursor.
+- [ ] Open a Python project and confirm that its `.venv` is discovered and Ruff formats on save.
+- [ ] Open a React Native project and confirm that Biome, Prettier, ESLint, Tailwind, and Expo Tools activate only where their project configuration applies.
 - [ ] Review extension publisher trust prompts in both editors.
 - [ ] Run `mise run editors:extensions` again if an extension was temporarily unavailable during bootstrap.
 

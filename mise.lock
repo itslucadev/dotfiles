@@ -28,6 +28,10 @@ url = "https://nodejs.org/dist/v24.18.1/node-v24.18.1-darwin-arm64.tar.gz"
 version = "2.1.220"
 backend = "npm:@anthropic-ai/claude-code"
 
+[[tools."npm:@biomejs/biome"]]
+version = "2.5.6"
+backend = "npm:@biomejs/biome"
+
 [[tools."npm:@earendil-works/pi-coding-agent"]]
 version = "0.82.1"
 backend = "npm:@earendil-works/pi-coding-agent"
@@ -68,6 +72,10 @@ backend = "npm:notebooklm-cli"
 version = "0.7.3"
 backend = "npm:opensrc"
 
+[[tools."npm:prettier"]]
+version = "3.9.6"
+backend = "npm:prettier"
+
 [[tools."npm:pyright"]]
 version = "1.1.411"
 backend = "npm:pyright"
@@ -91,3 +99,32 @@ backend = "npm:typescript-language-server"
 [[tools."npm:vercel"]]
 version = "58.1.0"
 backend = "npm:vercel"
+
+[[tools.python]]
+version = "3.12.13"
+backend = "core:python"
+
+[tools.python."platforms.macos-arm64"]
+checksum = "sha256:2f18cdef4125ca1440dd1ba00ebcb267526efb532138c0860438f755ea4eebac"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260728/cpython-3.12.13+20260728-aarch64-apple-darwin-install_only_stripped.tar.gz"
+provenance = "github-attestations"
+
+[[tools.ruff]]
+version = "0.16.0"
+backend = "aqua:astral-sh/ruff"
+
+[tools.ruff."platforms.macos-arm64"]
+checksum = "sha256:ce6564491a2cc4b0659f45ee174dbef17e4dec24e03a9c03d313b5430bc21099"
+url = "https://github.com/astral-sh/ruff/releases/download/0.16.0/ruff-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/ruff/releases/assets/487540064"
+provenance = "github-attestations"
+
+[[tools.uv]]
+version = "0.12.0"
+backend = "aqua:astral-sh/uv"
+
+[tools.uv."platforms.macos-arm64"]
+checksum = "sha256:2b9e582af54f84fa50c115427451a6c13e80f43b52f8282b8af5791077317bbf"
+url = "https://github.com/astral-sh/uv/releases/download/0.12.0/uv-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/493071342"
+provenance = "github-attestations"

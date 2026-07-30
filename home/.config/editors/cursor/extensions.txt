@@ -6,4 +6,3 @@ jnoortheen.nix-ide
 jock.svg
 muhammad-sammy.csharp
 pomdtr.excalidraw-editor
-yoavbls.pretty-ts-errors

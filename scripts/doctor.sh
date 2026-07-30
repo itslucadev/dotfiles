@@ -75,6 +75,12 @@ for command_name in \
   mise \
   node \
   bun \
+  python \
+  uv \
+  ruff \
+  pyright \
+  biome \
+  prettier \
   gh \
   java \
   watchman \
@@ -94,6 +100,13 @@ for command_name in \
   tsc; do
   check_command "$command_name"
 done
+
+if command -v python >/dev/null 2>&1 &&
+  [[ "$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)" == "3.12" ]]; then
+  pass "Managed Python version is 3.12"
+else
+  fail "Managed Python version is not 3.12"
+fi
 
 for application_name in \
   "AltTab" \

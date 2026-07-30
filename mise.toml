@@ -12,6 +12,10 @@ package_manager = "bun"
 bun = "latest"
 java = "zulu-17"
 node = "lts"
+python = "3.12"
+ruff = "latest"
+uv = "latest"
+"npm:@biomejs/biome" = "latest"
 "npm:@anthropic-ai/claude-code" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:@native-sdk/cli" = "latest"
@@ -23,6 +27,7 @@ node = "lts"
 "npm:eas-cli" = "latest"
 "npm:notebooklm-cli" = "latest"
 "npm:opensrc" = "latest"
+"npm:prettier" = "latest"
 "npm:pyright" = "latest"
 "npm:react-doctor" = "latest"
 "npm:turbo" = "latest"
@@ -32,6 +37,7 @@ node = "lts"
 
 [env]
 ANDROID_HOME = "{{ env.HOME }}/Library/Android/sdk"
+UV_PYTHON = { value = "{{ tools.python.path }}", tools = true }
 _.path = [
   "{{ env.HOME }}/Library/Android/sdk/emulator",
   "{{ env.HOME }}/Library/Android/sdk/platform-tools",
