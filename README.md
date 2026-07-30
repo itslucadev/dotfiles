@@ -453,7 +453,3 @@ Use `~/.zshrc.local` for non-secret machine-specific shell settings.
 The repository does not yet prescribe a secrets backend.
 
 The macOS Keychain, a dedicated CLI keychain, and Doppler will be evaluated before secret loading is automated.
-
-## Design
-
-The approved architecture is documented in [docs/superpowers/specs/2026-07-30-mac-setup-design.md](docs/superpowers/specs/2026-07-30-mac-setup-design.md).
