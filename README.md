@@ -54,7 +54,7 @@ The bootstrap:
 - Applies `Brewfile`.
 - Installs GitHub CLI and the remaining native command-line tools.
 - Installs locked mise runtimes and global CLIs.
-- Applies the managed Zsh, Starship, WezTerm, Neovim, Claude, and global agent dotfiles.
+- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Neovim, Claude, and global agent dotfiles.
 - Links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Creates `~/Developer` as the shared project directory.
 - Applies the confirmed macOS defaults.
@@ -121,6 +121,7 @@ Homebrew installs:
 - Caffeine
 - CleanMyMac
 - CleanShot
+- Ghostty
 - Proton VPN
 - Raycast v1
 - Tailscale
@@ -131,7 +132,7 @@ The Mac App Store installs stable Xcode and RocketSim.
 
 Raycast v2 Beta comes from Raycast's official signed disk image because no official Homebrew cask exists.
 
-Ghostty, KeepingYouAwake, Magnet, Parsec, Stats, and Xcode Beta are intentionally excluded.
+KeepingYouAwake, Magnet, Parsec, Stats, and Xcode Beta are intentionally excluded.
 
 ## Managed Runtimes and Global CLIs
 
@@ -173,6 +174,8 @@ The interactive stack is:
 - Antidote as the Zsh plugin manager.
 - Starship as the prompt renderer.
 - WezTerm as the primary terminal.
+- Ghostty as an additional terminal.
+- Herdr as the terminal agent multiplexer.
 
 Oh My Zsh and Oh My Posh are not installed.
 
@@ -202,7 +205,13 @@ Repository agent instructions explicitly prohibit installing individual Zsh plug
 
 WezTerm starts from Kun Chen's Rose Pine Moon styling with Hack Nerd Font, transparency, blur, minimal tabs, and resize-only window decorations.
 
-Ghostty remains a separate configuration decision and is not installed yet.
+Ghostty uses the same Rose Pine Moon theme, Hack Nerd Font, 15-point font size, 0.8 background opacity, and blur level 50.
+
+Herdr starts from its built-in Rose Pine theme and overrides the supported color tokens with the official Rose Pine Moon palette.
+
+Its panel background is reset so it inherits opacity and blur from the host terminal.
+
+The repository manages only Herdr's onboarding, agent-panel, notification, and theme settings.
 
 ## Neovim
 
@@ -220,9 +229,12 @@ One public `home/AGENTS.md` file is symlinked to:
 - `~/.agents/AGENTS.md`
 - `~/.claude/CLAUDE.md`
 - `~/.codex/AGENTS.md`
-- `~/.config/opencode/AGENTS.md`
 
 This gives the supported agents the same global working rules without maintaining duplicate files.
+
+`~/.claude/CLAUDE.md` is a symlink to the same repository source as the global `~/AGENTS.md`.
+
+OpenCode is not part of the setup.
 
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
 
@@ -348,9 +360,16 @@ The setup disables the corresponding native screenshot shortcuts.
 - [ ] Complete any NotebookLM CLI browser login.
 - [ ] Configure other agent tools without committing their credentials or histories.
 
+### Ghostty and Herdr
+
+- [ ] Launch Ghostty once and verify that Rose Pine Moon and Hack Nerd Font load.
+- [ ] Grant Ghostty Accessibility access only if global terminal shortcuts are added later.
+- [ ] Launch Herdr and verify its Rose Pine theme and system notification delivery.
+- [ ] Keep Herdr's built-in keyboard shortcuts unless this repository explicitly changes that policy.
+
 ### Final Verification
 
-- [ ] Open a new WezTerm window so the managed shell configuration is active.
+- [ ] Open new WezTerm and Ghostty windows so the managed shell configuration is active.
 - [ ] Run `mise doctor`.
 - [ ] Run `mise run doctor`.
 - [ ] Run `mise run test`.

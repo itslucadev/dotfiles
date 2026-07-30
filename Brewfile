@@ -7,6 +7,7 @@ brew "fd"
 brew "fzf"
 brew "gh"
 brew "git"
+brew "herdr"
 brew "jq"
 brew "lazygit"
 brew "mas"
@@ -32,4 +33,5 @@ cask "tailscale-app"
 
 # Terminal and font
 cask "font-hack-nerd-font"
+cask "ghostty"
 cask "wezterm"

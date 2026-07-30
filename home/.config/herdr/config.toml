@@ -1,0 +1,33 @@
+onboarding = false
+
+[ui]
+agent_panel_sort = "spaces"
+show_agent_labels_on_pane_borders = true
+
+[ui.toast]
+delivery = "system"
+
+[theme]
+name = "rose-pine"
+auto_switch = false
+
+# Herdr has no built-in Moon variant, so override its supported tokens with
+# the official Rose Pine Moon palette. Reset the panel background so the
+# host terminal's opacity and blur remain visible.
+[theme.custom]
+panel_bg = "reset"
+accent = "#c4a7e7"
+surface0 = "#2a273f"
+surface1 = "#393552"
+surface_dim = "#232136"
+overlay0 = "#6e6a86"
+overlay1 = "#908caa"
+text = "#e0def4"
+subtext0 = "#908caa"
+mauve = "#c4a7e7"
+green = "#9ccfd8"
+yellow = "#f6c177"
+red = "#eb6f92"
+blue = "#3e8fb0"
+teal = "#9ccfd8"
+peach = "#ea9a97"

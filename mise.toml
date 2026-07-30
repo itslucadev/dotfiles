@@ -45,8 +45,9 @@ _.path = [
 "~/.claude/settings.json" = {}
 "~/.claude/statusline.ts" = {}
 "~/.codex/AGENTS.md" = { source = "home/AGENTS.md" }
+"~/.config/ghostty" = {}
+"~/.config/herdr/config.toml" = {}
 "~/.config/nvim" = {}
-"~/.config/opencode/AGENTS.md" = { source = "home/AGENTS.md" }
 "~/.homebrew/Brewfile" = { source = "Brewfile" }
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}

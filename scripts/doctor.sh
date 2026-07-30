@@ -57,6 +57,7 @@ for command_name in \
   nvim \
   lazygit \
   fzf \
+  herdr \
   starship \
   agent-device \
   argent \
@@ -75,6 +76,7 @@ for application_name in \
   "Caffeine" \
   "CleanMyMac" \
   "CleanShot X" \
+  "Ghostty" \
   "ProtonVPN" \
   "Raycast" \
   "Raycast Beta" \

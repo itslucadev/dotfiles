@@ -68,6 +68,8 @@ printf 'Checking managed configuration files\n'
 for managed_file in \
   home/.claude/settings.json \
   home/.claude/statusline.ts \
+  home/.config/ghostty/config.ghostty \
+  home/.config/herdr/config.toml \
   home/.config/nvim/init.lua \
   home/.config/starship.toml \
   home/.config/wezterm/wezterm.lua \
@@ -114,7 +116,6 @@ for forbidden in \
   '"npm:firecrawl-cli"' \
   '"npm:portless"' \
   '"npm:snapai"' \
-  'cask "ghostty"' \
   'cask "keepingyouawake"' \
   'cask "parsec"' \
   'cask "stats"' \
@@ -124,6 +125,48 @@ for forbidden in \
     exit 1
   fi
 done
+
+printf 'Checking Ghostty and Herdr ownership\n'
+grep -Fq 'cask "ghostty"' Brewfile
+grep -Fq 'brew "herdr"' Brewfile
+grep -Fq '"~/.config/ghostty" = {}' mise.toml
+grep -Fq '"~/.config/herdr/config.toml" = {}' mise.toml
+
+for ghostty_setting in \
+  'theme = Rose Pine Moon' \
+  'font-family = Hack Nerd Font' \
+  'background-opacity = 0.8' \
+  'background-blur = 50'; do
+  grep -Fq "$ghostty_setting" home/.config/ghostty/config.ghostty
+done
+
+ghostty_command=""
+if command -v ghostty >/dev/null 2>&1; then
+  ghostty_command="$(command -v ghostty)"
+elif [[ -x /Applications/Ghostty.app/Contents/MacOS/ghostty ]]; then
+  ghostty_command="/Applications/Ghostty.app/Contents/MacOS/ghostty"
+fi
+
+if [[ -n "$ghostty_command" ]]; then
+  XDG_CONFIG_HOME="$REPO_ROOT/home/.config" \
+    "$ghostty_command" +show-config >/dev/null
+fi
+
+if grep -Eq '^\[keys(\.|\])' home/.config/herdr/config.toml; then
+  printf 'Herdr keybindings must use its defaults, not managed overrides.\n' >&2
+  exit 1
+fi
+
+grep -Fq 'name = "rose-pine"' home/.config/herdr/config.toml
+grep -Fq 'panel_bg = "reset"' home/.config/herdr/config.toml
+grep -Fq 'surface_dim = "#232136"' home/.config/herdr/config.toml
+grep -Fq 'blue = "#3e8fb0"' home/.config/herdr/config.toml
+grep -Fq 'peach = "#ea9a97"' home/.config/herdr/config.toml
+
+if command -v herdr >/dev/null 2>&1; then
+  HERDR_CONFIG_PATH="$REPO_ROOT/home/.config/herdr/config.toml" \
+    herdr config check >/dev/null
+fi
 
 printf 'Checking Zsh plugin ownership\n'
 if grep -En 'brew "(zsh-autosuggestions|zsh-syntax-highlighting|zsh-history-substring-search|zsh-autopair|fzf-tab|forgit)"' Brewfile; then
@@ -154,13 +197,17 @@ for agent_target in \
   '"~/AGENTS.md" = { source = "home/AGENTS.md" }' \
   '"~/.agents/AGENTS.md" = { source = "home/AGENTS.md" }' \
   '"~/.claude/CLAUDE.md" = { source = "home/AGENTS.md" }' \
-  '"~/.codex/AGENTS.md" = { source = "home/AGENTS.md" }' \
-  '"~/.config/opencode/AGENTS.md" = { source = "home/AGENTS.md" }'; do
+  '"~/.codex/AGENTS.md" = { source = "home/AGENTS.md" }'; do
   if ! grep -Fq "$agent_target" mise.toml; then
     printf 'Global agent mapping missing: %s\n' "$agent_target" >&2
     exit 1
   fi
 done
+
+if grep -Fqi 'opencode' mise.toml Brewfile; then
+  printf 'OpenCode must not be part of the managed setup.\n' >&2
+  exit 1
+fi
 
 printf 'Checking managed agent CLIs\n'
 for agent_package in \
