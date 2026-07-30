@@ -1,0 +1,13 @@
+{
+  "editor.fontFamily": "Hack Nerd Font Mono",
+  "editor.fontSize": 14,
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "files.autoSave": "afterDelay",
+  "git.enableSmartCommit": true,
+  "terminal.integrated.fontFamily": "Hack Nerd Font Mono",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "window.autoDetectColorScheme": false,
+  "workbench.colorTheme": "Rosé Pine Moon",
+  "workbench.preferredDarkColorTheme": "Rosé Pine Moon"
+}

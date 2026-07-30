@@ -15,7 +15,6 @@ node = "lts"
 "npm:@anthropic-ai/claude-code" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:@native-sdk/cli" = "latest"
-"npm:@openai/codex" = "latest"
 "npm:@playwright/cli" = "latest"
 "npm:@swmansion/argent" = "latest"
 "npm:@tobilu/qmd" = "latest"
@@ -44,7 +43,7 @@ _.path = [
 "~/.claude/CLAUDE.md" = { source = "home/AGENTS.md" }
 "~/.claude/settings.json" = {}
 "~/.claude/statusline.ts" = {}
-"~/.codex/AGENTS.md" = { source = "home/AGENTS.md" }
+"~/.config/git/ignore" = {}
 "~/.config/ghostty" = {}
 "~/.config/herdr/config.toml" = {}
 "~/.config/nvim" = {}
@@ -52,6 +51,10 @@ _.path = [
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}
 "~/.config/wezterm/wezterm.lua" = {}
+"~/.gitconfig" = {}
+"~/.ssh/config" = {}
+"~/Library/Application Support/Code/User/settings.json" = { source = "home/.config/editors/vscode/settings.json" }
+"~/Library/Application Support/Cursor/User/settings.json" = { source = "home/.config/editors/cursor/settings.json" }
 "~/.zprofile" = {}
 "~/.zsh_plugins.txt" = {}
 "~/.zshrc" = {}
@@ -93,6 +96,10 @@ run = "brew bundle --file Brewfile.mas"
 [tasks."apps:raycast-beta"]
 description = "Install Raycast v2 Beta from the official signed disk image"
 run = "./scripts/install-raycast-beta.sh"
+
+[tasks."editors:extensions"]
+description = "Install the managed VS Code and Cursor extensions"
+run = "./scripts/install-editor-extensions.sh"
 
 [tasks.doctor]
 description = "Report setup status and remaining manual actions"

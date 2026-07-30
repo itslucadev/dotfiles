@@ -1,0 +1,38 @@
+[include]
+	path = ~/.gitconfig.local
+
+[init]
+	defaultBranch = main
+
+[gpg]
+	format = ssh
+
+[gpg "ssh"]
+	allowedSignersFile = ~/.ssh/allowed_signers
+
+[credential]
+	helper = osxkeychain
+
+[fetch]
+	prune = true
+
+[pull]
+	rebase = true
+
+[push]
+	autoSetupRemote = true
+
+[rebase]
+	autoStash = true
+
+[rerere]
+	enabled = true
+
+[diff]
+	algorithm = histogram
+
+[merge]
+	conflictStyle = zdiff3
+
+[core]
+	excludesFile = ~/.config/git/ignore

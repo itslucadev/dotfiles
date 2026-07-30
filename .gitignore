@@ -14,6 +14,8 @@ mise.*.local.lock
 *.local
 .zsh_history
 .zsh_sessions/
+home/.gitconfig.local
+home/.ssh/config.local
 
 # Environment files and package-manager credentials
 .env
@@ -39,3 +41,7 @@ id_rsa
 id_rsa.pub
 id_ed25519
 id_ed25519.pub
+home/.ssh/allowed_signers
+home/.ssh/authorized_keys
+home/.ssh/known_hosts
+home/.ssh/known_hosts.old

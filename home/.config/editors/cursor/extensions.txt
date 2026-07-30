@@ -1,0 +1,9 @@
+anysphere.cursorpyright
+anysphere.remote-ssh
+astro-build.astro-vscode
+intlayer.intlayer-vs-code-extension
+jnoortheen.nix-ide
+jock.svg
+muhammad-sammy.csharp
+pomdtr.excalidraw-editor
+yoavbls.pretty-ts-errors

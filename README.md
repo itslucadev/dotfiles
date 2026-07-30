@@ -54,7 +54,8 @@ The bootstrap:
 - Applies `Brewfile`.
 - Installs GitHub CLI and the remaining native command-line tools.
 - Installs locked mise runtimes and global CLIs.
-- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Neovim, Claude, and global agent dotfiles.
+- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Neovim, Git, SSH, editor, Claude, and global agent dotfiles.
+- Installs the saved VS Code and Cursor extensions through their native command-line interfaces.
 - Links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Creates `~/Developer` as the shared project directory.
 - Applies the confirmed macOS defaults.
@@ -121,10 +122,12 @@ Homebrew installs:
 - Caffeine
 - CleanMyMac
 - CleanShot
+- Cursor
 - Ghostty
 - Proton VPN
 - Raycast v1
 - Tailscale
+- Visual Studio Code
 - WezTerm
 - Hack Nerd Font
 
@@ -145,7 +148,6 @@ mise manages:
 - AgentMail CLI
 - Argent
 - Claude Code
-- Codex CLI
 - EAS CLI
 - Native SDK CLI
 - NotebookLM CLI
@@ -162,7 +164,9 @@ mise manages:
 
 All npm-backed CLIs are installed by Bun through mise.
 
-Portless, Higgsfield CLI, SnapAI, and Firecrawl CLI are intentionally excluded.
+Codex CLI, Portless, Higgsfield CLI, SnapAI, and Firecrawl CLI are intentionally excluded.
+
+YouTube-DLP is no longer used and is intentionally excluded.
 
 Global `npm` and `undici` are not installed as separate tools.
 
@@ -221,6 +225,34 @@ Lazy.nvim owns Neovim plugins, including Rose Pine, Snacks, Oil, Neogit, Gitsign
 
 The setup does not install Neovim plugins through Homebrew or another bootstrap script.
 
+## VS Code and Cursor
+
+Homebrew installs both Visual Studio Code and Cursor.
+
+mise symlinks separate global `settings.json` files into the native macOS user settings location for each editor.
+
+Both editors use Hack Nerd Font Mono, Rosé Pine Moon, automatic import updates, and the shared editor preferences already present on the current Mac.
+
+Cursor keeps its Cursor-specific composer and terminal preferences in its own settings file.
+
+Common extensions have one shared inventory.
+
+VS Code and Cursor each have a second inventory for editor-specific extensions.
+
+`scripts/install-editor-extensions.sh` is the single adapter that reads those declarative inventories and invokes each editor's native `--install-extension` command.
+
+Run the extension installer through mise after changing either inventory:
+
+```sh
+mise run editors:extensions
+```
+
+The inventories were captured from the current Mac.
+
+The Graphite extension was deliberately removed.
+
+Zed is not installed or configured.
+
 ## Agent Configuration
 
 One public `home/AGENTS.md` file is symlinked to:
@@ -228,7 +260,6 @@ One public `home/AGENTS.md` file is symlinked to:
 - `~/AGENTS.md`
 - `~/.agents/AGENTS.md`
 - `~/.claude/CLAUDE.md`
-- `~/.codex/AGENTS.md`
 
 This gives the supported agents the same global working rules without maintaining duplicate files.
 
@@ -238,7 +269,7 @@ OpenCode is not part of the setup.
 
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
 
-Claude Code and Codex CLI are installed as Bun-backed npm tools through mise.
+Claude Code is installed as a Bun-backed npm tool through mise.
 
 The Claude configuration intentionally retains Lucas's personal `bypassPermissions` default and skipped permission prompts.
 
@@ -246,9 +277,21 @@ Review that choice before using the setup on another account or an untrusted mac
 
 Claude authentication, caches, conversation history, local settings, and generated plugin state are not tracked.
 
-The current Codex `config.toml` is not copied because it mixes public preferences with API credentials, local project trust, and machine-specific hooks.
+Codex configuration and Codex CLI are not part of this setup.
 
-A sanitized Codex baseline will be handled as a separate configuration step.
+## Git and SSH
+
+The public `~/.gitconfig` manages portable global behavior such as the default branch, rebase-based pulls, automatic upstream creation, pruning, conflict presentation, rerere, SSH signing, and macOS Keychain credentials.
+
+Personal identity and the signing key stay in the ignored `~/.gitconfig.local` file.
+
+This keeps the public repository reusable without publishing an email address or tying every clone to one identity.
+
+The public SSH config contains only generic macOS Keychain behavior, connection keepalive settings, and the standard GitHub host definition.
+
+It includes an ignored `~/.ssh/config.local` file for private host aliases, work servers, jump hosts, alternate users, and additional identity files.
+
+SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authentication state are never copied into this repository.
 
 ## Manual Setup Checklist
 
@@ -282,14 +325,28 @@ mise exposes `JAVA_HOME` for Zulu JDK 17 when its shell activation is active.
 
 ### Git and GitHub
 
-- [ ] Configure the Git name with `git config --global user.name "Your Name"`.
-- [ ] Configure the Git email with `git config --global user.email "you@example.com"`.
+- [ ] Configure the Git name with `git config --file ~/.gitconfig.local user.name "Your Name"`.
+- [ ] Configure the Git email with `git config --file ~/.gitconfig.local user.email "you@example.com"`.
 - [ ] Generate an SSH key with `ssh-keygen -t ed25519 -C "you@example.com"`.
+- [ ] Add the key to the macOS Keychain with `ssh-add --apple-use-keychain ~/.ssh/id_ed25519`.
+- [ ] Configure the signing key with `git config --file ~/.gitconfig.local user.signingkey ~/.ssh/id_ed25519.pub`.
+- [ ] Enable commit signing with `git config --file ~/.gitconfig.local commit.gpgsign true`.
+- [ ] Create `~/.ssh/allowed_signers` with `printf '%s %s\n' "you@example.com" "$(cat ~/.ssh/id_ed25519.pub)" > ~/.ssh/allowed_signers`.
 - [ ] Add the public key from `~/.ssh/id_ed25519.pub` to GitHub.
 - [ ] Test SSH with `ssh -T git@github.com`.
 - [ ] Authenticate GitHub CLI with `gh auth login`.
 
-Never commit the SSH private key or GitHub CLI authentication files.
+Add private SSH hosts only to `~/.ssh/config.local`.
+
+Never commit the Git identity file, SSH private key, SSH host inventory, or GitHub CLI authentication files.
+
+### VS Code and Cursor
+
+- [ ] Launch VS Code and confirm that Rosé Pine Moon and Hack Nerd Font Mono load.
+- [ ] Launch Cursor and sign in.
+- [ ] Confirm that Rosé Pine Moon and Hack Nerd Font Mono load in Cursor.
+- [ ] Review extension publisher trust prompts in both editors.
+- [ ] Run `mise run editors:extensions` again if an extension was temporarily unavailable during bootstrap.
 
 ### Raycast
 
@@ -353,7 +410,6 @@ The setup disables the corresponding native screenshot shortcuts.
 
 - [ ] Run Claude Code and complete its login.
 - [ ] Review the managed Claude `bypassPermissions` policy before opening untrusted repositories.
-- [ ] Run Codex and complete its login.
 - [ ] Authenticate EAS with `eas login`.
 - [ ] Authenticate Vercel with `vercel login`.
 - [ ] Authenticate AgentMail if it is used.
@@ -370,6 +426,7 @@ The setup disables the corresponding native screenshot shortcuts.
 ### Final Verification
 
 - [ ] Open new WezTerm and Ghostty windows so the managed shell configuration is active.
+- [ ] Verify the managed extension inventories in VS Code and Cursor.
 - [ ] Run `mise doctor`.
 - [ ] Run `mise run doctor`.
 - [ ] Run `mise run test`.
@@ -446,7 +503,7 @@ Run:
 
 The tests check shell, TOML, JSON, TypeScript, Lua, and Brewfile syntax when their validators are available.
 
-They also check executable permissions, managed files, dry-run paths, package-manager ownership, Homebrew trust ownership, excluded packages, destructive commands, common secret patterns, typography, and whitespace.
+They also check executable permissions, managed files, dry-run paths, package-manager ownership, editor inventories, Git and SSH ownership, Homebrew trust ownership, excluded packages, destructive commands, common secret patterns, typography, and whitespace.
 
 When mise is available, they create an isolated temporary home and verify task discovery plus every dotfile source path.
 
@@ -458,6 +515,8 @@ Never commit:
 
 - Passwords or API tokens
 - SSH private keys
+- `~/.gitconfig.local`
+- `~/.ssh/config.local`
 - `.env` files
 - `.npmrc`
 - GitHub CLI authentication state

@@ -75,6 +75,13 @@ run mise install
 log "Applying managed dotfiles"
 run mise bootstrap dotfiles apply --yes
 
+log "Installing managed editor extensions"
+if [[ "$DRY_RUN" == true ]]; then
+  run "$REPO_ROOT/scripts/install-editor-extensions.sh" --dry-run
+else
+  "$REPO_ROOT/scripts/install-editor-extensions.sh"
+fi
+
 log "Applying macOS defaults"
 run mkdir -p "$HOME/Pictures/Screenshots"
 run mkdir -p "$HOME/Developer/appzudio"

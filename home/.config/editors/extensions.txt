@@ -1,0 +1,12 @@
+biomejs.biome
+fwcd.kotlin
+golang.go
+llvm-vs-code-extensions.lldb-dap
+llvm-vs-code-extensions.vscode-clangd
+ms-dotnettools.vscode-dotnet-runtime
+ms-python.debugpy
+ms-python.python
+mvllow.rose-pine
+redhat.java
+rust-lang.rust-analyzer
+swiftlang.swift-vscode

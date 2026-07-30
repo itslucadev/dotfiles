@@ -59,6 +59,7 @@ for executable in \
   bootstrap.sh \
   scripts/configure-macos.sh \
   scripts/doctor.sh \
+  scripts/install-editor-extensions.sh \
   scripts/install-raycast-beta.sh \
   tests/test.sh; do
   [[ -x "$executable" ]]
@@ -68,11 +69,19 @@ printf 'Checking managed configuration files\n'
 for managed_file in \
   home/.claude/settings.json \
   home/.claude/statusline.ts \
+  home/.config/editors/extensions.txt \
+  home/.config/editors/cursor/extensions.txt \
+  home/.config/editors/cursor/settings.json \
+  home/.config/editors/vscode/extensions.txt \
+  home/.config/editors/vscode/settings.json \
+  home/.config/git/ignore \
   home/.config/ghostty/config.ghostty \
   home/.config/herdr/config.toml \
   home/.config/nvim/init.lua \
   home/.config/starship.toml \
   home/.config/wezterm/wezterm.lua \
+  home/.gitconfig \
+  home/.ssh/config \
   home/AGENTS.md \
   home/.zprofile \
   home/.zsh_plugins.txt \
@@ -83,8 +92,12 @@ done
 printf 'Checking JSON syntax\n'
 if command -v jq >/dev/null 2>&1; then
   jq empty home/.claude/settings.json
+  jq empty home/.config/editors/cursor/settings.json
+  jq empty home/.config/editors/vscode/settings.json
 else
   "$python_command" -m json.tool home/.claude/settings.json >/dev/null
+  "$python_command" -m json.tool home/.config/editors/cursor/settings.json >/dev/null
+  "$python_command" -m json.tool home/.config/editors/vscode/settings.json >/dev/null
 fi
 
 if command -v bun >/dev/null 2>&1; then
@@ -108,23 +121,67 @@ printf 'Checking dry-run paths\n'
 ./bootstrap.sh --dry-run >/dev/null
 ./apply.sh --dry-run >/dev/null
 ./scripts/configure-macos.sh --dry-run >/dev/null
+./scripts/install-editor-extensions.sh --dry-run >/dev/null
 ./scripts/install-raycast-beta.sh --dry-run >/dev/null
 
 printf 'Checking excluded tools and applications\n'
 for forbidden in \
   '"npm:@higgsfield/cli"' \
   '"npm:firecrawl-cli"' \
+  '"npm:@openai/codex"' \
+  '"npm:@withgraphite/graphite-cli"' \
   '"npm:portless"' \
   '"npm:snapai"' \
+  'brew "graphite"' \
+  'brew "graphite-cli"' \
+  'brew "yt-dlp"' \
   'cask "keepingyouawake"' \
   'cask "parsec"' \
   'cask "stats"' \
+  'cask "zed"' \
   'cask "xcode-beta"'; do
   if grep -Fq "$forbidden" mise.toml Brewfile Brewfile.mas; then
     printf 'Forbidden setup entry found: %s\n' "$forbidden" >&2
     exit 1
   fi
 done
+
+printf 'Checking editor ownership\n'
+grep -Fq 'cask "cursor"' Brewfile
+grep -Fq 'cask "visual-studio-code"' Brewfile
+grep -Fq '"~/Library/Application Support/Code/User/settings.json" = { source = "home/.config/editors/vscode/settings.json" }' mise.toml
+grep -Fq '"~/Library/Application Support/Cursor/User/settings.json" = { source = "home/.config/editors/cursor/settings.json" }' mise.toml
+
+for editor in cursor vscode; do
+  grep -Fq '"workbench.colorTheme": "Rosé Pine Moon"' \
+    "home/.config/editors/${editor}/settings.json"
+  grep -Fq '"editor.fontFamily": "Hack Nerd Font Mono"' \
+    "home/.config/editors/${editor}/settings.json"
+done
+
+grep -Fq 'mvllow.rose-pine' home/.config/editors/extensions.txt
+
+if grep -RFqi 'graphite' home/.config/editors; then
+  printf 'Graphite must not be part of the managed editor setup.\n' >&2
+  exit 1
+fi
+
+printf 'Checking Git and SSH ownership\n'
+grep -Fq '"~/.gitconfig" = {}' mise.toml
+grep -Fq '"~/.config/git/ignore" = {}' mise.toml
+grep -Fq '"~/.ssh/config" = {}' mise.toml
+grep -Fq 'path = ~/.gitconfig.local' home/.gitconfig
+grep -Fq 'Include ~/.ssh/config.local' home/.ssh/config
+
+if grep -Eqi 'gpgsign[[:space:]]*=[[:space:]]*true' home/.gitconfig; then
+  printf 'Commit signing must be enabled only after local key setup.\n' >&2
+  exit 1
+fi
+
+if grep -Eqi 'user[[:space:]]*=[[:space:]]*|email[[:space:]]*=' home/.gitconfig; then
+  printf 'Public Git config must not contain personal identity.\n' >&2
+  exit 1
+fi
 
 printf 'Checking Ghostty and Herdr ownership\n'
 grep -Fq 'cask "ghostty"' Brewfile
@@ -196,23 +253,20 @@ printf 'Checking global agent mappings\n'
 for agent_target in \
   '"~/AGENTS.md" = { source = "home/AGENTS.md" }' \
   '"~/.agents/AGENTS.md" = { source = "home/AGENTS.md" }' \
-  '"~/.claude/CLAUDE.md" = { source = "home/AGENTS.md" }' \
-  '"~/.codex/AGENTS.md" = { source = "home/AGENTS.md" }'; do
+  '"~/.claude/CLAUDE.md" = { source = "home/AGENTS.md" }'; do
   if ! grep -Fq "$agent_target" mise.toml; then
     printf 'Global agent mapping missing: %s\n' "$agent_target" >&2
     exit 1
   fi
 done
 
-if grep -Fqi 'opencode' mise.toml Brewfile; then
-  printf 'OpenCode must not be part of the managed setup.\n' >&2
+if grep -Eqi 'opencode|codex' mise.toml mise.lock Brewfile; then
+  printf 'OpenCode and Codex must not be part of the managed setup.\n' >&2
   exit 1
 fi
 
 printf 'Checking managed agent CLIs\n'
-for agent_package in \
-  '"npm:@anthropic-ai/claude-code"' \
-  '"npm:@openai/codex"'; do
+for agent_package in '"npm:@anthropic-ai/claude-code"'; do
   if ! grep -Fq "$agent_package" mise.toml; then
     printf 'Managed agent CLI missing: %s\n' "$agent_package" >&2
     exit 1

@@ -37,6 +37,31 @@ check_app() {
   fi
 }
 
+check_editor_extensions() {
+  local editor="$1"
+  local extension_file="$2"
+  local installed_extensions=""
+  local extension=""
+
+  if ! command -v "$editor" >/dev/null 2>&1; then
+    return
+  fi
+
+  installed_extensions="$("$editor" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+
+  while IFS= read -r extension || [[ -n "$extension" ]]; do
+    if [[ -z "$extension" || "$extension" == \#* ]]; then
+      continue
+    fi
+
+    if grep -Fxiq "$extension" <<<"$installed_extensions"; then
+      pass "$editor extension installed: $extension"
+    else
+      fail "$editor extension missing: $extension"
+    fi
+  done <"$extension_file"
+}
+
 printf 'Mac setup doctor\n\n'
 
 if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then
@@ -64,7 +89,8 @@ for command_name in \
   eas \
   react-doctor \
   claude \
-  codex \
+  code \
+  cursor \
   tsc; do
   check_command "$command_name"
 done
@@ -76,16 +102,31 @@ for application_name in \
   "Caffeine" \
   "CleanMyMac" \
   "CleanShot X" \
+  "Cursor" \
   "Ghostty" \
   "ProtonVPN" \
   "Raycast" \
   "Raycast Beta" \
   "RocketSim" \
   "Tailscale" \
+  "Visual Studio Code" \
   "WezTerm" \
   "Xcode"; do
   check_app "$application_name"
 done
+
+check_editor_extensions \
+  code \
+  "$HOME/github/phoenix-error/dotfiles/home/.config/editors/extensions.txt"
+check_editor_extensions \
+  code \
+  "$HOME/github/phoenix-error/dotfiles/home/.config/editors/vscode/extensions.txt"
+check_editor_extensions \
+  cursor \
+  "$HOME/github/phoenix-error/dotfiles/home/.config/editors/extensions.txt"
+check_editor_extensions \
+  cursor \
+  "$HOME/github/phoenix-error/dotfiles/home/.config/editors/cursor/extensions.txt"
 
 if [[ -d "$HOME/Library/Android/sdk" ]]; then
   pass "Android SDK directory exists"
@@ -106,10 +147,23 @@ else
   warn "Global Git name or email is missing"
 fi
 
+if [[ "$(git config --global --bool commit.gpgsign 2>/dev/null)" == "true" ]] &&
+  git config --global user.signingkey >/dev/null 2>&1; then
+  pass "Git SSH commit signing is enabled"
+else
+  warn "Git SSH commit signing is not enabled with a signing key"
+fi
+
 if find "$HOME/.ssh" -maxdepth 1 -type f -name '*.pub' -print -quit 2>/dev/null | grep -q .; then
   pass "At least one SSH public key exists"
 else
   warn "No SSH public key was found"
+fi
+
+if ssh -G github.com >/dev/null 2>&1; then
+  pass "SSH configuration is valid for GitHub"
+else
+  fail "SSH configuration is invalid for GitHub"
 fi
 
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then

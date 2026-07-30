@@ -21,6 +21,10 @@ brew "zoxide"
 # React Native and Android
 cask "android-studio"
 
+# Code editors
+cask "cursor"
+cask "visual-studio-code"
+
 # Productivity and system applications
 cask "alt-tab"
 cask "aqua-voice"

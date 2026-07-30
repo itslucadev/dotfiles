@@ -36,10 +36,6 @@ backend = "npm:@earendil-works/pi-coding-agent"
 version = "0.6.2"
 backend = "npm:@native-sdk/cli"
 
-[[tools."npm:@openai/codex"]]
-version = "0.146.0"
-backend = "npm:@openai/codex"
-
 [[tools."npm:@playwright/cli"]]
 version = "0.1.17"
 backend = "npm:@playwright/cli"
