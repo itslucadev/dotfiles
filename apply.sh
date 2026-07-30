@@ -80,14 +80,7 @@ run mkdir -p "$HOME/Pictures/Screenshots"
 run mkdir -p "$HOME/Developer/appzudio"
 run mise bootstrap macos defaults apply --yes
 
-log "Applying dynamic macOS preferences"
-if [[ "$DRY_RUN" == true ]]; then
-  run "$REPO_ROOT/scripts/configure-macos-extras.sh" --dry-run
-else
-  "$REPO_ROOT/scripts/configure-macos-extras.sh"
-fi
-
-log "Applying keyboard shortcut reservations"
+log "Reserving macOS keyboard shortcuts"
 if [[ "$DRY_RUN" == true ]]; then
   run "$REPO_ROOT/scripts/configure-shortcuts.sh" --dry-run
 else
@@ -103,9 +96,14 @@ fi
 
 log "Installing Mac App Store applications"
 if [[ "$DRY_RUN" == true ]]; then
-  run "$REPO_ROOT/scripts/install-mas-apps.sh" --dry-run
+  run brew bundle --file "$REPO_ROOT/Brewfile.mas"
 else
-  "$REPO_ROOT/scripts/install-mas-apps.sh"
+  if brew bundle --file "$REPO_ROOT/Brewfile.mas"; then
+    printf 'Mac App Store applications are installed.\n'
+  else
+    printf 'Warning: Xcode or RocketSim could not be installed automatically.\n' >&2
+    printf 'Sign in to the App Store, claim both applications if necessary, and run: mise run apps:mas\n'
+  fi
 fi
 
 log "Setup status"

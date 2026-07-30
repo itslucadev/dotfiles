@@ -18,6 +18,8 @@ After that test succeeds, the current Mac can be reset and configured with the s
 - Bun installs all npm-backed global CLIs managed by mise.
 - Dotfiles are applied with `mise bootstrap dotfiles`.
 - macOS preferences are applied with `mise bootstrap macos defaults`.
+- Native declarative configuration is preferred over setup scripts.
+- Scripts are limited to dependency bootstrap, ordered orchestration, unsupported nested preferences, and the verified Raycast Beta installer.
 - All setup operations must be idempotent.
 - The setup must never prune or uninstall software automatically.
 - The public repository must not contain secrets, tokens, private keys, account data, or machine-specific state.
@@ -30,20 +32,31 @@ After that test succeeds, the current Mac can be reset and configured with the s
 ├── bootstrap.sh
 ├── apply.sh
 ├── Brewfile
+├── Brewfile.mas
 ├── mise.toml
 ├── mise.lock
 ├── home/
-│   ├── .zshrc
-│   └── .config/
+│   ├── AGENTS.md
+│   ├── .claude/
+│   │   ├── settings.json
+│   │   └── statusline.ts
+│   ├── .config/
+│   │   ├── nvim/
+│   │   ├── starship.toml
+│   │   └── wezterm/
+│   ├── .zprofile
+│   ├── .zsh_plugins.txt
+│   └── .zshrc
 ├── scripts/
+│   ├── configure-shortcuts.sh
 │   ├── install-raycast-beta.sh
-│   ├── install-mas-apps.sh
 │   └── doctor.sh
 ├── tests/
+│   └── test.sh
 └── README.md
 ```
 
-The exact dotfiles below `home/` will be added one configuration area at a time.
+Additional dotfiles below `home/` are added one reviewed configuration area at a time.
 
 ## Bootstrap Flow
 
@@ -59,9 +72,10 @@ It performs these stages:
 6. Install mise runtimes and npm-backed CLIs.
 7. Apply managed dotfiles.
 8. Apply confirmed macOS defaults.
-9. Install Raycast v2 Beta from Raycast's official distribution.
-10. Attempt Mac App Store installations when the user is already signed in.
-11. Print the remaining manual checklist and run the repository doctor.
+9. Reserve nested system shortcuts that scalar macOS defaults cannot express.
+10. Install Raycast v2 Beta from Raycast's official distribution.
+11. Attempt Mac App Store installations from `Brewfile.mas` when the user is already signed in.
+12. Print the remaining manual checklist and run the repository doctor.
 
 The script must stop on real errors and explain actionable recovery steps.
 
@@ -110,6 +124,18 @@ The Beta installer verifies that the downloaded application has a valid Apple co
 On unsupported macOS versions, the installer skips Raycast v2 Beta with an actionable message instead of breaking the remaining setup.
 
 The target setup excludes Ghostty, KeepingYouAwake, Magnet, Parsec, Stats, and Xcode Beta.
+
+### Homebrew 6 Trust
+
+mise symlinks the root `Brewfile` to `~/.homebrew/Brewfile` so Homebrew's global bundle commands use the repository inventory.
+
+Official Homebrew taps are trusted automatically.
+
+Trust for any future third-party item is declared in `Brewfile` with the narrowest supported `trusted` option.
+
+The generated `~/.homebrew/trust.json` file is not tracked because it is runtime state rather than source configuration.
+
+The target inventory currently uses no third-party taps.
 
 ## Raycast
 
@@ -165,7 +191,15 @@ mise applies supported preferences through its typed macOS bootstrap sections.
 
 Preferences that mise does not expose through friendly keys use explicit typed entries in `[bootstrap.macos.defaults]`.
 
-Complex preferences that require plist arrays or dictionaries, including native screenshot shortcut changes, use small idempotent scripts invoked by mise tasks because the typed defaults backend intentionally supports only scalar values.
+The screenshot directory is a templated string in the raw defaults section, and `apply.sh` creates the directory before applying it.
+
+The native screenshot and Spotlight shortcut reservations require nested plist dictionaries.
+
+Because the typed defaults backend supports only scalar values, one focused idempotent `configure-shortcuts.sh` script owns those nested entries.
+
+mise itself deliberately does not restart applications after changing defaults.
+
+The shortcut script restarts only `SystemUIServer`, which is required for those reservations to take effect.
 
 ## Runtimes
 
@@ -254,6 +288,26 @@ Agent instructions and preferences may be committed only when they contain no cr
 
 Login sessions remain local and are recreated manually.
 
+## Shell, Editor, and Agent Dotfiles
+
+Antidote is the only Zsh plugin manager, and `home/.zsh_plugins.txt` owns the complete plugin inventory and ordering.
+
+Starship renders the prompt, while Zsh owns aliases, shell behavior, and tool activation.
+
+WezTerm uses Kun Chen's visual configuration as its starting point, with the user's retained frame-rate and close behavior.
+
+Lazy.nvim is the only Neovim plugin manager, and plugin declarations live below `home/.config/nvim/lua/plugins/`.
+
+One public `home/AGENTS.md` source is linked into the global locations used by Agents, Claude, Codex, and OpenCode.
+
+Claude's public settings and Bun status line are tracked separately from its credentials, histories, caches, local settings, and generated plugin state.
+
+The managed Claude settings intentionally retain the user's permissive `bypassPermissions` policy and document that choice in the manual checklist.
+
+Codex and OpenCode configuration files that contain credentials or machine-specific state are not copied wholesale.
+
+They require sanitized public baselines before they can be managed.
+
 ## Manual Checklist
 
 The README contains an ordered checklist for:
@@ -294,9 +348,14 @@ Repository tests validate:
 
 - Shell syntax
 - TOML syntax
+- JSON syntax
+- TypeScript transpilation
+- Neovim Lua compilation
 - Brewfile syntax
 - Required files and executable bits
 - Duplicate or excluded packages
+- Zsh and Neovim plugin ownership
+- Homebrew trust ownership
 - Public-repository secret patterns
 - Idempotent dry-run behavior where supported
 - mise configuration and task discovery when mise is available

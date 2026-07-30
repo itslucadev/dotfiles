@@ -42,7 +42,7 @@ Run the bootstrap:
 
 The fixed clone path allows the repository `mise.toml` to serve as the global mise configuration while keeping dotfile sources predictable.
 
-The scripts are idempotent and can be rerun after resolving a manual prerequisite.
+The setup is idempotent and can be rerun after resolving a manual prerequisite.
 
 ## What the Bootstrap Does
 
@@ -54,7 +54,8 @@ The bootstrap:
 - Applies `Brewfile`.
 - Installs GitHub CLI and the remaining native command-line tools.
 - Installs locked mise runtimes and global CLIs.
-- Applies the managed Zsh, Starship, and WezTerm dotfiles.
+- Applies the managed Zsh, Starship, WezTerm, Neovim, Claude, and global agent dotfiles.
+- Links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Creates `~/Developer` as the shared project directory.
 - Applies the confirmed macOS defaults.
 - Reserves shortcuts for Raycast and CleanShot.
@@ -63,6 +64,31 @@ The bootstrap:
 - Runs the setup doctor.
 
 The bootstrap never runs Homebrew cleanup, uninstalls unmanaged applications, or writes directly to the macOS privacy database.
+
+## Declarative Ownership
+
+The repository keeps configuration in the native declarative format of the tool that owns it:
+
+- `Brewfile` owns Homebrew formulae, casks, fonts, and Homebrew 6 trust declarations.
+- `Brewfile.mas` owns Mac App Store applications.
+- `mise.toml` owns runtimes, Bun-backed global CLIs, dotfile symlinks, tasks, and scalar macOS defaults.
+- `mise.lock` contains the resolved mise tool versions and is generated only by mise.
+- `home/` contains public configuration that mise symlinks into the home directory.
+- `home/.zsh_plugins.txt` is the only source of Zsh plugins.
+- `home/.config/nvim/lua/plugins/` is the only source of Neovim plugins.
+
+Only four executable entry points remain:
+
+- `bootstrap.sh` installs the first dependencies needed before mise is available.
+- `apply.sh` runs the setup in the required order because Homebrew must install mise before mise can orchestrate the remaining stages.
+- `scripts/configure-shortcuts.sh` edits the nested `AppleSymbolicHotKeys` dictionary, which mise macOS defaults cannot represent.
+- `scripts/install-raycast-beta.sh` installs and verifies Raycast Beta because it has no official Homebrew cask.
+
+The read-only `scripts/doctor.sh` and `tests/test.sh` inspect the result without configuring the Mac.
+
+The screenshot location is a templated scalar in `mise.toml`.
+
+All other supported macOS settings use mise's friendly or raw defaults sections.
 
 ## Reapply Changes
 
@@ -176,6 +202,38 @@ WezTerm starts from Kun Chen's Rose Pine Moon styling with Hack Nerd Font, trans
 
 Ghostty remains a separate configuration decision and is not installed yet.
 
+## Neovim
+
+mise symlinks the complete Neovim configuration directory.
+
+Lazy.nvim owns Neovim plugins, including Rose Pine, Snacks, Oil, Neogit, Gitsigns, Diffview, and Which Key.
+
+The setup does not install Neovim plugins through Homebrew or another bootstrap script.
+
+## Agent Configuration
+
+One public `home/AGENTS.md` file is symlinked to:
+
+- `~/AGENTS.md`
+- `~/.agents/AGENTS.md`
+- `~/.claude/CLAUDE.md`
+- `~/.codex/AGENTS.md`
+- `~/.config/opencode/AGENTS.md`
+
+This gives the supported agents the same global working rules without maintaining duplicate files.
+
+Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
+
+The Claude configuration intentionally retains Lucas's personal `bypassPermissions` default and skipped permission prompts.
+
+Review that choice before using the setup on another account or an untrusted machine.
+
+Claude authentication, caches, conversation history, local settings, and generated plugin state are not tracked.
+
+The current Codex `config.toml` is not copied because it mixes public preferences with API credentials, local project trust, and machine-specific hooks.
+
+A sanitized Codex baseline will be handled as a separate configuration step.
+
 ## Manual Setup Checklist
 
 ### Apple Account and Mac App Store
@@ -278,6 +336,7 @@ The setup disables the corresponding native screenshot shortcuts.
 ### Agent and Developer Logins
 
 - [ ] Run Claude Code and complete its login.
+- [ ] Review the managed Claude `bypassPermissions` policy before opening untrusted repositories.
 - [ ] Run Codex and complete its login.
 - [ ] Authenticate EAS with `eas login`.
 - [ ] Authenticate Vercel with `vercel login`.
@@ -312,6 +371,20 @@ The intended ownership is:
 macOS shortcut reservations are automated.
 
 Application-specific shortcut assignment remains manual because those applications own their settings and permissions.
+
+## Homebrew 6 Trust
+
+mise symlinks the root `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
+
+Official Homebrew taps require no additional trust.
+
+Any future third-party formula, cask, or command must declare the narrowest possible `trusted` option in `Brewfile`.
+
+The generated `~/.homebrew/trust.json` file is runtime state and is intentionally ignored.
+
+The existing Mac's trust file is not copied because it contains stale entries for tools that this setup no longer manages, including Oh My Posh and the old Homebrew Bun installation.
+
+The current target inventory uses only official Homebrew sources, so it has no third-party trust declarations yet.
 
 ## Updating Tool Versions
 
@@ -348,7 +421,9 @@ Run:
 ./tests/test.sh
 ```
 
-The tests check shell and TOML syntax, Brewfile parsing, executable permissions, dry-run paths, excluded packages, destructive package-manager commands, common secret patterns, and whitespace.
+The tests check shell, TOML, JSON, TypeScript, Lua, and Brewfile syntax.
+
+They also check executable permissions, managed files, dry-run paths, package-manager ownership, Homebrew trust ownership, excluded packages, destructive commands, common secret patterns, typography, and whitespace.
 
 They do not install applications or apply macOS settings.
 
@@ -365,6 +440,7 @@ Never commit:
 - Shell history
 - Agent credentials or conversation histories
 - Application databases, caches, or machine identifiers
+- Generated Homebrew trust state
 
 Use `~/.zshrc.local` for non-secret machine-specific shell settings.
 

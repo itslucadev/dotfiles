@@ -18,6 +18,16 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 - `home/` owns public dotfiles that mise links into the home directory.
 - `scripts/` owns idempotent setup behavior that cannot be expressed safely as scalar mise configuration.
 
+## Homebrew Trust Policy
+
+Declare Homebrew 6 trust only in `Brewfile` with the narrowest possible `trusted` option.
+
+Prefer trusting one formula, cask, or command over an entire third-party tap.
+
+Do not commit or manage the generated `~/.homebrew/trust.json` file.
+
+Do not add a third-party trust unless the matching package is also part of the managed setup.
+
 ## Zsh Plugin Policy
 
 Antidote is the only Zsh plugin manager.
@@ -39,6 +49,16 @@ Preserve the deliberate plugin ordering:
 5. History Substring Search loads after Zsh Syntax Highlighting.
 
 If a plugin needs a native CLI dependency, the CLI may belong in `Brewfile`, but the Zsh plugin still belongs in `home/.zsh_plugins.txt`.
+
+## Neovim Plugin Policy
+
+Lazy.nvim is the only Neovim plugin manager.
+
+Declare Neovim plugins under `home/.config/nvim/lua/plugins/`.
+
+Do not install Neovim plugins through Homebrew or bootstrap scripts.
+
+Native CLI dependencies used by Neovim may belong in `Brewfile`.
 
 ## Secrets
 

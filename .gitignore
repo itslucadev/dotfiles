@@ -27,6 +27,7 @@ home/.config/gh/hosts.yml
 home/.config/configstore/
 home/.claude/.credentials.json
 home/.codex/auth.json
+home/.homebrew/trust.json
 
 # Keys and certificates
 *.key

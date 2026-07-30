@@ -57,10 +57,8 @@ printf 'Checking executable files\n'
 for executable in \
   apply.sh \
   bootstrap.sh \
-  scripts/configure-macos-extras.sh \
   scripts/configure-shortcuts.sh \
   scripts/doctor.sh \
-  scripts/install-mas-apps.sh \
   scripts/install-raycast-beta.sh \
   tests/test.sh; do
   [[ -x "$executable" ]]
@@ -68,20 +66,41 @@ done
 
 printf 'Checking managed configuration files\n'
 for managed_file in \
+  home/.claude/settings.json \
+  home/.claude/statusline.ts \
+  home/.config/nvim/init.lua \
   home/.config/starship.toml \
   home/.config/wezterm/wezterm.lua \
+  home/AGENTS.md \
   home/.zprofile \
   home/.zsh_plugins.txt \
   home/.zshrc; do
   [[ -f "$managed_file" ]]
 done
 
+printf 'Checking JSON syntax\n'
+if command -v jq >/dev/null 2>&1; then
+  jq empty home/.claude/settings.json
+else
+  "$python_command" -m json.tool home/.claude/settings.json >/dev/null
+fi
+
+if command -v bun >/dev/null 2>&1; then
+  bun -e 'new Bun.Transpiler({ loader: "ts" }).transformSync(await Bun.file("home/.claude/statusline.ts").text())'
+fi
+
+if command -v nvim >/dev/null 2>&1; then
+  while IFS= read -r lua_file; do
+    nvim --clean --headless -i NONE \
+      -c "lua assert(loadfile([[${lua_file}]]))" \
+      -c "quit"
+  done < <(find home/.config/nvim -type f -name "*.lua" -print)
+fi
+
 printf 'Checking dry-run paths\n'
 ./bootstrap.sh --dry-run >/dev/null
 ./apply.sh --dry-run >/dev/null
-./scripts/configure-macos-extras.sh --dry-run >/dev/null
 ./scripts/configure-shortcuts.sh --dry-run >/dev/null
-./scripts/install-mas-apps.sh --dry-run >/dev/null
 ./scripts/install-raycast-beta.sh --dry-run >/dev/null
 
 printf 'Checking excluded tools and applications\n'
@@ -118,6 +137,42 @@ for required_plugin in \
     exit 1
   fi
 done
+
+printf 'Checking Neovim plugin ownership\n'
+if ! grep -Fq 'require("lazy").setup("plugins")' home/.config/nvim/lua/plugin.lua; then
+  printf 'Lazy.nvim must own the Neovim plugin inventory.\n' >&2
+  exit 1
+fi
+
+printf 'Checking global agent mappings\n'
+for agent_target in \
+  '"~/AGENTS.md" = { source = "home/AGENTS.md" }' \
+  '"~/.agents/AGENTS.md" = { source = "home/AGENTS.md" }' \
+  '"~/.claude/CLAUDE.md" = { source = "home/AGENTS.md" }' \
+  '"~/.codex/AGENTS.md" = { source = "home/AGENTS.md" }' \
+  '"~/.config/opencode/AGENTS.md" = { source = "home/AGENTS.md" }'; do
+  if ! grep -Fq "$agent_target" mise.toml; then
+    printf 'Global agent mapping missing: %s\n' "$agent_target" >&2
+    exit 1
+  fi
+done
+
+printf 'Checking Homebrew trust ownership\n'
+if [[ -e home/.homebrew/trust.json ]]; then
+  printf 'Generated Homebrew trust state must not be tracked.\n' >&2
+  exit 1
+fi
+
+git check-ignore --quiet home/.homebrew/trust.json
+grep -Fq '"~/.homebrew/Brewfile" = { source = "Brewfile" }' mise.toml
+
+if grep -REn 'HOMEBREW_NO_REQUIRE_TAP_TRUST' \
+  --exclude-dir=.git \
+  --exclude='test.sh' \
+  .; then
+  printf 'Homebrew tap trust must not be disabled.\n' >&2
+  exit 1
+fi
 
 printf 'Checking destructive package-manager operations\n'
 if grep -REn 'brew bundle cleanup|brew uninstall|mise prune' \
