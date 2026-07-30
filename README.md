@@ -54,7 +54,8 @@ The bootstrap:
 - Applies `Brewfile`.
 - Installs GitHub CLI and the remaining native command-line tools.
 - Installs locked mise runtimes and global CLIs.
-- Applies the minimal shell dotfiles.
+- Applies the managed Zsh, Starship, and WezTerm dotfiles.
+- Creates `~/Developer` as the shared project directory.
 - Applies the confirmed macOS defaults.
 - Reserves shortcuts for Raycast and CleanShot.
 - Installs the signed Raycast v2 Beta beside Raycast v1.
@@ -135,6 +136,37 @@ All npm-backed CLIs are installed by Bun through mise.
 Portless, Higgsfield CLI, SnapAI, and Firecrawl CLI are intentionally excluded.
 
 Global `npm` and `undici` are not installed as separate tools.
+
+## Shell and Terminal
+
+The interactive stack is:
+
+- Zsh as the shell.
+- Antidote as the Zsh plugin manager.
+- Starship as the prompt renderer.
+- WezTerm as the primary terminal.
+
+Oh My Zsh and Oh My Posh are not installed.
+
+Antidote loads:
+
+- Zsh Completions
+- ez-compinit
+- FZF Tab
+- Zsh Autosuggestions
+- Zsh You Should Use
+- Zsh Bat
+- Zsh Syntax Highlighting
+
+The shell also configures FZF, Eza, Zoxide, Bat, Neovim, Android SDK paths, and mise activation.
+
+The `dev` alias opens `~/Developer`.
+
+The `appzudio` alias opens `~/Developer/appzudio`.
+
+WezTerm starts from Kun Chen's Rose Pine Moon styling with Hack Nerd Font, transparency, blur, minimal tabs, and resize-only window decorations.
+
+Ghostty remains a separate configuration decision and is not installed yet.
 
 ## Manual Setup Checklist
 
@@ -326,7 +358,11 @@ Never commit:
 - Agent credentials or conversation histories
 - Application databases, caches, or machine identifiers
 
-Use `~/.zshrc.local`, ignored mise local configuration, the macOS Keychain, or the tool's own secure storage for machine-specific values.
+Use `~/.zshrc.local` for non-secret machine-specific shell settings.
+
+The repository does not yet prescribe a secrets backend.
+
+The macOS Keychain, a dedicated CLI keychain, and Doppler will be evaluated before secret loading is automated.
 
 ## Design
 

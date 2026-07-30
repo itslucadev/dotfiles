@@ -38,7 +38,10 @@ _.path = [
 
 [dotfiles]
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
+"~/.config/starship.toml" = {}
+"~/.config/wezterm/wezterm.lua" = {}
 "~/.zprofile" = {}
+"~/.zsh_plugins.txt" = {}
 "~/.zshrc" = {}
 
 [bootstrap.macos.dock]

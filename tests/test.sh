@@ -66,6 +66,16 @@ for executable in \
   [[ -x "$executable" ]]
 done
 
+printf 'Checking managed configuration files\n'
+for managed_file in \
+  home/.config/starship.toml \
+  home/.config/wezterm/wezterm.lua \
+  home/.zprofile \
+  home/.zsh_plugins.txt \
+  home/.zshrc; do
+  [[ -f "$managed_file" ]]
+done
+
 printf 'Checking dry-run paths\n'
 ./bootstrap.sh --dry-run >/dev/null
 ./apply.sh --dry-run >/dev/null
