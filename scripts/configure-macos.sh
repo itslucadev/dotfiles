@@ -3,6 +3,7 @@
 set -Eeuo pipefail
 
 DRY_RUN=false
+readonly screenshots_directory="$HOME/Pictures/Screenshots"
 
 if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=true
@@ -12,7 +13,7 @@ elif [[ "$#" -gt 0 ]]; then
 fi
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
-  printf 'Shortcut configuration is available on macOS only.\n'
+  printf 'macOS configuration is available on macOS only.\n'
   exit 0
 fi
 
@@ -22,9 +23,13 @@ fi
 readonly shortcut_ids=(28 29 30 31 64 184)
 
 if [[ "$DRY_RUN" == true ]]; then
+  printf 'Would store macOS screenshots in %s.\n' "$screenshots_directory"
   printf 'Would disable macOS symbolic hotkeys: %s\n' "${shortcut_ids[*]}"
   exit 0
 fi
+
+mkdir -p "$screenshots_directory"
+defaults write com.apple.screencapture location -string "$screenshots_directory"
 
 readonly preferences_file="$(mktemp)"
 trap 'rm -f "$preferences_file"' EXIT
@@ -53,3 +58,4 @@ defaults import com.apple.symbolichotkeys "$preferences_file" >/dev/null
 killall SystemUIServer >/dev/null 2>&1 || true
 
 printf 'Reserved macOS shortcuts for Raycast and CleanShot.\n'
+printf 'Configured the macOS screenshot directory.\n'

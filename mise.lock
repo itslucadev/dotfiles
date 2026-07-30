@@ -24,6 +24,10 @@ backend = "core:node"
 checksum = "sha256:eb02f7fab96d3d67de40c5ec8566096fcb4c2026728787683ae5a97eb612b941"
 url = "https://nodejs.org/dist/v24.18.1/node-v24.18.1-darwin-arm64.tar.gz"
 
+[[tools."npm:@anthropic-ai/claude-code"]]
+version = "2.1.220"
+backend = "npm:@anthropic-ai/claude-code"
+
 [[tools."npm:@earendil-works/pi-coding-agent"]]
 version = "0.82.1"
 backend = "npm:@earendil-works/pi-coding-agent"
@@ -31,6 +35,10 @@ backend = "npm:@earendil-works/pi-coding-agent"
 [[tools."npm:@native-sdk/cli"]]
 version = "0.6.2"
 backend = "npm:@native-sdk/cli"
+
+[[tools."npm:@openai/codex"]]
+version = "0.146.0"
+backend = "npm:@openai/codex"
 
 [[tools."npm:@playwright/cli"]]
 version = "0.1.17"

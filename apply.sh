@@ -80,11 +80,11 @@ run mkdir -p "$HOME/Pictures/Screenshots"
 run mkdir -p "$HOME/Developer/appzudio"
 run mise bootstrap macos defaults apply --yes
 
-log "Reserving macOS keyboard shortcuts"
+log "Applying dynamic and nested macOS settings"
 if [[ "$DRY_RUN" == true ]]; then
-  run "$REPO_ROOT/scripts/configure-shortcuts.sh" --dry-run
+  run "$REPO_ROOT/scripts/configure-macos.sh" --dry-run
 else
-  "$REPO_ROOT/scripts/configure-shortcuts.sh"
+  "$REPO_ROOT/scripts/configure-macos.sh"
 fi
 
 log "Installing Raycast v2 Beta"
@@ -110,7 +110,7 @@ log "Setup status"
 if [[ "$DRY_RUN" == true ]]; then
   run "$REPO_ROOT/scripts/doctor.sh"
 else
-  "$REPO_ROOT/scripts/doctor.sh" || true
+  mise exec -- "$REPO_ROOT/scripts/doctor.sh" || true
 fi
 
 printf '\nRepository setup finished.\n'

@@ -2,7 +2,7 @@ min_version = "2026.7.17"
 
 [settings]
 lockfile = true
-dotfiles.root = "{{ env.HOME }}/github/phoenix-error/dotfiles/home"
+dotfiles.root = "~/github/phoenix-error/dotfiles/home"
 dotfiles.default_mode = "symlink"
 
 [settings.npm]
@@ -12,8 +12,10 @@ package_manager = "bun"
 bun = "latest"
 java = "zulu-17"
 node = "lts"
+"npm:@anthropic-ai/claude-code" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:@native-sdk/cli" = "latest"
+"npm:@openai/codex" = "latest"
 "npm:@playwright/cli" = "latest"
 "npm:@swmansion/argent" = "latest"
 "npm:@tobilu/qmd" = "latest"
@@ -77,7 +79,7 @@ tap_to_click = true
 NSGlobalDomain = { AppleInterfaceStyle = "Dark", AppleShowAllExtensions = true, _HIHideMenuBar = true }
 "com.apple.desktopservices" = { DSDontWriteNetworkStores = true, DSDontWriteUSBStores = true }
 "com.apple.finder" = { AppleShowAllExtensions = true, CreateDesktop = false }
-"com.apple.screencapture" = { "disable-shadow" = true, location = "{{ env.HOME }}/Pictures/Screenshots" }
+"com.apple.screencapture" = { "disable-shadow" = true }
 
 [tasks.apply]
 description = "Apply the complete setup to an already bootstrapped Mac"
@@ -95,9 +97,9 @@ run = "./scripts/install-raycast-beta.sh"
 description = "Report setup status and remaining manual actions"
 run = "./scripts/doctor.sh"
 
-[tasks."macos:shortcuts"]
-description = "Reserve nested macOS keyboard shortcuts that scalar defaults cannot represent"
-run = "./scripts/configure-shortcuts.sh"
+[tasks.macos]
+description = "Apply dynamic and nested macOS preferences unsupported by mise defaults"
+run = "./scripts/configure-macos.sh"
 
 [tasks.test]
 description = "Run repository validation without changing the Mac"

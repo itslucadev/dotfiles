@@ -10,7 +10,7 @@ Implement the approved public macOS setup without applying it to the current Mac
 2. Configure mise runtimes, Bun-backed npm CLIs, environment variables, tasks, lockfiles, dotfiles, and macOS defaults.
 3. Create idempotent bootstrap and reapply entry points.
 4. Create a safe installer for Raycast v2 Beta and use the declarative Mac App Store Brewfile directly.
-5. Create the native shortcut reservation script.
+5. Create one focused adapter for the dynamic screenshot path and native shortcut reservations that mise defaults cannot represent.
 6. Create a read-only doctor and repository test suite.
 7. Document automatic behavior, manual permissions, authentication, React Native setup, and the new-Mac acceptance test.
 8. Validate every configuration without executing the real setup.

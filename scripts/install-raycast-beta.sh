@@ -5,6 +5,34 @@ set -Eeuo pipefail
 readonly RAYCAST_PAGE_URL="https://www.raycast.com/new"
 readonly APPLICATION_PATH="/Applications/Raycast Beta.app"
 readonly EXPECTED_BUNDLE_ID="com.raycast-x.macos"
+readonly EXPECTED_TEAM_ID="SY64MV22J9"
+
+verify_application() {
+  local application_path="$1"
+  local bundle_id
+  local team_id
+
+  bundle_id="$(
+    /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' \
+      "$application_path/Contents/Info.plist"
+  )"
+  if [[ "$bundle_id" != "$EXPECTED_BUNDLE_ID" ]]; then
+    printf 'Unexpected Raycast Beta bundle identifier: %s\n' "$bundle_id" >&2
+    return 1
+  fi
+
+  team_id="$(
+    codesign -dv --verbose=4 "$application_path" 2>&1 |
+      awk -F= '/^TeamIdentifier=/{print $2; exit}'
+  )"
+  if [[ "$team_id" != "$EXPECTED_TEAM_ID" ]]; then
+    printf 'Unexpected Raycast Beta signing team: %s\n' "${team_id:-missing}" >&2
+    return 1
+  fi
+
+  codesign --verify --deep --strict "$application_path"
+  spctl --assess --type execute "$application_path"
+}
 
 if [[ "${1:-}" == "--dry-run" ]]; then
   printf 'Would download and verify Raycast v2 Beta from %s.\n' "$RAYCAST_PAGE_URL"
@@ -26,7 +54,7 @@ if (( macos_major < 26 )); then
 fi
 
 if [[ -d "$APPLICATION_PATH" ]]; then
-  if codesign --verify --deep --strict "$APPLICATION_PATH" >/dev/null 2>&1; then
+  if verify_application "$APPLICATION_PATH" >/dev/null 2>&1; then
     printf 'Raycast v2 Beta is already installed and will update itself.\n'
     exit 0
   fi
@@ -70,18 +98,9 @@ if [[ ! -d "$source_application" ]]; then
   exit 1
 fi
 
-readonly bundle_id="$(
-  /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$source_application/Contents/Info.plist"
-)"
-if [[ "$bundle_id" != "$EXPECTED_BUNDLE_ID" ]]; then
-  printf 'Unexpected Raycast Beta bundle identifier: %s\n' "$bundle_id" >&2
-  exit 1
-fi
-
-codesign --verify --deep --strict "$source_application"
-spctl --assess --type execute "$source_application"
+verify_application "$source_application"
 
 sudo ditto "$source_application" "$APPLICATION_PATH"
-codesign --verify --deep --strict "$APPLICATION_PATH"
+verify_application "$APPLICATION_PATH"
 
 printf 'Raycast v2 Beta was installed from the official signed disk image.\n'

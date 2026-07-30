@@ -62,6 +62,8 @@ for command_name in \
   argent \
   eas \
   react-doctor \
+  claude \
+  codex \
   tsc; do
   check_command "$command_name"
 done

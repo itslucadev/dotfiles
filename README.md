@@ -77,18 +77,18 @@ The repository keeps configuration in the native declarative format of the tool 
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
 - `home/.config/nvim/lua/plugins/` is the only source of Neovim plugins.
 
-Only four executable entry points remain:
+Only four setup entry points can change the Mac:
 
 - `bootstrap.sh` installs the first dependencies needed before mise is available.
 - `apply.sh` runs the setup in the required order because Homebrew must install mise before mise can orchestrate the remaining stages.
-- `scripts/configure-shortcuts.sh` edits the nested `AppleSymbolicHotKeys` dictionary, which mise macOS defaults cannot represent.
+- `scripts/configure-macos.sh` owns the dynamic screenshot path and nested `AppleSymbolicHotKeys` dictionary that mise macOS defaults cannot represent correctly.
 - `scripts/install-raycast-beta.sh` installs and verifies Raycast Beta because it has no official Homebrew cask.
 
 The read-only `scripts/doctor.sh` and `tests/test.sh` inspect the result without configuring the Mac.
 
-The screenshot location is a templated scalar in `mise.toml`.
+All scalar macOS settings with static values use mise's friendly or raw defaults sections.
 
-All other supported macOS settings use mise's friendly or raw defaults sections.
+mise 2026.7.17 does not render templates inside raw macOS default values, so the user-specific screenshot path cannot live there without becoming a literal `{{ env.HOME }}` string.
 
 ## Reapply Changes
 
@@ -143,6 +143,8 @@ mise manages:
 - Agent Device
 - AgentMail CLI
 - Argent
+- Claude Code
+- Codex CLI
 - EAS CLI
 - Native SDK CLI
 - NotebookLM CLI
@@ -223,6 +225,8 @@ One public `home/AGENTS.md` file is symlinked to:
 This gives the supported agents the same global working rules without maintaining duplicate files.
 
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
+
+Claude Code and Codex CLI are installed as Bun-backed npm tools through mise.
 
 The Claude configuration intentionally retains Lucas's personal `bypassPermissions` default and skipped permission prompts.
 
@@ -421,9 +425,11 @@ Run:
 ./tests/test.sh
 ```
 
-The tests check shell, TOML, JSON, TypeScript, Lua, and Brewfile syntax.
+The tests check shell, TOML, JSON, TypeScript, Lua, and Brewfile syntax when their validators are available.
 
 They also check executable permissions, managed files, dry-run paths, package-manager ownership, Homebrew trust ownership, excluded packages, destructive commands, common secret patterns, typography, and whitespace.
+
+When mise is available, they create an isolated temporary home and verify task discovery plus every dotfile source path.
 
 They do not install applications or apply macOS settings.
 

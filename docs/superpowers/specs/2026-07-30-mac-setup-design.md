@@ -48,7 +48,7 @@ After that test succeeds, the current Mac can be reset and configured with the s
 │   ├── .zsh_plugins.txt
 │   └── .zshrc
 ├── scripts/
-│   ├── configure-shortcuts.sh
+│   ├── configure-macos.sh
 │   ├── install-raycast-beta.sh
 │   └── doctor.sh
 ├── tests/
@@ -72,7 +72,7 @@ It performs these stages:
 6. Install mise runtimes and npm-backed CLIs.
 7. Apply managed dotfiles.
 8. Apply confirmed macOS defaults.
-9. Reserve nested system shortcuts that scalar macOS defaults cannot express.
+9. Apply the dynamic screenshot path and nested system shortcuts that scalar macOS defaults cannot express.
 10. Install Raycast v2 Beta from Raycast's official distribution.
 11. Attempt Mac App Store installations from `Brewfile.mas` when the user is already signed in.
 12. Print the remaining manual checklist and run the repository doctor.
@@ -119,7 +119,7 @@ RocketSim is installed through the Mac App Store because it has no Homebrew cask
 
 Raycast v2 Beta is installed separately from Raycast's official download because it has no official Homebrew cask.
 
-The Beta installer verifies that the downloaded application has a valid Apple code signature before copying it into `/Applications`.
+The Beta installer verifies the bundle identifier, Raycast's Apple Developer Team identifier, and the valid Apple code signature before copying it into `/Applications`.
 
 On unsupported macOS versions, the installer skips Raycast v2 Beta with an actionable message instead of breaking the remaining setup.
 
@@ -191,11 +191,13 @@ mise applies supported preferences through its typed macOS bootstrap sections.
 
 Preferences that mise does not expose through friendly keys use explicit typed entries in `[bootstrap.macos.defaults]`.
 
-The screenshot directory is a templated string in the raw defaults section, and `apply.sh` creates the directory before applying it.
+mise 2026.7.17 does not render templates inside raw macOS default values.
+
+The user-specific screenshot directory therefore remains in the focused macOS adapter script so `$HOME` resolves before the value is written.
 
 The native screenshot and Spotlight shortcut reservations require nested plist dictionaries.
 
-Because the typed defaults backend supports only scalar values, one focused idempotent `configure-shortcuts.sh` script owns those nested entries.
+Because the typed defaults backend supports only static scalar values, one focused idempotent `configure-macos.sh` script owns the dynamic screenshot path and those nested entries.
 
 mise itself deliberately does not restart applications after changing defaults.
 
@@ -224,8 +226,10 @@ Each direct CLI has its own `npm:<package>` entry so mise can manage and verify 
 
 The initial retained CLI inventory is:
 
+- `@anthropic-ai/claude-code`
 - `@earendil-works/pi-coding-agent`
 - `@native-sdk/cli`
+- `@openai/codex`
 - `@playwright/cli`
 - `@swmansion/argent`
 - `@tobilu/qmd`
@@ -349,9 +353,9 @@ Repository tests validate:
 - Shell syntax
 - TOML syntax
 - JSON syntax
-- TypeScript transpilation
-- Neovim Lua compilation
-- Brewfile syntax
+- TypeScript transpilation when Bun is available
+- Neovim Lua compilation when Neovim is available
+- Brewfile syntax when Homebrew is available
 - Required files and executable bits
 - Duplicate or excluded packages
 - Zsh and Neovim plugin ownership

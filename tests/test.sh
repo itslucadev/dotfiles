@@ -57,7 +57,7 @@ printf 'Checking executable files\n'
 for executable in \
   apply.sh \
   bootstrap.sh \
-  scripts/configure-shortcuts.sh \
+  scripts/configure-macos.sh \
   scripts/doctor.sh \
   scripts/install-raycast-beta.sh \
   tests/test.sh; do
@@ -86,7 +86,12 @@ else
 fi
 
 if command -v bun >/dev/null 2>&1; then
-  bun -e 'new Bun.Transpiler({ loader: "ts" }).transformSync(await Bun.file("home/.claude/statusline.ts").text())'
+  typescript_output="$(mktemp)"
+  bun build home/.claude/statusline.ts \
+    --target=bun \
+    --outfile="$typescript_output" \
+    >/dev/null
+  rm -f "$typescript_output"
 fi
 
 if command -v nvim >/dev/null 2>&1; then
@@ -100,7 +105,7 @@ fi
 printf 'Checking dry-run paths\n'
 ./bootstrap.sh --dry-run >/dev/null
 ./apply.sh --dry-run >/dev/null
-./scripts/configure-shortcuts.sh --dry-run >/dev/null
+./scripts/configure-macos.sh --dry-run >/dev/null
 ./scripts/install-raycast-beta.sh --dry-run >/dev/null
 
 printf 'Checking excluded tools and applications\n'
@@ -157,6 +162,16 @@ for agent_target in \
   fi
 done
 
+printf 'Checking managed agent CLIs\n'
+for agent_package in \
+  '"npm:@anthropic-ai/claude-code"' \
+  '"npm:@openai/codex"'; do
+  if ! grep -Fq "$agent_package" mise.toml; then
+    printf 'Managed agent CLI missing: %s\n' "$agent_package" >&2
+    exit 1
+  fi
+done
+
 printf 'Checking Homebrew trust ownership\n'
 if [[ -e home/.homebrew/trust.json ]]; then
   printf 'Generated Homebrew trust state must not be tracked.\n' >&2
@@ -173,6 +188,45 @@ if grep -REn 'HOMEBREW_NO_REQUIRE_TAP_TRUST' \
   printf 'Homebrew tap trust must not be disabled.\n' >&2
   exit 1
 fi
+
+printf 'Checking mise bootstrap configuration\n'
+if grep -Eq '^dotfiles\.root = "\{\{' mise.toml ||
+  grep -E '^"com\.apple\.screencapture".*\{\{' mise.toml; then
+  printf 'mise does not render templates in these bootstrap fields.\n' >&2
+  exit 1
+fi
+
+grep -Fq 'defaults write com.apple.screencapture location' \
+  scripts/configure-macos.sh
+
+mise_command="${MISE_BIN:-}"
+if [[ -z "$mise_command" ]] && command -v mise >/dev/null 2>&1; then
+  mise_command="$(command -v mise)"
+fi
+
+if [[ -n "$mise_command" ]]; then
+  CI=1 "$mise_command" tasks ls >/dev/null
+
+  validation_home="$(mktemp -d)"
+  validation_status="$(mktemp)"
+  trap 'rm -rf "$validation_home"; rm -f "$validation_status"' EXIT
+  mkdir -p "$validation_home/github/phoenix-error"
+  ln -s "$REPO_ROOT" "$validation_home/github/phoenix-error/dotfiles"
+
+  HOME="$validation_home" CI=1 "$mise_command" \
+    bootstrap dotfiles status >"$validation_status"
+
+  if grep -Fq 'source missing' "$validation_status"; then
+    printf 'mise reports a missing dotfile source.\n' >&2
+    cat "$validation_status" >&2
+    exit 1
+  fi
+else
+  printf 'SKIP  mise executable is unavailable\n'
+fi
+
+printf 'Checking Raycast signing identity\n'
+grep -Fq 'EXPECTED_TEAM_ID="SY64MV22J9"' scripts/install-raycast-beta.sh
 
 printf 'Checking destructive package-manager operations\n'
 if grep -REn 'brew bundle cleanup|brew uninstall|mise prune' \
