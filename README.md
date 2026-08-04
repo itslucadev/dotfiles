@@ -165,7 +165,7 @@ Inspect the setup without changing the Mac:
 
 ## Managed Applications
 
-Homebrew installs:
+Homebrew installs these applications:
 
 - AltTab
 - Android Studio
@@ -186,24 +186,30 @@ Homebrew installs:
 - Hoppscotch
 - IINA
 - ImageOptim
+- Linear
 - LocalSend
 - Minecraft
 - MultiViewer
+- Obsidian
 - OpenUsage
 - Pear Desktop for YouTube Music
 - Proton VPN
 - Raycast v1
 - Spark
 - Tailscale
+- TextMate
+- Tower
 - Visual Studio Code
 - WezTerm
 - WhatsApp
 
-Homebrew also installs Fastlane, Git LFS, the Infisical CLI, the Maestro CLI, the Sentry CLI, Tmux, and YouTube-DLP.
+Homebrew also installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, Fastlane, Git LFS, Gitleaks, the Infisical CLI, the Linear CLI, the Maestro CLI, Mole, the Resend CLI, the Sentry CLI, the Sentry Wizard, Tmux, and YouTube-DLP.
 
-The Mac App Store installs Actions, Apple Developer, Folder Quick Look, Helm, Notability, Obsidian Web Clipper, RocketSim, TestFlight, Timepage, and stable Xcode.
+The Mac App Store installs Actions, Folder Quick Look, Helm, Obsidian Web Clipper, RocketSim, Timepage, and stable Xcode.
 
-Magnet and Mela are installed on the current Mac but are deliberately not reinstalled. Raycast Window Management replaces Magnet.
+Apple Developer, TestFlight, Notability, Magnet, Mela, Arc, Slack, Figma, the Affinity suite, GitHub Desktop, Parsec, Proton Pass, KeepingYouAwake, Stats, and Stremio are deliberately excluded. Raycast Window Management replaces Magnet.
+
+Only Hack Nerd Font is installed. The Fira Code, JetBrains Mono, Meslo, and Symbols Only Nerd Fonts are deliberately excluded.
 
 Raycast v2 Beta comes from Raycast's official signed disk image because no official Homebrew cask exists.
 
@@ -224,20 +230,17 @@ mise manages:
 - Ruff
 - Zulu JDK 17
 - Agent Device
-- AgentMail CLI
 - Argent
 - Biome
 - Chrome DevTools axi
-- Claude Code
+- Codex CLI
 - Context7 CLI
 - EAS CLI
 - gh-axi
 - Lavish CLI
-- Native SDK CLI
 - NotebookLM CLI
-- OpenSrc
+- Oh My Pi
 - Pi Coding Agent
-- Playwright CLI
 - PostHog CLI
 - Prettier
 - Pyright
@@ -258,7 +261,7 @@ Python, uv, and Ruff are installed directly by mise.
 
 The global `UV_PYTHON` setting points uv at the Python interpreter selected by the active mise configuration, so a project-level mise version can still override the global Python 3.12 default.
 
-Codex CLI, Portless, Higgsfield CLI, SnapAI, and Firecrawl CLI are intentionally excluded.
+AgentMail CLI, OpenSrc, the Native SDK CLI, the Playwright CLI, Portless, Higgsfield CLI, SnapAI, and Firecrawl CLI are intentionally excluded.
 
 YouTube-DLP and the new Sentry CLI are installed through Homebrew because they are native command-line tools rather than project runtimes.
 
@@ -341,7 +344,7 @@ Ruff formats Python, applies safe fixes, and organizes imports on save.
 
 Project-level `pyproject.toml` or `ruff.toml` settings take priority over the global editor defaults.
 
-The shared React and React Native setup includes Biome, Prettier, ESLint, Tailwind CSS IntelliSense, Pretty TypeScript Errors, and the official Expo Tools extension.
+The shared React and React Native setup includes Biome, Prettier, ESLint, Tailwind CSS IntelliSense, and Pretty TypeScript Errors.
 
 Biome formats JavaScript, JSX, TypeScript, TSX, JSON, and JSONC on save.
 
@@ -349,9 +352,13 @@ Prettier formats CSS, SCSS, HTML, GraphQL, Markdown, and YAML on save.
 
 Each project should still declare its own Biome, Prettier, and ESLint dependencies and configuration so the repository controls exact tool versions and rules.
 
-Common extensions have one shared inventory.
+Both editors deliberately run the same extension set.
 
-VS Code and Cursor each have a second inventory for editor-specific extensions.
+`home/.config/editors/extensions.txt` is the shared inventory and holds every extension that both editors can install.
+
+The two editor-specific inventories exist only for extensions that genuinely cannot be shared. Today that is a single pair: Microsoft licenses Pylance for official Microsoft products only, so VS Code gets `ms-python.vscode-pylance` and Cursor gets its replacement `anysphere.cursorpyright`.
+
+Add a new extension to the shared inventory unless installing it in the other editor is impossible.
 
 `scripts/install-editor-extensions.sh` is the single adapter that reads those declarative inventories and invokes each editor's native `--install-extension` command.
 
@@ -400,7 +407,13 @@ OpenCode is not part of the setup.
 
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
 
-Claude Code is installed as a Bun-backed npm tool through mise.
+Claude Code is installed through its Homebrew cask.
+
+Anthropic deprecated the npm package in January 2026 with version 2.1.15 and now ships a native binary, so the runtime-package rule does not apply to it.
+
+The native binary updates itself into `~/.local/share/claude`. That directory belongs to Claude Code's own updater and is not managed by this repository.
+
+The Codex CLI and Oh My Pi are still current npm packages, so mise installs both.
 
 Claude agent teams use Tmux split panes.
 
@@ -416,11 +429,11 @@ The Pyright and TypeScript LSP plugins remain enabled so Claude receives diagnos
 
 Claude authentication, caches, conversation history, local settings, and generated plugin state are not tracked.
 
-The [ChatGPT desktop application](https://learn.chatgpt.com/docs/app) includes the Codex desktop experience.
+The [ChatGPT desktop application](https://learn.chatgpt.com/docs/app) includes the Codex desktop experience, and mise installs the standalone Codex CLI beside it.
 
-The standalone Codex CLI and its configuration are not part of this setup.
+Oh My Pi extends the Pi coding agent into a multi-agent orchestration setup, and Herdr installs the matching integrations for Claude Code, Cursor, and Pi.
 
-The Claude Codex plugin and its marketplace are also excluded.
+The Claude Codex plugin and its marketplace remain excluded.
 
 The global agent instructions tell agents to use PostHog CLI for deterministic PostHog work without storing its credentials in the repository.
 

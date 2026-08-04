@@ -1,23 +1,32 @@
 # Command-line tools and shared native dependencies
+brew "agent-browser"
 brew "antidote"
+brew "asc"
 brew "bat"
+brew "bfg"
+brew "cameroncooke/axe/axe", trusted: true
 brew "cocoapods"
 brew "eza"
 brew "fd"
 brew "fastlane"
 brew "fzf"
 brew "getsentry/tools/sentry", trusted: true
+brew "getsentry/tools/sentry-wizard", trusted: true
 brew "gh"
 brew "git"
 brew "git-lfs"
+brew "gitleaks"
 brew "herdr"
 brew "infisical/get-cli/infisical", trusted: true
 brew "jq"
 brew "lazygit"
 brew "mas"
-brew "mobile-dev-inc/tap/maestro", trusted: true
 brew "mise"
+brew "mobile-dev-inc/tap/maestro", trusted: true
+brew "mole"
+brew "resend/cli/resend", trusted: true
 brew "ripgrep"
+brew "schpet/tap/linear", trusted: true
 brew "starship"
 brew "tmux"
 brew "watchman"
@@ -30,7 +39,13 @@ cask "expo-orbit"
 
 # Code editors
 cask "cursor"
+cask "textmate"
 cask "visual-studio-code"
+
+# Agents
+# Claude Code uses the Homebrew cask because Anthropic deprecated the npm
+# package in January 2026 in favour of the native binary.
+cask "claude-code"
 
 # Browsers and communication
 cask "chatgpt"
@@ -43,6 +58,7 @@ cask "whatsapp"
 cask "hoppscotch"
 cask "localsend"
 cask "openusage"
+cask "tower"
 
 # Media and file utilities
 cask "iina"
@@ -56,6 +72,8 @@ cask "aqua-voice"
 cask "caffeine"
 cask "cleanshot"
 cask "cleanmymac"
+cask "linear"
+cask "obsidian"
 cask "protonvpn"
 cask "raycast"
 cask "readdle-spark"

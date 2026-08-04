@@ -20,4 +20,4 @@
 
 https://github.com/mattpocock/skills/tree/2ab958093e83e0ec752e6c1c5932da465bf23e0c/skills/engineering|ask-matt code-review codebase-design diagnosing-bugs domain-modeling grill-with-docs implement improve-codebase-architecture prototype research resolving-merge-conflicts tdd to-spec to-tickets triage wayfinder
 https://github.com/mattpocock/skills/tree/2ab958093e83e0ec752e6c1c5932da465bf23e0c/skills/productivity|grill-me grilling handoff teach writing-great-skills
-https://github.com/mattpocock/skills/tree/2ab958093e83e0ec752e6c1c5932da465bf23e0c/skills/misc|git-guardrails-claude-code migrate-to-shoehorn scaffold-exercises setup-pre-commit
+https://github.com/mattpocock/skills/tree/2ab958093e83e0ec752e6c1c5932da465bf23e0c/skills/misc|git-guardrails-claude-code scaffold-exercises setup-pre-commit

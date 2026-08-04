@@ -25,9 +25,26 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 
 Do not add a second setup entry point. New setup behavior belongs in `bootstrap.sh` or in a `scripts/` helper that it calls.
 
+## Package Manager Ownership
+
+Every tool has exactly one installation channel. Decide it with this rule, in order:
+
+1. A graphical application belongs in `Brewfile` as a cask, or in `Brewfile.mas` when the Mac App Store is its only channel.
+2. A language runtime belongs in `mise.toml`. That covers Node, Bun, Python, Java, uv, and Ruff.
+3. Anything installed through a language runtime belongs in `mise.toml` with its backend prefix, so `npm:` or `pipx:`. mise pins it in `mise.lock` and enforces the seven-day minimum release age, which Homebrew cannot do.
+4. Everything else is a native binary and belongs in `Brewfile` as a formula.
+
+A tool that ships both a native binary and a runtime package follows rule 3 unless its vendor deprecated the runtime package, in which case it follows rule 4.
+
+Never declare the same tool in both `Brewfile` and `mise.toml`.
+
+Before adding a tool, check the other inventory for an existing entry.
+
 ## Editor Extension Policy
 
-Keep shared editor extensions in the shared inventory and add an editor-specific entry only when compatibility requires it.
+Both editors run the same extension set.
+
+Put every extension in the shared inventory. Use an editor-specific inventory only when the extension cannot be installed in the other editor at all, and record the reason in a comment.
 
 Install extensions only through `scripts/install-editor-extensions.sh` or the matching mise task.
 

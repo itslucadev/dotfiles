@@ -1,19 +1,16 @@
+# Extensions shared by VS Code and Cursor.
+# Both editors receive every entry here, so keep editor-specific lists empty
+# unless an extension genuinely cannot be installed in the other editor.
+anthropic.claude-code
 biomejs.biome
 bradlc.vscode-tailwindcss
 charliermarsh.ruff
 dbaeumer.vscode-eslint
+eamodio.gitlens
 esbenp.prettier-vscode
-expo.vscode-expo-tools
-fwcd.kotlin
-golang.go
-llvm-vs-code-extensions.lldb-dap
-llvm-vs-code-extensions.vscode-clangd
-ms-dotnettools.vscode-dotnet-runtime
 ms-python.debugpy
 ms-python.python
 ms-python.vscode-python-envs
 mvllow.rose-pine
-redhat.java
-rust-lang.rust-analyzer
-swiftlang.swift-vscode
+sukarth.vscode-modernized
 yoavbls.pretty-ts-errors
