@@ -347,6 +347,14 @@ The shared React and React Native setup includes Biome, Prettier, ESLint, Tailwi
 
 Swift, Java, Kotlin, clangd, LLDB, and the .NET extensions are deliberately excluded. Xcode owns Swift and Objective-C, Android Studio owns Java and Kotlin, and both are part of this setup.
 
+Fallow reports unused code, circular dependencies, duplication, complexity hotspots, and architecture boundary violations in TypeScript and JavaScript.
+
+Homebrew installs its `fallow` command, and both editors install the `fallow-rs.fallow-vscode` extension, which is published on the Visual Studio Marketplace and on Open VSX.
+
+The Homebrew formula builds only the CLI crate, so it does not provide `fallow-lsp`. The language server therefore resolves a project-local install, and every project that wants editor diagnostics should add `fallow` as a development dependency at the matching version.
+
+The extension keeps its `fallow.autoDownload` default, so it fetches a managed language server when a project has none.
+
 Biome formats JavaScript, JSX, TypeScript, TSX, JSON, and JSONC on save.
 
 Prettier formats CSS, SCSS, HTML, GraphQL, Markdown, and YAML on save.

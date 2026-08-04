@@ -8,6 +8,7 @@ brew "bfg"
 brew "cameroncooke/axe/axe", trusted: true
 brew "cocoapods"
 brew "eza"
+brew "fallow"
 brew "fd"
 brew "fastlane"
 brew "fzf"

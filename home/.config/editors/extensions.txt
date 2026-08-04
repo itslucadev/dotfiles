@@ -10,6 +10,7 @@ dbaeumer.vscode-eslint
 dsznajder.es7-react-js-snippets
 eamodio.gitlens
 esbenp.prettier-vscode
+fallow-rs.fallow-vscode
 formulahendry.auto-rename-tag
 ms-python.debugpy
 ms-python.python
