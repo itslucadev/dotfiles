@@ -203,7 +203,9 @@ Homebrew installs these applications:
 - WezTerm
 - WhatsApp
 
-Homebrew also installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, Fastlane, Git LFS, Gitleaks, the Infisical CLI, the Linear CLI, the Maestro CLI, Mole, the Resend CLI, the Sentry CLI, the Sentry Wizard, Tmux, and YouTube-DLP.
+Homebrew also installs Claude Code and the Codex CLI as casks.
+
+Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, Fastlane, Git LFS, Gitleaks, the Infisical CLI, the Linear CLI, the Maestro CLI, Mole, the Pi coding agent, the Resend CLI, the Sentry CLI, the Sentry Wizard, Tmux, and YouTube-DLP.
 
 The Mac App Store installs Actions, Folder Quick Look, Helm, Obsidian Web Clipper, RocketSim, Timepage, and stable Xcode.
 
@@ -233,14 +235,12 @@ mise manages:
 - Argent
 - Biome
 - Chrome DevTools axi
-- Codex CLI
 - Context7 CLI
 - EAS CLI
 - gh-axi
 - Lavish CLI
 - NotebookLM CLI
 - Oh My Pi
-- Pi Coding Agent
 - PostHog CLI
 - Prettier
 - Pyright
@@ -344,7 +344,9 @@ Ruff formats Python, applies safe fixes, and organizes imports on save.
 
 Project-level `pyproject.toml` or `ruff.toml` settings take priority over the global editor defaults.
 
-The shared React and React Native setup includes Biome, Prettier, ESLint, Tailwind CSS IntelliSense, and Pretty TypeScript Errors.
+The shared React and React Native setup includes Biome, Prettier, ESLint, Tailwind CSS IntelliSense, Pretty TypeScript Errors, Error Lens, Path IntelliSense, Auto Rename Tag, Import Cost, Indent Rainbow, and the ES7+ React snippets.
+
+Swift, Java, Kotlin, clangd, LLDB, and the .NET extensions are deliberately excluded. Xcode owns Swift and Objective-C, Android Studio owns Java and Kotlin, and both are part of this setup.
 
 Biome formats JavaScript, JSX, TypeScript, TSX, JSON, and JSONC on save.
 
@@ -407,13 +409,13 @@ OpenCode is not part of the setup.
 
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
 
-Claude Code is installed through its Homebrew cask.
+Homebrew installs every coding agent: Claude Code and Codex as casks, the Pi coding agent as a formula.
 
-Anthropic deprecated the npm package in January 2026 with version 2.1.15 and now ships a native binary, so the runtime-package rule does not apply to it.
+Agent binaries update themselves at runtime, so a mise lockfile could not hold their versions and the seven-day minimum release age would buy nothing. Anthropic also deprecated the Claude Code npm package in January 2026 with version 2.1.15 in favour of the native binary.
 
-The native binary updates itself into `~/.local/share/claude`. That directory belongs to Claude Code's own updater and is not managed by this repository.
+Claude Code updates itself into `~/.local/share/claude`. That directory belongs to its own updater and is not managed by this repository.
 
-The Codex CLI and Oh My Pi are still current npm packages, so mise installs both.
+Oh My Pi is the one exception. It extends the Pi agent, is published only on npm, and has no Homebrew package, so mise installs it.
 
 Claude agent teams use Tmux split panes.
 

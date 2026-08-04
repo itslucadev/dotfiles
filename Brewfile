@@ -24,6 +24,7 @@ brew "mas"
 brew "mise"
 brew "mobile-dev-inc/tap/maestro", trusted: true
 brew "mole"
+brew "pi-coding-agent"
 brew "resend/cli/resend", trusted: true
 brew "ripgrep"
 brew "schpet/tap/linear", trusted: true
@@ -43,9 +44,10 @@ cask "textmate"
 cask "visual-studio-code"
 
 # Agents
-# Claude Code uses the Homebrew cask because Anthropic deprecated the npm
-# package in January 2026 in favour of the native binary.
+# Agent binaries update themselves, so a mise lockfile cannot hold their
+# version anyway. Homebrew is their single declared channel.
 cask "claude-code"
+cask "codex"
 
 # Browsers and communication
 cask "chatgpt"

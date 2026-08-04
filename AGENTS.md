@@ -31,10 +31,11 @@ Every tool has exactly one installation channel. Decide it with this rule, in or
 
 1. A graphical application belongs in `Brewfile` as a cask, or in `Brewfile.mas` when the Mac App Store is its only channel.
 2. A language runtime belongs in `mise.toml`. That covers Node, Bun, Python, Java, uv, and Ruff.
-3. Anything installed through a language runtime belongs in `mise.toml` with its backend prefix, so `npm:` or `pipx:`. mise pins it in `mise.lock` and enforces the seven-day minimum release age, which Homebrew cannot do.
-4. Everything else is a native binary and belongs in `Brewfile` as a formula.
+3. A coding agent belongs in `Brewfile` whenever Homebrew ships it. Agent binaries update themselves at runtime, so a mise lockfile cannot hold their version and the seven-day minimum release age buys nothing.
+4. Anything else that is installed through a language runtime belongs in `mise.toml` with its backend prefix, so `npm:` or `pipx:`. mise pins it in `mise.lock` and enforces the seven-day minimum release age, which Homebrew cannot do.
+5. Everything else is a native binary and belongs in `Brewfile` as a formula.
 
-A tool that ships both a native binary and a runtime package follows rule 3 unless its vendor deprecated the runtime package, in which case it follows rule 4.
+A tool that ships both a native binary and a runtime package follows rule 4 unless its vendor deprecated the runtime package, in which case it follows rule 5.
 
 Never declare the same tool in both `Brewfile` and `mise.toml`.
 
