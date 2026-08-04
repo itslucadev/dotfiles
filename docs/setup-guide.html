@@ -2131,14 +2131,14 @@ mise run doctor</code></pre>
                 </article>
 
                 <article class="task" data-task-id="verify-tests">
-                  <input class="task-check" type="checkbox" aria-label="Repository Tests erfolgreich" />
+                  <input class="task-check" type="checkbox" aria-label="Repository ohne offene Änderungen" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Deklarative Repository-Tests ausführen</h3>
+                      <h3 class="task-title">Repository-Zustand prüfen</h3>
                       <span class="badge auto">Prüfung</span>
                     </div>
                     <div class="command">
-                      <pre><code>mise run test
+                      <pre><code>./bootstrap.sh --dry-run
 git diff --check</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
@@ -2204,8 +2204,8 @@ git status --short</code></pre>
                     </div>
                     <div class="command">
                       <pre><code>cd ~/github/phoenix-error/dotfiles
-mise run doctor
-mise run test</code></pre>
+mise doctor
+mise run doctor</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                   </div>

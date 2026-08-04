@@ -159,6 +159,9 @@ fi
 log "Applying managed dotfiles"
 run mise bootstrap dotfiles apply --yes
 
+log "Installing Herdr agent integrations"
+run_script "$REPO_ROOT/scripts/install-herdr-integrations.sh"
+
 log "Configuring GitHub SSH authentication and commit signing"
 run_script "$REPO_ROOT/scripts/setup-github-ssh.sh"
 

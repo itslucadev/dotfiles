@@ -15,6 +15,17 @@ These instructions apply to Lucas's agents across projects.
 - Preserve unrelated user changes and do not hide existing failures.
 - Never commit credentials, tokens, private keys, authentication state, or machine-specific secrets.
 
+## Preferred Command-Line Tools
+
+These wrappers replace the tools an agent would otherwise reach for by default.
+Use them without being asked, and fall back to the underlying tool only when the wrapper cannot express the task.
+
+- Use `gh-axi` for every GitHub operation instead of `gh` or the GitHub API.
+- Use `lavish-axi` whenever a response is easier to grasp as a rich page than as prose: plans, comparisons, diagrams, tables, reports, and review surfaces.
+- Use `chrome-devtools-axi` to drive or inspect a Chrome session instead of any other browser automation tool.
+- Use `ctx7` for library documentation instead of web search.
+- Use `nlm` for NotebookLM work.
+
 ## Optional Personal Context
 
 When a task would benefit from Lucas's personal viewpoints, read `~/OPINIONS.md` if it exists.

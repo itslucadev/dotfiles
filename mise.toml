@@ -27,9 +27,13 @@ uv = "latest"
 "npm:@tobilu/qmd" = "latest"
 "npm:agent-device" = "latest"
 "npm:agentmail-cli" = "latest"
+"npm:chrome-devtools-axi" = "latest"
+"npm:ctx7" = "latest"
 "npm:eas-cli" = "latest"
-"npm:notebooklm-cli" = "latest"
+"npm:gh-axi" = "latest"
+"npm:lavish-axi" = "latest"
 "npm:opensrc" = "latest"
+"pipx:notebooklm-mcp-cli" = "latest"
 "npm:prettier" = "latest"
 "npm:pyright" = "latest"
 "npm:react-doctor" = "latest"
@@ -49,6 +53,7 @@ _.path = [
 [dotfiles]
 "~/.agents.md" = { source = "home/AGENTS.md" }
 "~/.claude/CLAUDE.md" = { source = "home/AGENTS.md" }
+"~/.claude/rules/context7.md" = {}
 "~/.claude/settings.json" = {}
 "~/.claude/statusline.ts" = {}
 "~/.config/git/ignore" = {}
@@ -109,6 +114,10 @@ run = "./scripts/install-raycast-beta.sh"
 description = "Install the pinned global skills for Claude Code and Cursor"
 run = "./scripts/install-agent-skills.sh"
 
+[tasks."agents:herdr"]
+description = "Install the Herdr agent integrations for Claude Code and Cursor"
+run = "./scripts/install-herdr-integrations.sh"
+
 [tasks."editors:extensions"]
 description = "Install the managed VS Code and Cursor extensions"
 run = "./scripts/install-editor-extensions.sh"
@@ -124,7 +133,3 @@ run = "./scripts/doctor.sh"
 [tasks.macos]
 description = "Apply dynamic and nested macOS preferences unsupported by mise defaults"
 run = "./scripts/configure-macos.sh"
-
-[tasks.test]
-description = "Run repository validation without changing the Mac"
-run = "./tests/test.sh"

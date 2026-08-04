@@ -65,6 +65,7 @@ The bootstrap:
 - Installs locked mise runtimes and global CLIs.
 - Installs the commit-pinned global skills for Claude Code and Cursor through BunX.
 - Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Git, SSH, editor, Claude, and global agent dotfiles.
+- Installs the Herdr agent integrations for Claude Code, Cursor, and Pi.
 - Creates or reuses one Ed25519 key for GitHub authentication and commit signing, loads it through the macOS Keychain, and maintains the local allowed signers file.
 - Installs the saved VS Code and Cursor extensions through their native command-line interfaces.
 - Links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
@@ -116,16 +117,19 @@ The repository keeps configuration in the native declarative format of the tool 
 
 It installs the first dependencies needed before mise is available, then runs the remaining stages in the required order, because Homebrew must install mise before mise can orchestrate the rest.
 
-It calls six helper scripts that can change the Mac or connected accounts:
+It calls seven helper scripts that can change the Mac or connected accounts:
 
 - `scripts/configure-macos.sh` owns the dynamic screenshot path and nested `AppleSymbolicHotKeys` dictionary that mise macOS defaults cannot represent correctly.
-- `scripts/install-agent-skills.sh` reconciles the pinned global skill profile for Claude Code and Cursor through BunX.
+- `scripts/install-agent-skills.sh` reconciles the pinned global skill profile for Claude Code and Cursor through BunX, then installs the NotebookLM skill through its own CLI.
 - `scripts/install-editor-extensions.sh` installs the declarative extension inventories through the native VS Code and Cursor CLIs.
+- `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
 - `scripts/install-raycast-beta.sh` installs and verifies Raycast Beta because it has no official Homebrew cask.
 - `scripts/setup-github-ssh.sh` configures the local SSH identity and registers its public key with GitHub for authentication and signing.
 
-The read-only `scripts/doctor.sh` and `tests/test.sh` inspect the result without configuring the Mac.
+The read-only `scripts/doctor.sh` inspects the result without configuring the Mac.
+
+This repository has no test suite. Configuration is verified with `./bootstrap.sh --dry-run` and the setup doctor.
 
 All scalar macOS settings with static values use mise's friendly or raw defaults sections.
 
@@ -199,6 +203,8 @@ Homebrew also installs Fastlane, Git LFS, the Infisical CLI, the Maestro CLI, th
 
 The Mac App Store installs Actions, Apple Developer, Folder Quick Look, Helm, Notability, Obsidian Web Clipper, RocketSim, TestFlight, Timepage, and stable Xcode.
 
+Magnet and Mela are installed on the current Mac but are deliberately not reinstalled. Raycast Window Management replaces Magnet.
+
 Raycast v2 Beta comes from Raycast's official signed disk image because no official Homebrew cask exists.
 
 The bootstrap installs Rosetta 2 when necessary because the current Minecraft launcher is still built for Intel Macs.
@@ -221,8 +227,12 @@ mise manages:
 - AgentMail CLI
 - Argent
 - Biome
+- Chrome DevTools axi
 - Claude Code
+- Context7 CLI
 - EAS CLI
+- gh-axi
+- Lavish CLI
 - Native SDK CLI
 - NotebookLM CLI
 - OpenSrc
@@ -237,6 +247,8 @@ mise manages:
 - TypeScript
 - TypeScript Language Server
 - Vercel CLI
+
+The NotebookLM CLI is the one Python-backed entry. It is installed from PyPI as `notebooklm-mcp-cli` and provides the `nlm` command plus the NotebookLM skill.
 
 All npm-backed CLIs, including Biome and Prettier, are installed by Bun through mise.
 
@@ -376,6 +388,14 @@ This gives the supported agents the same global working rules without maintainin
 
 `~/.claude/CLAUDE.md` is a symlink to the same repository source as the global `~/.agents.md`.
 
+The global instructions also name the command-line wrappers that agents must prefer over their built-in tools: `gh-axi` instead of `gh`, `lavish-axi` for visual review surfaces, `chrome-devtools-axi` for driving Chrome, `ctx7` for library documentation, and `nlm` for NotebookLM.
+
+Every one of those tools is installed by this setup, and `home/.claude/settings.json` starts `gh-axi`, `chrome-devtools-axi`, and `lavish-axi` as session-start hooks.
+
+`home/.claude/rules/context7.md` is the only managed Claude rule. It tells agents to use the mise-installed `ctx7` CLI rather than `npx ctx7@latest`, so documentation lookups also respect the pinned version and the minimum release age.
+
+Herdr installs its own agent hooks through `mise run agents:herdr`. This repository never copies a generated hook file, and `~/.claude/hooks` is not a managed dotfile path.
+
 OpenCode is not part of the setup.
 
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
@@ -412,9 +432,15 @@ Every source is pinned to a full Git commit so a new Mac receives reviewed skill
 
 The installer uses `bunx --bun skills@1.5.21`, never `npx`, and links the selected skills through the central `~/.agents/skills` store for Claude Code and Cursor.
 
-The profile contains selected Vercel, Anthropic, Sentry, Expo, Software Mansion Argent, React Doctor, Apple design, interface design, and animation skills.
+The profile is deliberately small. It contains Matt Pocock's engineering, productivity, and misc skills, and nothing else.
 
-Ponytail, Understand Anything, Karpathy skills, Codex skills, and OpenCode skills are intentionally excluded.
+His `skills/personal` folder is excluded because `obsidian-vault` points at a Windows vault path and `edit-article` encodes someone else's publishing workflow. His `deprecated` and `in-progress` folders are excluded as well.
+
+`setup-matt-pocock-skills` is excluded because this repository installs those skills declaratively instead.
+
+The NotebookLM skill is the one exception to the pinning rule. It ships inside the NotebookLM CLI package, so the installer runs `nlm skill install claude-code` and `nlm skill install cursor` after reconciling the inventory.
+
+Vercel, Anthropic, Sentry, Expo, Argent, React Doctor, and animation skill sources were removed from the profile. Ponytail, Understand Anything, Karpathy skills, Codex skills, and OpenCode skills remain excluded.
 
 Reconcile the profile after changing the inventory:
 
@@ -422,7 +448,7 @@ Reconcile the profile after changing the inventory:
 mise run agents:skills
 ```
 
-To update a source, review the upstream `SKILL.md` changes, replace its full commit SHA in the inventory, run the installer, and run the repository tests.
+To update a source, review the upstream `SKILL.md` changes, replace its full commit SHA in the inventory, and run the installer.
 
 The repository does not copy local plugin caches or private skill folders.
 
@@ -643,7 +669,6 @@ The setup configures macOS so pressing Fn or Globe has no native action, leaving
 - [ ] Verify the managed extension inventories in VS Code and Cursor.
 - [ ] Run `mise doctor`.
 - [ ] Run `mise run doctor`.
-- [ ] Run `mise run test`.
 - [ ] Build and launch one React Native project on an iOS Simulator.
 - [ ] Build and launch one React Native project on the Android emulator.
 - [ ] Reboot once and verify login items, shortcuts, VPNs, and permissions.
@@ -654,7 +679,7 @@ The repository can be tested on the current Mac later, but that is not equivalen
 
 Use this order:
 
-1. Run `./tests/test.sh` and `./bootstrap.sh --dry-run` while preparing the repository.
+1. Run `./bootstrap.sh --dry-run` while preparing the repository.
 2. Use a disposable macOS virtual machine for a clean bootstrap when possible.
 3. Use a separate macOS user only for per-user dotfiles and defaults, remembering that `/Applications` and Homebrew remain shared.
 4. If desired, run the real bootstrap on the current user only immediately before the planned erase and only after verifying a Time Machine or equivalent backup.
@@ -738,19 +763,14 @@ It does not use `--zap` and does not manage Mac App Store applications, editor e
 
 ## Repository Validation
 
-Run:
+This repository has no test suite, and one is not planned.
+
+Inspect a change without touching the Mac:
 
 ```sh
-./tests/test.sh
+./bootstrap.sh --dry-run
+./scripts/doctor.sh
 ```
-
-The tests check shell, TOML, JSON, TypeScript, and Brewfile syntax when their validators are available.
-
-They also check executable permissions, managed files, dry-run paths, package-manager ownership, the constrained Homebrew reconciliation, editor inventories, Git and SSH ownership, Homebrew trust ownership, excluded packages, unsupported destructive commands, common secret patterns, typography, and whitespace.
-
-When mise is available, they create an isolated temporary home and verify task discovery plus every dotfile source path.
-
-They do not install applications or apply macOS settings.
 
 ## Public Repository Safety
 
@@ -769,7 +789,13 @@ Never commit:
 - Application databases, caches, or machine identifiers
 - Generated Homebrew trust state
 
-Git, SSH, and Zsh each use one managed configuration file and do not load separate local configuration fragments.
+The setup uses exactly one managed file per tool and deliberately has no `*.local` override layer.
+
+That includes `~/.claude/settings.local.json`, `~/.gitconfig.local`, `~/.ssh/config.local`, and `mise.local.toml`.
+
+A setting that would otherwise land in a local override belongs in the managed file, so a new Mac reproduces it. The Claude plugin toggles and the reduced-motion preference were moved into `home/.claude/settings.json` for exactly that reason.
+
+The matching `.gitignore` entries stay as a safety net against accidental commits, not as an invitation to create such files.
 
 The repository does not yet prescribe a secrets backend.
 

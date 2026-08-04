@@ -45,3 +45,6 @@ home/.ssh/allowed_signers
 home/.ssh/authorized_keys
 home/.ssh/known_hosts
 home/.ssh/known_hosts.old
+
+# Lavish review artifacts
+.lavish/

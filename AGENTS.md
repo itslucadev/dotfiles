@@ -19,6 +19,7 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 - `home/.config/editors/extensions.txt` owns extensions shared by VS Code and Cursor.
 - `home/.config/editors/{vscode,cursor}/extensions.txt` own editor-specific extensions.
 - `home/` owns public dotfiles that mise links into the home directory.
+- `home/.claude/rules/` owns the Claude rules that this setup supports.
 - `bootstrap.sh` is the only setup entry point and owns the required stage order.
 - `scripts/` owns idempotent setup behavior that cannot be expressed safely as scalar mise configuration.
 
@@ -106,7 +107,11 @@ Do not add a managed `~/.tmux.conf` unless the user explicitly requests Tmux cus
 
 The pinned inventory in `home/.config/skills/default-skills.txt` is the only source of global agent skills.
 
-Install or reconcile it only through `scripts/install-agent-skills.sh` or `mise run agents:skills`.
+The profile is deliberately small. Matt Pocock's engineering, productivity, and misc skills are the only global agent skills.
+
+Do not add a skill source without an explicit decision from the user.
+
+Install or reconcile the inventory only through `scripts/install-agent-skills.sh` or `mise run agents:skills`.
 
 Use BunX with the pinned Skills CLI version.
 
@@ -114,7 +119,43 @@ Do not replace it with `npx`, manually copied skill directories, plugin-cache co
 
 Review upstream `SKILL.md` changes before updating a source commit SHA.
 
+The NotebookLM skill is the one exception. It ships inside the NotebookLM CLI package, so `scripts/install-agent-skills.sh` installs it with `nlm skill install` instead of pinning a Git tree.
+
 Do not add Codex, OpenCode, Ponytail, Understand Anything, or Karpathy skill sources.
+
+## Agent Command-Line Tool Policy
+
+`home/AGENTS.md` declares the wrappers that agents must prefer over their default tools.
+
+Every wrapper named there must be installed by `Brewfile` or `mise.toml`, and every Claude hook in `home/.claude/settings.json` must call a tool that the setup installs.
+
+Do not reference a tool in agent instructions or hooks that a new Mac would not have.
+
+## Claude Rule Policy
+
+`home/.claude/rules/` holds only rules that this setup actually supports.
+
+Currently that is `context7.md`, and its `ctx7` CLI is installed by `mise.toml`.
+
+Do not add a rule for a tool that is not part of the managed setup.
+
+## Herdr Integration Policy
+
+Herdr owns its own agent hooks.
+
+`scripts/install-herdr-integrations.sh` calls `herdr integration install`, and that is the only way hooks reach `~/.claude/hooks` and the other agent directories.
+
+Do not copy a generated `herdr-agent-state` hook into `home/`, and do not manage `~/.claude/hooks` through `mise.toml`.
+
+## No Local Override Files
+
+This setup uses exactly one managed file per tool.
+
+Do not create, document, or read `*.local` override files. That includes `~/.claude/settings.local.json`, `~/.gitconfig.local`, `~/.ssh/config.local`, and `mise.local.toml`.
+
+Settings that would otherwise land in a local override belong in the managed file so a new Mac reproduces them.
+
+The `.gitignore` entries for these paths stay as a safety net against accidental commits, not as an invitation to use them.
 
 ## Secrets
 
@@ -132,8 +173,8 @@ Never commit Infisical tokens, project identifiers that should remain private, e
 
 ## Verification
 
-Run `./tests/test.sh` after every configuration change.
+This repository has no test suite. Do not add one.
 
-Use dry runs and isolated validation only.
+Verify a change with `./bootstrap.sh --dry-run` and `./scripts/doctor.sh`, both of which are read-only.
 
 Do not install, upgrade, uninstall, clean up, or apply macOS settings on the current Mac while preparing this repository.

@@ -68,9 +68,6 @@ if command -v starship >/dev/null 2>&1; then
 fi
 
 alias cls="clear"
-alias ..="cd .."
-alias ...="cd ../.."
-alias ....="cd ../../.."
 alias cdd="cd ../.."
 alias dev='cd "$DEV_HOME"'
 alias appzudio='cd "$DEV_HOME/appzudio"'
@@ -82,17 +79,3 @@ alias ll="eza --icons=auto --group-directories-first --all --header --long"
 alias llm="eza --icons=auto --group-directories-first --all --header --long --sort=modified"
 alias lt="eza --icons=auto --group-directories-first --tree"
 alias tree="eza --icons=auto --group-directories-first --tree"
-
-alias bi="brew install"
-alias bic="brew install --cask"
-alias bl="brew list"
-alias bu="brew update"
-alias bup="brew upgrade"
-
-alias gs="git status --short --branch"
-alias ga="git add"
-alias gap="git add --patch"
-alias gc="git commit"
-alias gd="git diff"
-alias gl="git log --graph --decorate --oneline"
-alias gp="git push"

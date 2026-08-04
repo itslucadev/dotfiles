@@ -359,6 +359,42 @@ fi
 
 check_agent_skills
 
+for agent_wrapper in gh-axi lavish-axi chrome-devtools-axi ctx7 nlm; do
+  if command -v "$agent_wrapper" >/dev/null 2>&1; then
+    pass "Preferred agent CLI available: $agent_wrapper"
+  else
+    fail "Preferred agent CLI missing: $agent_wrapper"
+  fi
+done
+
+if [[ -f "$HOME/.claude/rules/context7.md" ]]; then
+  pass "Managed Claude rule is applied: context7"
+else
+  fail "Managed Claude rule is missing: ~/.claude/rules/context7.md"
+fi
+
+if [[ -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]]; then
+  pass "Herdr installed its Claude Code integration"
+else
+  warn "Run mise run agents:herdr to install the Herdr agent integrations"
+fi
+
+local_override_found=false
+for local_override in \
+  "$HOME/.claude/settings.local.json" \
+  "$HOME/.gitconfig.local" \
+  "$HOME/.ssh/config.local" \
+  "$HOME/.config/mise/config.local.toml"; do
+  if [[ -e "$local_override" ]]; then
+    warn "Unmanaged local override file exists: ${local_override/#$HOME/\~}"
+    local_override_found=true
+  fi
+done
+
+if [[ "$local_override_found" == false ]]; then
+  pass "No local override files are present"
+fi
+
 if xcode-select -p 2>/dev/null | grep -Fq "/Applications/Xcode.app/"; then
   pass "Stable Xcode is the active developer directory"
 else
