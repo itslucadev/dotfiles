@@ -205,7 +205,7 @@ Homebrew installs these applications:
 
 Homebrew also installs Claude Code and the Codex CLI as casks.
 
-Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, Fastlane, Git LFS, Gitleaks, the Infisical CLI, the Linear CLI, the Maestro CLI, Mole, the Pi coding agent, the Resend CLI, the Sentry CLI, the Sentry Wizard, Tmux, and YouTube-DLP.
+Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, Fastlane, Git LFS, Gitleaks, the Infisical CLI, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, the Pi coding agent, the Resend CLI, the Sentry CLI, the Sentry Wizard, Tmux, and YouTube-DLP.
 
 The Mac App Store installs Actions, Folder Quick Look, Helm, Obsidian Web Clipper, RocketSim, Timepage, and stable Xcode.
 
@@ -240,7 +240,6 @@ mise manages:
 - gh-axi
 - Lavish CLI
 - NotebookLM CLI
-- Oh My Pi
 - PostHog CLI
 - Prettier
 - Pyright
@@ -409,13 +408,15 @@ OpenCode is not part of the setup.
 
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
 
-Homebrew installs every coding agent: Claude Code and Codex as casks, the Pi coding agent as a formula.
+Homebrew installs every coding agent: Claude Code and Codex as casks, the Pi coding agent and Oh My Pi as formulae.
 
 Agent binaries update themselves at runtime, so a mise lockfile could not hold their versions and the seven-day minimum release age would buy nothing. Anthropic also deprecated the Claude Code npm package in January 2026 with version 2.1.15 in favour of the native binary.
 
+Every Homebrew cask and formula pins the exact release artifact with a SHA-256 checksum, which a vendor install script piped into a shell cannot offer.
+
 Claude Code updates itself into `~/.local/share/claude`. That directory belongs to its own updater and is not managed by this repository.
 
-Oh My Pi is the one exception. It extends the Pi agent, is published only on npm, and has no Homebrew package, so mise installs it.
+Oh My Pi comes from `can1357/tap` as the `omp` formula, a native binary at version 17. Its npm package stalled at 0.2.0 and is not the same distribution.
 
 Claude agent teams use Tmux split panes.
 
@@ -433,7 +434,7 @@ Claude authentication, caches, conversation history, local settings, and generat
 
 The [ChatGPT desktop application](https://learn.chatgpt.com/docs/app) includes the Codex desktop experience, and mise installs the standalone Codex CLI beside it.
 
-Oh My Pi extends the Pi coding agent into a multi-agent orchestration setup, and Herdr installs the matching integrations for Claude Code, Cursor, and Pi.
+Oh My Pi extends the Pi coding agent into a multi-agent orchestration setup, and Herdr installs the matching integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
 
 The Claude Codex plugin and its marketplace remain excluded.
 
@@ -730,7 +731,7 @@ mise symlinks the root `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 
 Official Homebrew taps require no additional trust.
 
-The Infisical CLI, Maestro CLI, Sentry CLI, Pear Desktop, and FluxMarkdown come from third-party taps.
+The AXe CLI, Infisical CLI, Linear CLI, Maestro CLI, Oh My Pi, Resend CLI, Sentry CLI, Sentry Wizard, Pear Desktop, and FluxMarkdown come from third-party taps.
 
 Each of those packages declares item-scoped `trusted: true` in `Brewfile`, so the repository does not trust the rest of its tap.
 

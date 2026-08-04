@@ -6,7 +6,7 @@
 
 set -Eeuo pipefail
 
-readonly INTEGRATIONS=("claude" "cursor" "pi")
+readonly INTEGRATIONS=("claude" "codex" "cursor" "omp" "pi")
 
 DRY_RUN=false
 

@@ -2,6 +2,7 @@
 brew "agent-browser"
 brew "antidote"
 brew "asc"
+brew "can1357/tap/omp", trusted: true
 brew "bat"
 brew "bfg"
 brew "cameroncooke/axe/axe", trusted: true
