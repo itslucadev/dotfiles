@@ -90,8 +90,8 @@ NSGlobalDomain = { AppleInterfaceStyle = "Dark", AppleShowAllExtensions = true, 
 "com.apple.screencapture" = { "disable-shadow" = true }
 
 [tasks.setup]
-description = "Run the complete setup, from Homebrew through the setup doctor"
-run = "./bootstrap.sh"
+description = "Apply the managed setup, from Brewfile through the setup doctor"
+run = "./scripts/setup.sh"
 
 [tasks."apps:mas"]
 description = "Install the managed Mac App Store applications"

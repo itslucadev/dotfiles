@@ -122,6 +122,20 @@ for command_name in \
   check_command "$command_name"
 done
 
+# mise is installed by bootstrap.sh from its own installer, never by Homebrew.
+# A Homebrew copy would be removed by brew bundle cleanup mid-setup.
+if [[ -x "$HOME/.local/bin/mise" ]]; then
+  pass "mise is self-managed at ~/.local/bin/mise"
+else
+  fail "mise is missing at ~/.local/bin/mise"
+fi
+
+if command -v brew >/dev/null 2>&1 && brew list --formula mise >/dev/null 2>&1; then
+  fail "mise is installed through Homebrew and must be removed with brew uninstall mise"
+else
+  pass "mise is not installed through Homebrew"
+fi
+
 if command -v brew >/dev/null 2>&1 &&
   brew bundle check --no-upgrade \
     --file "$HOME/github/phoenix-error/dotfiles/Brewfile" >/dev/null 2>&1; then

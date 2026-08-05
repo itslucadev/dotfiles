@@ -56,14 +56,15 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 | Mac App Store applications | mas | `Brewfile.mas` |
 | Runtimes and global CLIs | mise | `mise.toml` |
 | Dotfiles and macOS defaults | mise | `mise.toml` and `home/` |
-| Setup entry point | Bash | `bootstrap.sh` |
+| Bare-metal initialization | Bash | `bootstrap.sh` |
+| Managed setup stages | mise | `mise.toml` task `setup` |
 | Git identity, signing, SSH | you, by hand | nothing here, [see why](#git-and-ssh) |
 
 ## Contents
 
 **Setup**
 [Quick Start](#quick-start-on-a-new-mac) ·
-[What the Bootstrap Does](#what-the-bootstrap-does) ·
+[What the Two Commands Do](#what-the-two-commands-do) ·
 [Manual Interaction Gates](#manual-interaction-gates) ·
 [Declarative Ownership](#declarative-ownership) ·
 [Reapply Changes](#reapply-changes)
@@ -105,7 +106,7 @@ The current Mac can also be used for a final rehearsal immediately before it is 
 > Git is deliberately not part of this repository. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand, so a fresh Mac has no Git identity, no commit signing, and no SSH configuration until they are created.
 >
 > Cloning needs none of it. The repository is public and the command below clones over HTTPS.
-> After `Brewfile` installs Git, `./bootstrap.sh` pauses for the manual Git and SSH checklist, then verifies the identity, the Ed25519 key, and `ssh -T git@github.com` before continuing.
+> After `Brewfile` installs Git, the `setup` task pauses for the manual Git and SSH checklist, then verifies the identity, the Ed25519 key, and `ssh -T git@github.com` before continuing.
 >
 > See: [Setting Git and SSH Up by Hand](#setting-git-and-ssh-up-by-hand).
 
@@ -125,31 +126,65 @@ git clone https://github.com/phoenix-error/dotfiles.git ~/github/phoenix-error/d
 cd ~/github/phoenix-error/dotfiles
 ```
 
-Run the bootstrap:
+Initialize the Mac. This installs the Xcode Command Line Tools, Homebrew, and mise, and nothing else:
 
 ```sh
 ./bootstrap.sh
 ```
 
+Open a new terminal, then apply the setup:
+
+```sh
+mise run setup
+```
+
+That is the whole command sequence. The task pauses at every step that needs a person, explains what to do, verifies the result, and continues.
+
+The new terminal is needed because `bootstrap.sh` links `~/.zprofile` and `~/.zshrc` as its last step, which is what puts Homebrew and mise on `PATH`.
+If that step reported that it could not link them, the Mac already has hand-written files there.
+Nothing is lost, and the setup runs as `~/.local/bin/mise run setup` instead.
+
 The fixed clone path allows the repository `mise.toml` to serve as the global mise configuration while keeping dotfile sources predictable.
 
-The setup is idempotent and can be rerun after resolving a manual prerequisite.
+Both commands are idempotent and can be rerun after resolving a manual prerequisite.
 
-After the command finishes, open the offline [interactive setup guide](docs/setup-guide.html) to complete permissions, remaining application logins, and application onboarding.
+After `mise run setup` finishes, open the offline [interactive setup guide](docs/setup-guide.html) to complete permissions, remaining application logins, and application onboarding.
 
 The global agent skills are installed by hand from [docs/agent-skills.md](docs/agent-skills.md), which documents the install commands and excluded sources.
 
-## What the Bootstrap Does
+## What the Two Commands Do
 
-The bootstrap:
+`./bootstrap.sh` is bare-metal initialization and installs only what cannot come from managed configuration, because nothing that could install it exists yet:
 
-- Verifies Apple Silicon macOS.
+- Verifies Apple Silicon macOS and the expected clone path.
 - Ensures the Xcode Command Line Tools are available.
-- Installs Homebrew when necessary.
+- Installs Homebrew from `https://brew.sh` when necessary.
+- Installs mise from `https://mise.run` into `~/.local/bin/mise` when necessary.
+- Trusts the repository `mise.toml`.
+- Links `~/.zprofile`, `~/.zshrc`, and `~/.zsh_plugins.txt`, the files that put Homebrew and mise on `PATH` and that the shell configuration reads.
+
+Then it stops. It installs no declared package and applies no other configuration.
+
+mise.run is the method the mise documentation recommends for macOS, with Homebrew listed only as the alternative.
+The official binaries are built with the optimized release profile, are updatable with `mise self-update`, and are available immediately after a release.
+
+Linking the two shell files is the last initialization step rather than a setup stage because neither Homebrew nor mise is on a fresh Mac's default `PATH`, and those two files are what put them there.
+It runs without `--force`, so mise refuses to replace a hand-written `~/.zshrc` instead of overwriting it.
+In that case `bootstrap.sh` says so, and the setup runs once as `~/.local/bin/mise run setup`.
+
+The `https://mise.run/zsh` installer variant, which appends the activation line to `~/.zshrc` itself, is deliberately not used.
+That file is a managed symlink here, and a foreign edit would make `mise bootstrap dotfiles apply` refuse the conflict on every run.
+
+mise is deliberately absent from `Brewfile`.
+It has to exist before the `Brewfile` is applied, and `brew bundle cleanup` must never be able to remove the binary that is driving the setup.
+The check targets the install path rather than `PATH`, so a Mac that still carries an older Homebrew mise gets the self-managed copy before cleanup removes the Homebrew one.
+
+The `setup` task in `mise.toml` runs `scripts/setup.sh` and owns every managed stage:
+
+- Updates mise itself, because `Brewfile` no longer keeps it current.
 - Applies `Brewfile`.
 - Removes Homebrew formulae, casks, and taps that are not required by `Brewfile`.
 - Pauses for the manual Git identity and GitHub SSH setup, then verifies them before continuing.
-- Trusts the repository `mise.toml`.
 - Installs the locked language runtimes, then the locked global CLIs.
 - Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
@@ -169,11 +204,12 @@ It does not remove manually installed applications outside Homebrew or write dir
 
 ## Manual Interaction Gates
 
-The bootstrap treats every manual prerequisite for a later automated stage as a gate.
+The setup treats every manual prerequisite for a later automated stage as a gate.
 
 In an interactive terminal, it pauses at the gate, explains the required action, waits for completion, verifies the result, and only then continues.
 
 In a non-interactive environment, it stops with Exit code 2 and prints the command that must be rerun after the action is complete.
+That command is `./bootstrap.sh` for the Command Line Tools gate and `mise run setup` for the later ones.
 
 The gated interactions are:
 
@@ -198,18 +234,18 @@ The repository keeps configuration in the native declarative format of the tool 
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
 - Git owns nothing here. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand, because a managed Git configuration is applied before the SSH key it depends on exists.
 
-`bootstrap.sh` is the only setup entry point.
+`bootstrap.sh` runs once per Mac, or again after a macOS upgrade removed the Xcode Command Line Tools.
 
-It installs the first dependencies needed before mise is available, then runs the remaining stages in the required order, because Homebrew must install mise before mise can orchestrate the rest.
+`mise run setup` is the entry point for everything else, including every rerun.
 
-It calls two helper scripts that can change the Mac or connected accounts:
+`scripts/setup.sh` calls two helper scripts that can change the Mac or connected accounts:
 
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
 
 The read-only `scripts/doctor.sh` inspects the result without configuring the Mac.
 
-This repository has no test suite. Configuration is verified with `./bootstrap.sh --dry-run` and the setup doctor.
+This repository has no test suite. Configuration is verified with `./scripts/setup.sh --dry-run` and the setup doctor.
 
 All scalar macOS settings with static values use mise's friendly or raw defaults sections.
 
@@ -217,31 +253,31 @@ Screenshot folder and keyboard-shortcut conflicts stay manual because CleanShot 
 
 ## Reapply Changes
 
-After pulling repository changes, run the same command as on a new Mac:
+After pulling repository changes, reapply the managed stages:
 
 ```sh
-./bootstrap.sh
+mise run setup
 ```
 
 Every stage is idempotent, so desired packages, applied dotfiles, and applied macOS defaults are left alone.
 
 Homebrew formulae, casks, and taps that are neither declared nor required as dependencies are removed.
 
-The equivalent repository task is:
-
-```sh
-mise run setup
-```
-
 The task is deliberately named `setup`.
 
 mise reserves the `bootstrap` name for its built-in bootstrap pipeline and automatically runs a task with that name afterward, so using the same name here would repeat the repository setup.
 
+`./bootstrap.sh` is not part of a rerun. It only reverifies the Xcode Command Line Tools, Homebrew, and mise, which a working Mac already has.
+
 Inspect the setup without changing the Mac:
 
 ```sh
-./bootstrap.sh --dry-run
+./scripts/setup.sh --dry-run
 ```
+
+The dry run prints every command instead of running it and is called directly rather than through mise, so it also works on a Mac where mise is missing.
+
+`./bootstrap.sh --dry-run` does the same for the three initialization steps.
 
 ## Managed Applications
 
@@ -521,7 +557,7 @@ The reason is ordering. A managed `~/.gitconfig` that enables commit signing is 
 Configuration that only works once a later stage has run is configuration this repository should not own.
 
 Creating the key, registering it with GitHub, and verifying the connection are also manual.
-`./bootstrap.sh` only pauses after `Brewfile` installs Git, prints the checklist, and continues once the identity, the Ed25519 key, and `ssh -T git@github.com` succeed.
+The `setup` task only pauses after `Brewfile` installs Git, prints the checklist, and continues once the identity, the Ed25519 key, and `ssh -T git@github.com` succeed.
 
 This follows the official [Connecting to GitHub with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) workflow.
 
@@ -529,7 +565,7 @@ SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authe
 
 ### Setting Git and SSH Up by Hand
 
-Do this when `./bootstrap.sh` pauses after applying `Brewfile`, or earlier on a Mac that already has Homebrew Git.
+Do this when the setup pauses after applying `Brewfile`, or earlier on a Mac that already has Homebrew Git.
 
 Set the identity. The GitHub Noreply address keeps the personal address private:
 
@@ -836,7 +872,7 @@ The repository can be tested on the current Mac later, but that is not equivalen
 
 Use this order:
 
-1. Run `./bootstrap.sh --dry-run` while preparing the repository.
+1. Run `./bootstrap.sh --dry-run` and `./scripts/setup.sh --dry-run` while preparing the repository.
 2. Use a disposable macOS virtual machine for a clean bootstrap when possible.
 3. Use a separate macOS user only for per-user dotfiles and defaults, remembering that `/Applications` and Homebrew remain shared.
 4. If desired, run the real bootstrap on the current user only immediately before the planned erase and only after verifying a Time Machine or equivalent backup.
@@ -928,6 +964,7 @@ Inspect a change without touching the Mac:
 
 ```sh
 ./bootstrap.sh --dry-run
+./scripts/setup.sh --dry-run
 ./scripts/doctor.sh
 ```
 

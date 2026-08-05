@@ -1330,7 +1330,7 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                   <input class="task-check" type="checkbox" aria-label="Bootstrap erfolgreich ausgeführt" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Den einzigen Setup-Einstiegspunkt ausführen</h3>
+                      <h3 class="task-title">Den Mac initialisieren, dann das Setup anwenden</h3>
                       <span class="badge auto">Automatisch</span>
                     </div>
                     <div class="command">
@@ -1339,7 +1339,20 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Installiert Homebrew-Pakete, pausiert danach für Git und SSH von Hand,
+                      <code>./bootstrap.sh</code> installiert nur Xcode Command Line Tools,
+                      Homebrew und mise, verlinkt <code>~/.zprofile</code> und
+                      <code>~/.zshrc</code> und hört dann auf. Danach neues Terminal öffnen,
+                      damit die Shell brew und mise findet.
+                    </p>
+                    <div class="command">
+                      <pre><code>mise run setup</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Meldet <code>./bootstrap.sh</code>, dass die Shell-Konfiguration nicht
+                      verlinkt werden konnte, liegen dort schon handgeschriebene Dateien. Dann
+                      stattdessen <code>~/.local/bin/mise run setup</code> aufrufen. Der Task
+                      installiert Homebrew-Pakete, pausiert danach für Git und SSH von Hand,
                       setzt dann Runtimes, globale CLIs, Dotfile-Symlinks, bestätigte
                       macOS-Defaults und nach Möglichkeit die MAS-Apps fort.
                       Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
@@ -1365,7 +1378,7 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                   <input class="task-check" type="checkbox" aria-label="Idempotenter zweiter Lauf bestätigt" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Nach behobenen Voraussetzungen denselben Bootstrap erneut ausführen</h3>
+                      <h3 class="task-title">Nach behobenen Voraussetzungen denselben Setup-Task erneut ausführen</h3>
                       <span class="badge auto">Automatisch</span>
                     </div>
                     <div class="command">
@@ -1627,7 +1640,7 @@ echo "$PATH" | tr ':' '\n' | grep "$ANDROID_HOME"</code></pre>
                 <code>~/.config/git/ignore</code> und <code>~/.ssh/config</code> werden von Hand
                 gesetzt, weil eine verwaltete Git-Konfiguration schon aktiv wäre, bevor der
                 Schlüssel existiert, mit dem sie signiert. Nach dem <code>Brewfile</code> pausiert
-                <code>./bootstrap.sh</code>, bis Identität, Ed25519-Schlüssel und
+                <code>mise run setup</code>, bis Identität, Ed25519-Schlüssel und
                 <code>ssh -T git@github.com</code> stehen. Schlüssel erzeugen, bei GitHub
                 registrieren und die Verbindung prüfen bleiben manuell. Die GitHub CLI kann später
                 folgen. Private Schlüssel, Hosts und Logins bleiben ausschließlich lokal.
@@ -2343,11 +2356,11 @@ brew bundle check --file Brewfile.mas</code></pre>
                   <input class="task-check" type="checkbox" aria-label="Zweiter Bootstrap-Lauf sauber" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Bootstrap ein zweites Mal ohne unerwartete Änderungen ausführen</h3>
+                      <h3 class="task-title">Setup ein zweites Mal ohne unerwartete Änderungen ausführen</h3>
                       <span class="badge auto">Idempotenz</span>
                     </div>
                     <div class="command">
-                      <pre><code>./bootstrap.sh
+                      <pre><code>mise run setup
 git status --short</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>

@@ -19,10 +19,16 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 - `home/.config/editors/settings.json` owns the shared VS Code and Cursor user settings.
 - `home/` owns public dotfiles that mise links into the home directory.
 - `home/.claude/rules/` owns the Claude rules that this setup supports.
-- `bootstrap.sh` is the only setup entry point and owns the required stage order.
+- `bootstrap.sh` owns bare-metal initialization only: Xcode Command Line Tools, Homebrew, mise, `mise trust`, and linking `~/.zprofile`, `~/.zshrc`, and `~/.zsh_plugins.txt` so both tools are reachable as ordinary commands. It stops there and installs no declared package.
+- `scripts/setup.sh` owns every managed setup stage and the required stage order. The `setup` task in `mise.toml` is its only caller.
+- `scripts/lib.sh` owns the shared logging, dry-run, and manual-gate helpers. Source it, do not execute it.
 - `scripts/` owns idempotent setup behavior that cannot be expressed safely as scalar mise configuration.
 
-Do not add a second setup entry point. New setup behavior belongs in `bootstrap.sh` or in a `scripts/` helper that it calls.
+New setup behavior belongs in `scripts/setup.sh` or in a `scripts/` helper that it calls.
+
+Only add a stage to `bootstrap.sh` when it must run before mise exists. Everything else is a managed stage.
+
+Do not add a third setup entry point.
 
 ## Package Manager Ownership
 
@@ -38,11 +44,24 @@ A tool that ships both a native binary and a runtime package follows rule 4 unle
 
 Never declare the same tool in both `Brewfile` and `mise.toml`.
 
+mise itself is the one exception to the rule and belongs in neither inventory.
+`bootstrap.sh` installs it from `https://mise.run` into `~/.local/bin/mise`, which is the method the mise documentation recommends for macOS.
+It has to exist before `Brewfile` is applied, and `brew bundle cleanup` would otherwise uninstall the binary that is running the setup.
+Do not add `brew "mise"` back.
+
+Do not switch to the `https://mise.run/zsh` installer variant. It appends the activation line to `~/.zshrc`, which is a managed symlink here, and `mise bootstrap dotfiles apply` refuses that conflict rather than replacing the file.
+
+Never pass `--force` to `mise bootstrap dotfiles apply`. Refusing a conflict is the behavior that protects a hand-written dotfile.
+
 Before adding a tool, check the other inventory for an existing entry.
 
 The rule covers declarations, not dependency closures. Homebrew formulae pull their own runtimes, so `agent-browser` and `pi-coding-agent` bring `node`, and `watchman` and `yt-dlp` bring `python`. Those installs are unavoidable and are not duplicate declarations.
 
-`home/.zshrc` activates mise after Homebrew's shell environment, so the mise shims come first on `PATH` and the declared runtime versions win. Do not reorder those two lines.
+`home/.zshrc` puts `~/.local/bin` on `PATH` after Homebrew's shell environment and activates mise after that, so mise is findable at its install path and its shims still come first on `PATH`, which makes the declared runtime versions win. Do not reorder those three blocks.
+
+`~/.local/bin` is the only `PATH` entry `home/.zshrc` sets. Everything else, including `ANDROID_HOME` and the Android SDK directories, belongs in `[env]` in `mise.toml`. Do not duplicate a managed environment variable into the shell configuration.
+
+Every tool lookup in `home/.zshrc` stays guarded. `bootstrap.sh` links that file before the `Brewfile` is applied, so the first terminal after initialization has none of the declared tools yet, and an unguarded call would error there.
 
 ## Editor Extension Policy
 
@@ -194,6 +213,6 @@ Never commit Infisical tokens, project identifiers that should remain private, e
 
 This repository has no test suite. Do not add one.
 
-Verify a change with `./bootstrap.sh --dry-run` and `./scripts/doctor.sh`, both of which are read-only.
+Verify a change with `./bootstrap.sh --dry-run`, `./scripts/setup.sh --dry-run`, and `./scripts/doctor.sh`, all of which are read-only.
 
 Do not install, upgrade, uninstall, clean up, or apply macOS settings on the current Mac while preparing this repository.

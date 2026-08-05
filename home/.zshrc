@@ -1,10 +1,15 @@
-# Keep local history out of the public repository.
+# Without these three lines there is effectively no shell history. zsh defaults
+# to HISTSIZE=30, SAVEHIST=0, and an unset HISTFILE, so nothing survives a
+# session. The two sizes are kept equal on purpose: HISTSIZE is the in-memory
+# list and SAVEHIST is what reaches the file, so a larger HISTSIZE would only
+# hold entries that can never be saved. 50000 lines cost a few megabytes and are
+# what make fzf's Ctrl-R and zsh-history-substring-search worth having.
 HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
 HISTSIZE=50000
-SAVEHIST=10000
+SAVEHIST=50000
 
-setopt append_history
-setopt hist_expire_dups_first
+# share_history already implies append_history, and hist_ignore_all_dups keeps
+# duplicates out of the list entirely, so no expiry policy is needed.
 setopt hist_ignore_all_dups
 setopt hist_ignore_space
 setopt share_history
@@ -14,6 +19,14 @@ if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
+# bootstrap.sh installs mise here, so this directory has to be on PATH before
+# mise can be found and activated below. Every other managed PATH entry and
+# environment variable, including the Android SDK, comes from mise.toml.
+path=(
+  "$HOME/.local/bin"
+  $path
+)
+
 if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
 fi
@@ -21,15 +34,10 @@ fi
 export EDITOR="cursor --wait"
 export VISUAL="$EDITOR"
 export DEV_HOME="$HOME/Developer"
-export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 
-path=(
-  "$HOME/.local/bin"
-  "$ANDROID_HOME/emulator"
-  "$ANDROID_HOME/platform-tools"
-  $path
-)
-
+# Every guard below matters. bootstrap.sh links this file before the Brewfile
+# is applied, so the first terminal after it has neither antidote nor these
+# tools yet.
 if command -v fzf >/dev/null 2>&1; then
   source <(fzf --zsh)
 fi
@@ -40,20 +48,19 @@ if [[ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ]]; then
   antidote load
 fi
 
-bindkey "^f" autosuggest-accept
+# These key bindings need widgets that the plugins above create.
+if (( $+widgets[autosuggest-accept] )); then
+  bindkey "^f" autosuggest-accept
+fi
 
 HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
 if (( $+widgets[history-substring-search-up] )); then
   bindkey "^[[A" history-substring-search-up
   bindkey "^[[B" history-substring-search-down
-else
-  autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
-  zle -N up-line-or-beginning-search
-  zle -N down-line-or-beginning-search
-  bindkey "^[[A" up-line-or-beginning-search
-  bindkey "^[[B" down-line-or-beginning-search
 fi
 
+# The first three are case-insensitive completion and the grouped headers and
+# menu style that fzf-tab expects. The last one previews directories with eza.
 zstyle ":completion:*" matcher-list "m:{a-zA-Z}={A-Za-z}"
 zstyle ":completion:*" menu no
 zstyle ":completion:*:descriptions" format "[%d]"
@@ -78,4 +85,3 @@ alias l="eza --icons=auto --group-directories-first --git-ignore"
 alias ll="eza --icons=auto --group-directories-first --all --header --long"
 alias llm="eza --icons=auto --group-directories-first --all --header --long --sort=modified"
 alias lt="eza --icons=auto --group-directories-first --tree"
-alias tree="eza --icons=auto --group-directories-first --tree"

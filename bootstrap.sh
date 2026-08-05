@@ -1,54 +1,40 @@
 #!/usr/bin/env bash
 
+# Bare-metal initialization for a fresh Apple Silicon Mac.
+#
+# This script installs only the three things that cannot come from managed
+# configuration, because nothing that could install them exists yet:
+#
+#   1. Xcode Command Line Tools, which provide the compiler toolchain and git
+#   2. Homebrew, which owns native binaries, casks, and fonts
+#   3. mise, which owns runtimes, global CLIs, dotfiles, and the setup tasks
+#
+# It then trusts the repository configuration and links the two shell dotfiles
+# that put Homebrew and mise on PATH, so both end up reachable as ordinary
+# commands. Then it stops. The actual setup is `mise run setup`, run by hand as
+# the second and last command.
+
 set -Eeuo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly EXPECTED_REPO_ROOT="${HOME}/github/phoenix-error/dotfiles"
-readonly MANUAL_ACTION_EXIT=2
+readonly LOCAL_BIN="${HOME}/.local/bin"
+readonly MISE_BIN="${LOCAL_BIN}/mise"
 
 DRY_RUN=false
 
-log() {
-  printf '\n==> %s\n' "$1"
+source "${REPO_ROOT}/scripts/lib.sh"
+
+homebrew_installer=""
+mise_installer=""
+
+cleanup_installers() {
+  [[ -n "$homebrew_installer" ]] && rm -f "$homebrew_installer"
+  [[ -n "$mise_installer" ]] && rm -f "$mise_installer"
+  return 0
 }
 
-run() {
-  if [[ "$DRY_RUN" == true ]]; then
-    printf '  +'
-    printf ' %q' "$@"
-    printf '\n'
-    return 0
-  fi
-
-  "$@"
-}
-
-# Scripts that implement their own --dry-run handling.
-run_script() {
-  local script="$1"
-
-  if [[ "$DRY_RUN" == true ]]; then
-    "$script" --dry-run
-  else
-    "$script"
-  fi
-}
-
-wait_for_manual_action() {
-  local instruction="$1"
-  local rerun_command="$2"
-
-  printf '\nManual action required: %s\n' "$instruction"
-
-  if [[ ! -t 0 ]]; then
-    printf 'An interactive terminal is required.\n' >&2
-    printf 'Complete the action, then run: %s\n' "$rerun_command" >&2
-    exit "$MANUAL_ACTION_EXIT"
-  fi
-
-  printf 'Press Return after completing the action. The setup will verify it before continuing.\n'
-  read -r
-}
+trap cleanup_installers EXIT
 
 usage() {
   printf 'Usage: %s [--dry-run]\n' "${0##*/}"
@@ -85,74 +71,7 @@ if [[ "$REPO_ROOT" != "$EXPECTED_REPO_ROOT" && "$DRY_RUN" != true ]]; then
   exit 1
 fi
 
-github_ssh_auth_works() {
-  local ssh_output=""
-
-  ssh_output="$(ssh -T git@github.com 2>&1 || true)"
-  grep -Fq 'successfully authenticated' <<<"$ssh_output"
-}
-
-github_manual_setup_ready() {
-  [[ -f "$HOME/.ssh/id_ed25519" && -f "$HOME/.ssh/id_ed25519.pub" ]] &&
-    ssh-keygen -lf "$HOME/.ssh/id_ed25519.pub" >/dev/null 2>&1 &&
-    [[ "$(awk 'NR == 1 { print $1 }' "$HOME/.ssh/id_ed25519.pub")" == "ssh-ed25519" ]] &&
-    git config --global --get user.name >/dev/null 2>&1 &&
-    git config --global --get user.email >/dev/null 2>&1 &&
-    github_ssh_auth_works
-}
-
-print_github_manual_setup_instructions() {
-  printf '\nConfigure Git and GitHub SSH by hand now.\n'
-  printf 'Homebrew has installed Git. Do the full checklist in README.md:\n'
-  printf '  Setting Git and SSH Up by Hand\n'
-  printf '\nMinimum required before this setup continues:\n'
-  printf '  1. git config --global user.name / user.email\n'
-  printf '  2. ~/.ssh/config and an Ed25519 key at ~/.ssh/id_ed25519\n'
-  printf '  3. Add the public key on GitHub as Authentication and Signing keys\n'
-  printf '  4. Verify with: ssh -T git@github.com\n'
-  printf '     Compare the host fingerprint with GitHub documentation first.\n'
-}
-
-ensure_github_manual_setup() {
-  if [[ "$DRY_RUN" == true ]]; then
-    print_github_manual_setup_instructions
-    printf '  + verify global Git identity\n'
-    printf '  + verify ~/.ssh/id_ed25519{,.pub}\n'
-    printf '  + verify ssh -T git@github.com authenticates\n'
-    return
-  fi
-
-  if github_manual_setup_ready; then
-    printf 'Git identity and GitHub SSH authentication are ready.\n'
-    return
-  fi
-
-  print_github_manual_setup_instructions
-
-  until github_manual_setup_ready; do
-    wait_for_manual_action \
-      "Finish the manual Git and GitHub SSH setup, then confirm." \
-      "./bootstrap.sh"
-
-    if ! git config --global --get user.name >/dev/null 2>&1 ||
-      ! git config --global --get user.email >/dev/null 2>&1; then
-      printf 'Global Git user.name or user.email is still missing.\n' >&2
-      continue
-    fi
-
-    if [[ ! -f "$HOME/.ssh/id_ed25519" || ! -f "$HOME/.ssh/id_ed25519.pub" ]]; then
-      printf 'Expected ~/.ssh/id_ed25519 and ~/.ssh/id_ed25519.pub.\n' >&2
-      continue
-    fi
-
-    if ! github_ssh_auth_works; then
-      printf 'ssh -T git@github.com did not report successful authentication.\n' >&2
-      continue
-    fi
-  done
-
-  printf 'Git identity and GitHub SSH authentication are ready.\n'
-}
+cd "$REPO_ROOT"
 
 log "Checking Xcode Command Line Tools"
 if ! xcode-select -p >/dev/null 2>&1; then
@@ -173,8 +92,7 @@ if ! command -v brew >/dev/null 2>&1 && [[ ! -x /opt/homebrew/bin/brew ]]; then
   if [[ "$DRY_RUN" == true ]]; then
     printf '  + install Homebrew from https://brew.sh\n'
   else
-    readonly homebrew_installer="$(mktemp)"
-    trap 'rm -f "$homebrew_installer"' EXIT
+    homebrew_installer="$(mktemp)"
     curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$homebrew_installer"
     NONINTERACTIVE=1 /bin/bash "$homebrew_installer"
   fi
@@ -189,61 +107,59 @@ if [[ "$DRY_RUN" != true ]] && ! command -v brew >/dev/null 2>&1; then
   exit 1
 fi
 
-cd "$REPO_ROOT"
+# mise comes from its own installer and is deliberately absent from Brewfile.
+# It has to exist before the Brewfile is applied, and `brew bundle cleanup`
+# must never be able to remove the binary that drives the rest of the setup.
+# The check targets the install path rather than PATH so a Mac that still has
+# the old Homebrew mise replaces it here instead of losing it during cleanup.
+log "Checking mise"
+if [[ ! -x "$MISE_BIN" ]]; then
+  if [[ "$DRY_RUN" == true ]]; then
+    printf '  + install mise from https://mise.run into %s\n' "$MISE_BIN"
+  else
+    mise_installer="$(mktemp)"
+    curl -fsSL https://mise.run -o "$mise_installer"
+    MISE_INSTALL_PATH="$MISE_BIN" sh "$mise_installer"
+  fi
+fi
 
-log "Installing Homebrew formulae and casks"
-run brew bundle --file "$REPO_ROOT/Brewfile"
+export PATH="${LOCAL_BIN}:${PATH}"
 
-log "Removing unmanaged Homebrew formulae, casks, and taps"
-run brew bundle cleanup \
-  --force \
-  --formula \
-  --cask \
-  --tap \
-  --file "$REPO_ROOT/Brewfile"
-
-# Git comes from Brewfile. Identity, the SSH key, GitHub registration, and
-# ssh -T are done by hand here before anything else that needs them.
-log "Waiting for manual Git identity and GitHub SSH setup"
-ensure_github_manual_setup
-
-if [[ "$DRY_RUN" != true ]] && ! command -v mise >/dev/null 2>&1; then
-  printf 'mise was not found after applying Brewfile.\n' >&2
+if [[ "$DRY_RUN" != true ]] && [[ ! -x "$MISE_BIN" ]]; then
+  printf 'mise was not found at %s after installation.\n' "$MISE_BIN" >&2
   exit 1
 fi
 
+# The setup task lives in mise.toml, so the configuration has to be trusted
+# before mise will read it.
 log "Trusting the repository mise configuration"
-run mise trust "$REPO_ROOT/mise.toml"
+run "$MISE_BIN" trust "$REPO_ROOT/mise.toml"
 
-# The runtimes install first because other backends depend on them. The pipx
-# backend needs uv, and every npm-backed tool needs bun as its package manager.
-log "Installing locked language runtimes"
-run mise install uv bun node python java ruff
-
-log "Installing locked global CLIs"
-run mise install
-
-log "Applying managed dotfiles"
-run mise bootstrap dotfiles apply --yes
-
-log "Installing Herdr agent integrations"
-run_script "$REPO_ROOT/scripts/install-herdr-integrations.sh"
-
-log "Applying macOS defaults"
-run mkdir -p "$HOME/Developer/appzudio"
-run mise bootstrap macos defaults apply --yes
-
-log "Installing Mac App Store applications"
-run_script "$REPO_ROOT/scripts/install-mas-apps.sh"
-
-log "Setup status"
-if [[ "$DRY_RUN" == true ]]; then
-  run "$REPO_ROOT/scripts/doctor.sh"
+# Neither Homebrew nor mise is on a fresh Mac's default PATH, and the two files
+# that put them there are managed by this repository. Linking just those two
+# ends the initialization with both tools reachable as ordinary commands.
+#
+# This deliberately runs without --force. mise refuses to replace a dotfile it
+# does not own, so a Mac with a hand-written ~/.zshrc keeps it and falls back to
+# the absolute path below instead of losing the file.
+log "Linking the managed shell configuration"
+if run "$MISE_BIN" bootstrap dotfiles apply --yes \
+  "~/.zprofile" \
+  "~/.zshrc" \
+  "~/.zsh_plugins.txt"; then
+  shell_configuration_linked=true
 else
-  mise exec -- "$REPO_ROOT/scripts/doctor.sh" || true
+  shell_configuration_linked=false
+  printf 'The managed shell configuration was not linked.\n' >&2
+  printf 'The setup task applies it later together with every other dotfile.\n' >&2
 fi
 
-printf '\nRepository setup finished.\n'
-printf 'Open docs/setup-guide.html and complete the manual checklist.\n'
-printf 'Install the global agent skills by hand from docs/agent-skills.md.\n'
-printf 'Then run: mise run doctor\n'
+printf '\nInitialization finished. Homebrew and mise are ready.\n'
+
+if [[ "$shell_configuration_linked" == true ]]; then
+  printf 'Open a new terminal so the shell picks both up, then run: mise run setup\n'
+else
+  printf 'Now run: %s run setup\n' "$MISE_BIN"
+fi
+
+printf 'It applies the setup and pauses for the manual steps it needs.\n'

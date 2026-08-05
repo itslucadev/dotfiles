@@ -23,7 +23,6 @@ brew "infisical/get-cli/infisical", trusted: true
 brew "jq"
 brew "lazygit"
 brew "mas"
-brew "mise"
 brew "mobile-dev-inc/tap/maestro", trusted: true
 brew "mole"
 brew "pi-coding-agent"
