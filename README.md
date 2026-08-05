@@ -98,6 +98,19 @@ The current Mac can also be used for a final rehearsal immediately before it is 
 
 ## Quick Start on a New Mac
 
+> [!IMPORTANT]
+> **Set up the GitHub SSH key before doing any Git work on a new Mac.**
+>
+> Cloning this repository does not need it. The repository is public and the command below clones over HTTPS.
+> Committing does need it, and that catches people out.
+>
+> The managed `~/.gitconfig` sets `commit.gpgsign = true` and points `user.signingkey` at `~/.ssh/id_ed25519.pub`.
+> From the moment the dotfiles are applied, every `git commit` fails with `fatal: failed to write commit object` until that key exists.
+> `bootstrap.sh` creates and registers the key on its own, but only near the end of the run, well after it applies the dotfiles.
+>
+> A single uninterrupted `./bootstrap.sh` therefore needs nothing in advance.
+> For anything else, including committing partway through the run or applying the dotfiles on their own, set the key up first with [Setting the Key Up by Hand](#setting-the-key-up-by-hand).
+
 Sign in to the Mac with an administrator account and complete the initial macOS onboarding.
 
 Install the Xcode Command Line Tools:
@@ -575,6 +588,38 @@ The bootstrap does not continue until local setup, both GitHub registrations, an
 This implements the official [Connecting to GitHub with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) workflow.
 
 SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authentication state are never copied into this repository.
+
+### Setting the Key Up by Hand
+
+The bootstrap owns this stage and runs it automatically, but it runs it after applying the dotfiles.
+Because `~/.gitconfig` makes commit signing mandatory, Git cannot commit in the window between those two stages, or on any machine where the dotfiles were applied without completing the SSH stage.
+
+Run GitHub's documented macOS flow by hand when Git has to work before or without a full bootstrap:
+
+```sh
+ssh-keygen -t ed25519 -C "42442490+phoenix-error@users.noreply.github.com"
+eval "$(ssh-agent -s)"
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+pbcopy < ~/.ssh/id_ed25519.pub
+```
+
+Add the copied public key at [GitHub SSH and GPG keys](https://github.com/settings/keys) twice, once as an Authentication Key and once as a Signing Key.
+Registering it only for authentication leaves commit signing broken, and Git keeps failing the same way.
+
+Verify the connection, comparing the offered host fingerprint against [GitHub's published fingerprints](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints) on first use:
+
+```sh
+ssh -T git@github.com
+```
+
+Doing this by hand does not conflict with the bootstrap.
+`scripts/setup-github-ssh.sh` creates a key only when neither key file exists and checks GitHub before each upload, so the later automated stage finds the work already done and skips it.
+
+Confirm the complete local and remote state at any time:
+
+```sh
+./scripts/setup-github-ssh.sh --status
+```
 
 ## Secrets with Infisical
 
