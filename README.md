@@ -61,20 +61,22 @@ The bootstrap:
 - Installs Homebrew when necessary.
 - Applies `Brewfile`.
 - Removes Homebrew formulae, casks, and taps that are not required by `Brewfile`.
-- Installs GitHub CLI and the remaining native command-line tools.
-- Installs locked mise runtimes and global CLIs.
-- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Git, SSH, editor, Claude, and global agent dotfiles.
+- Trusts the repository `mise.toml`.
+- Installs the locked language runtimes, then the locked global CLIs.
+- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Git, SSH, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
-- Creates or reuses one Ed25519 key for GitHub authentication and commit signing, loads it through the macOS Keychain, and maintains the local allowed signers file.
 - Installs the saved VS Code and Cursor extensions through their native command-line interfaces.
-- Links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
-- Creates `~/Developer` as the shared project directory.
-- Applies the confirmed macOS defaults.
+- Creates `~/Developer` and applies the confirmed macOS defaults.
 - Reserves shortcuts for Raycast and CleanShot.
+- Creates or reuses one Ed25519 key for GitHub authentication and commit signing, loads it through the macOS Keychain, and maintains the local allowed signers file.
 - Installs the signed Raycast v2 Beta beside Raycast v1.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
 - Installs the commit-pinned global skills for Claude Code and Cursor through BunX, and the NotebookLM skill through its own CLI.
 - Runs the setup doctor.
+
+The runtimes install before the remaining CLIs because the other backends depend on them: the pipx backend needs uv, and every npm-backed tool needs bun as its package manager.
+
+The four stages that wait for a person run together near the end, so everything between Homebrew and the reserved shortcuts completes unattended.
 
 The agent skills run last on purpose. Their installer verifies each target agent by looking for its configuration directory, and those directories only exist once the managed dotfiles are in place.
 
@@ -207,7 +209,9 @@ Homebrew installs these applications:
 
 Homebrew also installs Claude Code and the Codex CLI as casks.
 
-Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, Fastlane, Git LFS, Gitleaks, the Infisical CLI, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, the Pi coding agent, the Resend CLI, the Sentry CLI, the Sentry Wizard, Tmux, and YouTube-DLP.
+Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, CocoaPods, Fallow, Fastlane, fd, Git LFS, Gitleaks, the Infisical CLI, jq, LazyGit, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, the Pi coding agent, the Resend CLI, ripgrep, the Sentry CLI, the Sentry Wizard, Tmux, Watchman, and YouTube-DLP.
+
+The interactive shell tools Antidote, bat, eza, fd, FZF, ripgrep, Starship, and Zoxide are covered in the shell section below.
 
 The Mac App Store installs Actions, Folder Quick Look, Helm, Obsidian Web Clipper, RocketSim, Timepage, and stable Xcode.
 
@@ -221,7 +225,7 @@ The setup does not install Rosetta 2. No managed cask declares an Intel requirem
 
 GatherOS, Maestro Studio, Recordly, and SimCam are direct-download applications covered by the manual setup checklist.
 
-Affinity Designer, Affinity Photo, Affinity Publisher, Arc, Figma, GitHub Desktop, KeepingYouAwake, Linear, Magnet, Obsidian, Parsec, Proton Pass, Sentry Spotlight, Slack, Stats, Stremio, TextMate, Tower, and Xcode Beta are intentionally excluded.
+Sentry Spotlight and Xcode Beta are excluded as well.
 
 ## Managed Runtimes and Global CLIs
 
@@ -298,6 +302,7 @@ Antidote loads:
 - Zsh Bat
 - Zsh Syntax Highlighting
 - Zsh History Substring Search
+- Zsh SSH
 
 The shell also configures FZF, Eza, Zoxide, Bat, Android SDK paths, and mise activation.
 
@@ -315,7 +320,9 @@ Repository agent instructions explicitly prohibit installing individual Zsh plug
 
 WezTerm starts from Kun Chen's Rose Pine Moon styling with Hack Nerd Font, transparency, blur, minimal tabs, and resize-only window decorations.
 
-Ghostty uses the same Rose Pine Moon theme, Hack Nerd Font, 15-point font size, 0.8 background opacity, and blur level 50.
+Ghostty uses the same Rose Pine Moon theme, Hack Nerd Font, 14-point font size, 0.8 background opacity, and blur level 50.
+
+Its configuration file is named `config` with no extension, because that is the only name Ghostty reads inside `~/.config/ghostty`.
 
 Herdr starts from its built-in Rose Pine theme and overrides the supported color tokens with the official Rose Pine Moon palette.
 
@@ -346,6 +353,10 @@ Ruff formats Python, applies safe fixes, and organizes imports on save.
 Project-level `pyproject.toml` or `ruff.toml` settings take priority over the global editor defaults.
 
 The shared React and React Native setup includes Biome, Prettier, ESLint, Tailwind CSS IntelliSense, Pretty TypeScript Errors, Error Lens, Path IntelliSense, Auto Rename Tag, Import Cost, Indent Rainbow, and the ES7+ React snippets.
+
+Both editors also receive GitLens and the Claude Code extension.
+
+Modernized is the one VS Code specific addition beyond Pylance. It is published only on the Visual Studio Marketplace, so Cursor cannot install it.
 
 Swift, Java, Kotlin, clangd, LLDB, and the .NET extensions are deliberately excluded. Xcode owns Swift and Objective-C, Android Studio owns Java and Kotlin, and both are part of this setup.
 
@@ -442,7 +453,7 @@ The Pyright and TypeScript LSP plugins remain enabled so Claude receives diagnos
 
 Claude authentication, caches, conversation history, local settings, and generated plugin state are not tracked.
 
-The [ChatGPT desktop application](https://learn.chatgpt.com/docs/app) includes the Codex desktop experience, and mise installs the standalone Codex CLI beside it.
+The [ChatGPT desktop application](https://learn.chatgpt.com/docs/app) includes the Codex desktop experience, and Homebrew installs the standalone Codex CLI beside it.
 
 Oh My Pi extends the Pi coding agent into a multi-agent orchestration setup, and Herdr installs the matching integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
 
@@ -601,7 +612,7 @@ Never commit an alternate Git identity file, SSH private key, private SSH host i
 - [ ] Launch Cursor and sign in.
 - [ ] Confirm that Rosé Pine Moon and Hack Nerd Font Mono load in Cursor.
 - [ ] Open a Python project and confirm that its `.venv` is discovered and Ruff formats on save.
-- [ ] Open a React Native project and confirm that Biome, Prettier, ESLint, Tailwind, and Expo Tools activate only where their project configuration applies.
+- [ ] Open a React Native project and confirm that Biome, Prettier, ESLint, and Tailwind activate only where their project configuration applies.
 - [ ] Review extension publisher trust prompts in both editors.
 - [ ] Run `mise run editors:extensions` again if an extension was temporarily unavailable during bootstrap.
 
@@ -678,7 +689,7 @@ The setup configures macOS so pressing Fn or Globe has no native action, leaving
 - [ ] Authenticate Sentry CLI with `sentry auth login`.
 - [ ] Authenticate EAS with `eas login`.
 - [ ] Authenticate Vercel with `vercel login`.
-- [ ] Authenticate AgentMail if it is used.
+- [ ] Authenticate Fallow if a project uses the optional paid runtime layer.
 - [ ] Complete any NotebookLM CLI browser login.
 - [ ] Configure other agent tools without committing their credentials or histories.
 
