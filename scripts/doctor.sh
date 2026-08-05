@@ -74,10 +74,19 @@ check_editor_extensions() {
   local extension=""
 
   if ! command -v "$editor" >/dev/null 2>&1; then
+    fail "Cannot check extensions, editor command missing: $editor"
     return
   fi
 
-  installed_extensions="$("$editor" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+  # A failing --list-extensions would otherwise yield an empty list, which reads
+  # as "nothing is installed" and reports every extension as missing without
+  # ever showing the real reason.
+  if ! installed_extensions="$("$editor" --list-extensions 2>&1)"; then
+    fail "Could not list installed extensions for $editor: $installed_extensions"
+    return
+  fi
+
+  installed_extensions="$(printf '%s' "$installed_extensions" | tr '[:upper:]' '[:lower:]')"
 
   while IFS= read -r extension || [[ -n "$extension" ]]; do
     if [[ -z "$extension" || "$extension" == \#* ]]; then
@@ -90,66 +99,6 @@ check_editor_extensions() {
       fail "$editor extension missing: $extension"
     fi
   done <"$extension_file"
-}
-
-check_agent_skills() {
-  local inventory="$HOME/github/phoenix-error/dotfiles/home/.config/skills/default-skills.txt"
-  local source_url=""
-  local skill_names=""
-  local skill=""
-  local target_directory=""
-  local skill_count=0
-  local -a skills=()
-  local -a missing=()
-  local -a unlinked=()
-  # The Skills CLI keeps one central store and links each agent into it. A
-  # missing skill in the store is a real failure; a missing agent link is worth
-  # reporting but does not mean the skill was never installed.
-  local store="$HOME/.agents/skills"
-  local -a agent_directories=(
-    "$HOME/.claude/skills"
-    "$HOME/.codex/skills"
-    "$HOME/.cursor/skills"
-    "$HOME/.pi/agent/skills"
-  )
-
-  if [[ ! -r "$inventory" ]]; then
-    fail "Agent skill inventory is missing"
-    return
-  fi
-
-  while IFS='|' read -r source_url skill_names ||
-    [[ -n "$source_url$skill_names" ]]; do
-    if [[ -z "$source_url" || "$source_url" == \#* ]]; then
-      continue
-    fi
-
-    read -r -a skills <<<"$skill_names"
-    for skill in "${skills[@]}"; do
-      skill_count=$((skill_count + 1))
-
-      if [[ ! -f "$store/$skill/SKILL.md" ]]; then
-        missing+=("$skill")
-        continue
-      fi
-
-      for target_directory in "${agent_directories[@]}"; do
-        if [[ ! -e "$target_directory/$skill" ]]; then
-          unlinked+=("${target_directory/#$HOME/\~}/$skill")
-        fi
-      done
-    done
-  done <"$inventory"
-
-  if [[ "${#missing[@]}" -ne 0 ]]; then
-    fail "Managed agent skills missing from ~/.agents/skills: ${missing[*]}"
-  else
-    pass "$skill_count managed agent skills are installed"
-  fi
-
-  if [[ "${#unlinked[@]}" -ne 0 ]]; then
-    warn "Agent skill links missing: ${unlinked[*]}"
-  fi
 }
 
 printf 'Mac setup doctor\n\n'
@@ -373,8 +322,6 @@ if [[ -d "$HOME/Library/Android/sdk" ]]; then
 else
   warn "Complete Android Studio onboarding to install the Android SDK"
 fi
-
-check_agent_skills
 
 for agent_wrapper in gh-axi lavish-axi chrome-devtools-axi ctx7 nlm; do
   if command -v "$agent_wrapper" >/dev/null 2>&1; then

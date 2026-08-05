@@ -176,20 +176,6 @@ run_script "$REPO_ROOT/scripts/install-raycast-beta.sh"
 log "Installing Mac App Store applications"
 run_script "$REPO_ROOT/scripts/install-mas-apps.sh"
 
-# The agent skills run last because they are the one stage nothing else depends
-# on, and because they link into the agent directories that the earlier stages
-# create. A failure here must not hide the setup doctor, which is the one stage
-# that reports what the whole run achieved.
-skills_failed=false
-
-log "Installing the pinned global agent skills"
-if [[ "$DRY_RUN" == true ]]; then
-  "$REPO_ROOT/scripts/install-agent-skills.sh" --dry-run
-elif ! mise exec -- "$REPO_ROOT/scripts/install-agent-skills.sh"; then
-  skills_failed=true
-  printf '\nThe agent skills did not install. Continuing to the setup doctor.\n' >&2
-fi
-
 log "Setup status"
 if [[ "$DRY_RUN" == true ]]; then
   run "$REPO_ROOT/scripts/doctor.sh"
@@ -197,13 +183,7 @@ else
   mise exec -- "$REPO_ROOT/scripts/doctor.sh" || true
 fi
 
-if [[ "$skills_failed" == true ]]; then
-  printf '\nRepository setup finished with one failed stage.\n' >&2
-  printf 'Rerun the agent skills with: mise run agents:skills\n' >&2
-  printf 'Open docs/setup-guide.html and complete the manual checklist.\n' >&2
-  exit 1
-fi
-
 printf '\nRepository setup finished.\n'
 printf 'Open docs/setup-guide.html and complete the manual checklist.\n'
+printf 'Install the global agent skills by hand from docs/agent-skills.md.\n'
 printf 'Then run: mise run doctor\n'

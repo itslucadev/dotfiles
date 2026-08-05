@@ -209,8 +209,45 @@ Für Bibliotheks-Dokumentation gibt es die `ctx7`-Regel und zusätzlich das `con
 Für Browser-Steuerung gibt es `chrome-devtools-axi`, das laut Regel exklusiv sein soll, dazu das `chrome-devtools-mcp`-Plugin und `agent-browser`.
 Der Name `code-review` ist doppelt belegt, einmal aus dem Skill-Inventar und einmal aus einem Plugin, mit unterschiedlichem Verhalten.
 
-**`mise.lock` muss beim ersten echten Lauf neu erzeugt werden.**
-
 **Der Einrichtungsvorgang ist weiterhin nie gelaufen.**
 Der Probelauf läuft vollständig durch, aber das ist keine Ausführung.
 Die Reihenfolge der Stufen, das Aufräumen von Homebrew, die Wartestellen und der GitHub-Ablauf sind gelesen, nicht bewiesen.
+
+## Nachtrag, 5. August 2026
+
+Eine Gegenprüfung dieses Berichts hat drei Aussagen widerlegt.
+
+**Ein Skill-Name existierte nicht mehr.**
+Der Bericht führt unter "Was der Prüfung standgehalten hat" auf, alle 24 Skill-Namen existierten im Quellprojekt.
+Ein frischer Klon von `mattpocock/skills` zeigt: `writing-great-skills` ist dort nicht vorhanden.
+Der Nachfolger heißt `writing-for-agents`.
+Auf der bestehenden Maschine lag der alte Skill noch aus einer früheren Installation, weshalb es niemandem auffiel.
+Auf einem neuen Mac wäre er nie angekommen.
+
+**Der Doctor verschluckte weiter, was der Installer meldet.**
+Der Bericht schreibt zu den fehlgeschlagenen Erweiterungslisten "Beides wird jetzt ausdrücklich geprüft".
+Das galt nur für `install-editor-extensions.sh`.
+`doctor.sh` rief `--list-extensions` weiterhin mit unterdrückter Fehlerausgabe und ohne Rückgabewert-Prüfung auf und übersprang einen fehlenden Editor kommentarlos.
+
+**AgentMail stand weiter doppelt.**
+Der Bericht hakt den Widerspruch als behoben ab.
+Der Setup-Guide verlangte die AgentMail-Anmeldung weiterhin, während das README die CLI ausschließt.
+
+**Eine Zahl stimmt nicht.**
+Das Brewfile enthält 37 Programme, nicht 38. Es waren auch zum Berichtsstand schon 37.
+
+Bestätigt wurde dagegen alles Übrige.
+Nachgerechnet oder gegen die jeweilige Quelle geprüft: die Analyse der Skills-CLI im entpackten Quelltext von 1.5.21, die 36 Formeln, die zehn Vertrauenserklärungen, die sieben App-Store-Kennnummern samt Anwendungsnamen, die Zahlen zu `mise.lock`, die fünf Herdr-Integrationsnamen gegen `herdr integration list`, jeder Schlüssel in `home/.claude/settings.json` gegen die Claude-Binärdatei, die Ladereihenfolge von mise nach Homebrew in `.zshrc` und der Programmname von Pear Desktop.
+
+Ebenfalls geprüft und ohne Befund: jeder Eintrag der Programmliste im Doctor hat einen Kanal, und jeder Name entspricht dem, was der Kanal tatsächlich in `/Applications` ablegt.
+Das gilt auch für die drei Sonderfälle Tailscale, das über ein Installationspaket statt eines Programm-Artefakts kommt, WezTerm, dessen Artefakt in einem verschachtelten Pfad liegt, und Raycast Beta, das aus dem eigenen Skript stammt.
+
+**Die Folge für die Skills:** Sie sind ganz aus dem Einrichtungsvorgang entfernt.
+Sie werden von Hand installiert, und `docs/agent-skills.md` hält fest, welche das sind.
+Skill-Quellen werden umbenannt und stillgelegt, während der Rest dieses Inventars stabil bleibt, und ein veralteter Eintrag hätte den ganzen Lauf gekostet, ohne dass ein frischer Mac davon abhängt.
+
+**Die Folge für `mise.lock`:** Die Datei wird nicht mehr versioniert.
+Der Befund oben stimmt, aber die vorgeschlagene Antwort war die falsche.
+Nur mise kann die Datei schreiben, jeder Eintrag in `mise.toml` steht auf `latest` oder `lts`, und eine mitgeführte Kopie ist binnen Monaten veraltet, ohne je die maßgebliche Quelle gewesen zu sein.
+Das ist `mise.toml`, und die Bremse gegen frische Lieferketten-Angriffe ist die Mindestwartezeit von sieben Tagen, nicht die Sperrdatei.
+Jede Maschine löst ihre Versionen jetzt selbst auf.

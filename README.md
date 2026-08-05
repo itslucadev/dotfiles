@@ -8,9 +8,9 @@ Homebrew installs formulae, desktop applications, and fonts.
 
 mise installs Node.js, Bun, Python, Java, native developer tools, and global npm-backed CLIs, with Bun acting as the npm package manager.
 
-The lockfile targets Apple Silicon macOS only, and fuzzy versions must be at least seven days old before mise selects them.
+Fuzzy versions must be at least seven days old before mise selects them, which limits exposure to brand-new supply-chain releases.
 
-This limits exposure to brand-new supply-chain releases while the committed lockfile keeps accepted versions reproducible.
+Each machine keeps its own `mise.lock`, which mise writes and this repository does not track.
 
 ## Status
 
@@ -52,6 +52,8 @@ The setup is idempotent and can be rerun after resolving a manual prerequisite.
 
 After the command finishes, open the offline [interactive setup guide](docs/setup-guide.html) to complete permissions, remaining application logins, and application onboarding.
 
+The global agent skills are installed by hand from [docs/agent-skills.md](docs/agent-skills.md), which records which skills belong on the machine and the exact command for each source.
+
 ## What the Bootstrap Does
 
 The bootstrap:
@@ -71,14 +73,13 @@ The bootstrap:
 - Creates or reuses one Ed25519 key for GitHub authentication and commit signing, loads it through the macOS Keychain, and maintains the local allowed signers file.
 - Installs the signed Raycast v2 Beta beside Raycast v1.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
-- Installs the global agent skills for Claude Code, Codex, Cursor, and Pi through BunX, and the NotebookLM skill through its own CLI.
 - Runs the setup doctor.
+
+It does not install agent skills. Those are a personal, fast-moving choice and are listed in [docs/agent-skills.md](docs/agent-skills.md) for manual installation.
 
 The runtimes install before the remaining CLIs because the other backends depend on them: the pipx backend needs uv, and every npm-backed tool needs bun as its package manager.
 
 The four stages that wait for a person run together near the end, so everything between Homebrew and the reserved shortcuts completes unattended.
-
-The agent skills run last on purpose. Their installer verifies each target agent by looking for its configuration directory, and those directories only exist once the managed dotfiles are in place.
 
 The Homebrew reconciliation uses regular cask uninstall behavior and never passes `--zap`, so application data and shared support files are preserved.
 
@@ -113,7 +114,7 @@ The repository keeps configuration in the native declarative format of the tool 
 - `Brewfile` owns the exact desired top-level Homebrew formulae, casks, taps, fonts, and Homebrew 6 trust declarations.
 - `Brewfile.mas` owns Mac App Store applications.
 - `mise.toml` owns runtimes, Bun-backed global CLIs, dotfile symlinks, tasks, and scalar macOS defaults.
-- `mise.lock` contains the resolved mise tool versions and is generated only by mise.
+- `mise.lock` contains the resolved mise tool versions. Only mise writes it, it is local to each machine, and it is not tracked.
 - `home/` contains public configuration that mise symlinks into the home directory.
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
 
@@ -121,10 +122,9 @@ The repository keeps configuration in the native declarative format of the tool 
 
 It installs the first dependencies needed before mise is available, then runs the remaining stages in the required order, because Homebrew must install mise before mise can orchestrate the rest.
 
-It calls seven helper scripts that can change the Mac or connected accounts:
+It calls six helper scripts that can change the Mac or connected accounts:
 
 - `scripts/configure-macos.sh` owns the dynamic screenshot path and nested `AppleSymbolicHotKeys` dictionary that mise macOS defaults cannot represent correctly.
-- `scripts/install-agent-skills.sh` installs the global skill profile for Claude Code, Codex, Cursor, and Pi through BunX, then installs the NotebookLM skill through its own CLI.
 - `scripts/install-editor-extensions.sh` installs the declarative extension inventories through the native VS Code and Cursor CLIs.
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
@@ -463,31 +463,17 @@ The global agent instructions tell agents to use PostHog CLI for deterministic P
 
 ## Global Agent Skills
 
-The global skill profile is declared in `home/.config/skills/default-skills.txt`.
+The setup does not install agent skills.
 
-The installer uses `bunx --bun skills@1.5.21`, never `npx`, and installs the selected skills for Claude Code, Codex, Cursor, and Pi in one call.
+Skill sources are renamed, split, and retired far faster than the rest of this inventory, and a stale entry fails the whole run without adding anything a fresh Mac needs to work.
+They are installed by hand instead.
 
-Oh My Pi extends the Pi agent and reads Pi's skill directory, so the `pi` target covers both.
-
-The profile is deliberately small. It contains Matt Pocock's engineering, productivity, and misc skills, and nothing else.
-
-His `skills/personal` folder is excluded because `obsidian-vault` points at a Windows vault path and `edit-article` encodes someone else's publishing workflow. His `deprecated` and `in-progress` folders are excluded as well.
-
-`setup-matt-pocock-skills` is excluded because this repository installs those skills declaratively instead.
-
-The NotebookLM skill is the one exception to the pinning rule. It ships inside the NotebookLM CLI package, so the installer runs `nlm skill install claude-code` and `nlm skill install cursor` after reconciling the inventory.
-
-Vercel, Anthropic, Sentry, Expo, Argent, React Doctor, and animation skill sources were removed from the profile. Ponytail, Understand Anything, Karpathy skills, Codex skills, and OpenCode skills remain excluded.
-
-Reconcile the profile after changing the inventory:
-
-```sh
-mise run agents:skills
-```
-
-To change the profile, edit the inventory and run the installer again.
+[docs/agent-skills.md](docs/agent-skills.md) is the record of which skills belong on the machine.
+It lists every skill with its purpose, the exact `bunx --bun skills@1.5.21` command for each source, what is deliberately left out, and how to verify the result.
 
 The repository does not copy local plugin caches or private skill folders.
+
+The Claude plugins enabled in `home/.claude/settings.json` ship their own skills, which that file does not govern.
 
 ## Git and SSH
 
@@ -706,7 +692,7 @@ The setup configures macOS so pressing Fn or Globe has no native action, leaving
 - [ ] Verify the managed extension inventories in VS Code and Cursor.
 - [ ] Run `mise doctor`.
 - [ ] Run `mise run doctor`.
-- [ ] Run `MISE_SAFE=1 mise lock --bump`, then review and commit the regenerated `mise.lock`.
+- [ ] Install the global agent skills by hand from [docs/agent-skills.md](docs/agent-skills.md).
 - [ ] Build and launch one React Native project on an iOS Simulator.
 - [ ] Build and launch one React Native project on the Android emulator.
 - [ ] Reboot once and verify login items, shortcuts, VPNs, and permissions.
@@ -781,19 +767,17 @@ brew bundle --file Brewfile
 brew bundle cleanup --force --formula --cask --tap --file Brewfile
 ```
 
-Refresh locked mise versions without installing them:
+Refresh the local resolved mise versions without installing them:
 
 ```sh
 MISE_SAFE=1 mise lock --bump
 ```
 
-Review and commit `mise.lock` after testing.
+`mise.lock` is not tracked. Only mise can write it, every entry in `mise.toml` is a fuzzy version, and a committed copy went stale within months without ever having been the source of truth. `mise.toml` is that source, and the seven-day minimum release age is what actually limits exposure.
 
-`mise.lock` is currently out of date. It still pins seven tools that `mise.toml` no longer declares, among them Claude Code and the Pi coding agent, which now come from Homebrew. It is also missing entries for `chrome-devtools-axi`, `ctx7`, `gh-axi`, `lavish-axi`, and the NotebookLM CLI, so those five resolve without a pinned version on a fresh install.
+Each machine therefore resolves and keeps its own lockfile.
 
-Only mise can regenerate the file, so the first real bootstrap has to run `MISE_SAFE=1 mise lock --bump` and commit the result.
-
-The repository does not enable mise's strict `locked` mode yet because every managed backend must first have a complete macOS artifact URL and checksum in `mise.lock`.
+The repository does not enable mise's strict `locked` mode, which would require a tracked lockfile with a complete macOS artifact URL and checksum for every managed backend.
 
 Homebrew Bundle computes the recursive dependency closure of the managed formulae and the formula dependencies required by managed casks before cleanup.
 

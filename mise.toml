@@ -104,10 +104,6 @@ run = "./scripts/install-mas-apps.sh"
 description = "Install Raycast v2 Beta from the official signed disk image"
 run = "./scripts/install-raycast-beta.sh"
 
-[tasks."agents:skills"]
-description = "Install the pinned global skills for Claude Code and Cursor"
-run = "./scripts/install-agent-skills.sh"
-
 [tasks."agents:herdr"]
 description = "Install the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi"
 run = "./scripts/install-herdr-integrations.sh"

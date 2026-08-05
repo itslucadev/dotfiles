@@ -9,6 +9,11 @@ mise.local.lock
 mise.*.local.toml
 mise.*.local.lock
 
+# Resolved mise versions. Only mise can write this file, and every declared
+# entry is a fuzzy version, so a committed copy drifts out of date without ever
+# being the source of truth. Each machine keeps its own.
+mise.lock
+
 # Local shell configuration and history
 *.local
 .zsh_history

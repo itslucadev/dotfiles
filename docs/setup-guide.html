@@ -1948,26 +1948,26 @@ vercel login</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Falls genutzt, zusätzlich AgentMail und NotebookLM CLI authentifizieren.
+                      Falls genutzt, zusätzlich die NotebookLM CLI authentifizieren.
                     </p>
                   </div>
                 </article>
 
                 <article class="task" data-task-id="agents-default-skills">
-                  <input class="task-check" type="checkbox" aria-label="Default Skills geprüft" />
+                  <input class="task-check" type="checkbox" aria-label="Globale Agent-Skills installiert" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Commit-gepinnte Default Skills für Claude und Cursor prüfen</h3>
-                      <span class="badge auto">Automatisch</span>
+                      <h3 class="task-title">Globale Agent-Skills von Hand installieren</h3>
+                      <span class="badge manual">Manuell</span>
                     </div>
                     <p class="task-note">
-                      Das Inventar liegt unter
-                      <code>home/.config/skills/default-skills.txt</code>. Der Installer verwendet
-                      <code>bunx --bun skills@1.5.21</code>, niemals <code>npx</code>, und verlinkt
-                      die geprüften Skills für Claude Code und Cursor.
+                      Das Setup installiert keine Skills. Welche Skills auf die Maschine gehören und
+                      mit welchem Befehl, steht in <code>docs/agent-skills.md</code>. Die Befehle
+                      verwenden <code>bunx --bun skills@1.5.21</code>, niemals <code>npx</code>, und
+                      richten sich an Claude Code, Codex, Cursor und Pi.
                     </p>
                     <div class="command">
-                      <pre><code>mise run agents:skills</code></pre>
+                      <pre><code>open docs/agent-skills.md</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                   </div>
