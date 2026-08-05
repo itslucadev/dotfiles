@@ -2005,12 +2005,6 @@ eas login
 vercel login</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
-                    <p class="task-note">
-                      Falls genutzt, Gemini Notebook mit <code>nlm login</code> authentifizieren.
-                      MCP und Skill richtest du danach mit <code>nlm setup add</code> und
-                      <code>nlm skill install</code> ein; Details stehen in
-                      <code>docs/agent-skills.md</code>.
-                    </p>
                   </div>
                 </article>
 
@@ -2029,6 +2023,33 @@ vercel login</code></pre>
                     </p>
                     <div class="command">
                       <pre><code>open docs/agent-skills.md</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="agents-gemini-notebook">
+                  <input class="task-check" type="checkbox" aria-label="Gemini Notebook eingerichtet" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Gemini Notebook einrichten</h3>
+                      <span class="badge manual">Login</span>
+                    </div>
+                    <p class="task-note">
+                      Das Setup installiert <code>nlm</code> über mise, aber nicht die Anmeldung,
+                      den MCP-Server oder den Skill. Ohne <code>nlm login</code> schlagen
+                      Notebook-Befehle und der gebündelte Skill fehl. Pi wird von
+                      <code>nlm setup</code> und <code>nlm skill install</code> nicht unterstützt.
+                    </p>
+                    <div class="command">
+                      <pre><code>nlm login
+nlm setup add claude-code
+nlm setup add cursor
+nlm setup add codex
+nlm skill install claude-code
+nlm skill install cursor
+nlm skill install codex
+nlm doctor</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                   </div>

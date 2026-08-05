@@ -60,13 +60,6 @@ Pi is not supported by `nlm setup` or `nlm skill install`.
 
 Run `nlm doctor` to verify installation, authentication, and agent configuration.
 
-## Excluded sources
-
-Matt Pocock's `skills/personal`, `deprecated`, and `in-progress` folders are excluded.
-
-Vercel, Anthropic, Sentry, Expo, Argent, React Doctor, and animation skill sources are excluded.
-Ponytail, Understand Anything, Karpathy skills, Codex skills, and OpenCode skills are excluded.
-
 ## Skills that arrive another way
 
 The Claude plugins enabled in `home/.claude/settings.json` ship their own skills, and this file does not govern them.
