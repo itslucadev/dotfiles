@@ -1606,28 +1606,64 @@ echo "$PATH" | tr ':' '\n' | grep "$ANDROID_HOME"</code></pre>
             </button>
             <div class="phase-body">
               <p class="phase-intro">
-                Das öffentliche Repo liefert die bestätigte GitHub-Noreply-Identität sowie
-                portable Git- und SSH-Regeln. Der Bootstrap erstellt oder übernimmt genau
-                einen lokalen Ed25519-Schlüssel für Authentifizierung und Signing. Private
+                Git ist bewusst nicht Teil des Repos. <code>~/.gitconfig</code>,
+                <code>~/.config/git/ignore</code> und <code>~/.ssh/config</code> werden von Hand
+                gesetzt, weil eine verwaltete Git-Konfiguration schon aktiv wäre, bevor der
+                Schlüssel existiert, mit dem sie signiert. Die Identität muss deshalb vor
+                <code>./bootstrap.sh</code> stehen. Automatisiert bleibt, was davon profitiert:
+                Schlüssel erzeugen, bei GitHub registrieren und die Verbindung prüfen. Private
                 Schlüssel, Hosts und GitHub-Login bleiben ausschließlich lokal.
               </p>
               <div class="task-list">
                 <article class="task" data-task-id="git-identity">
-                  <input class="task-check" type="checkbox" aria-label="Verwaltete Git-Identität geprüft" />
+                  <input class="task-check" type="checkbox" aria-label="Git-Identität von Hand gesetzt" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Verwaltete GitHub-Noreply-Identität prüfen</h3>
-                      <span class="badge auto">Automatisch</span>
+                      <h3 class="task-title">Git-Identität von Hand setzen</h3>
+                      <span class="badge manual">Manuell</span>
                     </div>
                     <div class="command">
-                      <pre><code>git config --global --get user.name
-git config --global --get user.email
-git config --global --get user.signingkey</code></pre>
+                      <pre><code>git config --global user.name "phoenix-error"
+git config --global user.email "42442490+phoenix-error@users.noreply.github.com"
+git config --global init.defaultBranch main</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Erwartet werden <code>phoenix-error</code>, die verwaltete GitHub-Noreply-Adresse
-                      und <code>~/.ssh/id_ed25519.pub</code>.
+                      Muss vor <code>./bootstrap.sh</code> stehen. Der Bootstrap bricht sonst
+                      mit Exit-Code 2 ab, weil die SSH-Stufe den Schlüssel mit dieser Adresse
+                      beschriftet. Die GitHub-Noreply-Adresse hält die private Adresse aus
+                      öffentlichen Commits heraus.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="git-ssh-config">
+                  <input class="task-check" type="checkbox" aria-label="SSH-Konfiguration angelegt" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">~/.ssh/config anlegen</h3>
+                      <span class="badge manual">Manuell</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>cat &gt; ~/.ssh/config &lt;&lt;'EOF'
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+  ServerAliveInterval 60
+  ServerAliveCountMax 3
+
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+EOF
+chmod 600 ~/.ssh/config</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Ohne diese Datei lädt SSH den Schlüssel nicht aus dem Schlüsselbund und
+                      fragt die Passphrase bei jeder Verbindung erneut ab.
                     </p>
                   </div>
                 </article>
@@ -1698,6 +1734,28 @@ gh auth status</code></pre>
                       <pre><code>mise run github:ssh</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="git-signing-enable">
+                  <input class="task-check" type="checkbox" aria-label="Commit-Signing aktiviert" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Commit-Signing aktivieren, erst nach dem Schlüssel</h3>
+                      <span class="badge manual">Manuell</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
+git config --global commit.gpgsign true</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Nicht früher ausführen. Ist <code>commit.gpgsign</code> aktiv, bevor
+                      <code>~/.ssh/id_ed25519</code> existiert, scheitert jeder Commit mit
+                      <code>fatal: failed to write commit object</code>.
+                    </p>
                   </div>
                 </article>
 
@@ -1961,10 +2019,10 @@ vercel login</code></pre>
                       <span class="badge manual">Manuell</span>
                     </div>
                     <p class="task-note">
-                      Das Setup installiert keine Skills. Welche Skills auf die Maschine gehören und
-                      mit welchem Befehl, steht in <code>docs/agent-skills.md</code>. Die Befehle
-                      verwenden <code>bunx --bun skills@1.5.21</code>, niemals <code>npx</code>, und
-                      richten sich an Claude Code, Codex, Cursor und Pi.
+                      Das Setup installiert keine Skills. Wie du sie installierst und welche Quellen
+                      ausgeschlossen sind, steht in <code>docs/agent-skills.md</code>. Die Befehle
+                      verwenden <code>bunx skills</code>, niemals <code>npx</code>, und richten sich
+                      an Claude Code, Codex, Cursor und Pi.
                     </p>
                     <div class="command">
                       <pre><code>open docs/agent-skills.md</code></pre>

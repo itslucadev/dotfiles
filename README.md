@@ -57,6 +57,7 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 | Runtimes and global CLIs | mise | `mise.toml` |
 | Dotfiles and macOS defaults | mise | `mise.toml` and `home/` |
 | Setup entry point | Bash | `bootstrap.sh` |
+| Git identity, signing, SSH | you, by hand | nothing here, [see why](#git-and-ssh) |
 
 ## Contents
 
@@ -99,17 +100,14 @@ The current Mac can also be used for a final rehearsal immediately before it is 
 ## Quick Start on a New Mac
 
 > [!IMPORTANT]
-> **Set up the GitHub SSH key before doing any Git work on a new Mac.**
+> **Configure Git before running the setup.**
 >
-> Cloning this repository does not need it. The repository is public and the command below clones over HTTPS.
-> Committing does need it, and that catches people out.
+> Git is deliberately not part of this repository. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are set up by hand, so a fresh Mac has no Git identity, no commit signing, and no SSH configuration until they are created.
 >
-> The managed `~/.gitconfig` sets `commit.gpgsign = true` and points `user.signingkey` at `~/.ssh/id_ed25519.pub`.
-> From the moment the dotfiles are applied, every `git commit` fails with `fatal: failed to write commit object` until that key exists.
-> `bootstrap.sh` creates and registers the key on its own, but only near the end of the run, well after it applies the dotfiles.
+> Cloning needs none of it. The repository is public and the command below clones over HTTPS.
+> `./bootstrap.sh` does need the identity. It verifies `user.name` and `user.email` before installing anything and stops with exit code 2 if either is missing, because the GitHub SSH stage labels the key with that address.
 >
-> A single uninterrupted `./bootstrap.sh` therefore needs nothing in advance.
-> For anything else, including committing partway through the run or applying the dotfiles on their own, set the key up first with [Setting the Key Up by Hand](#setting-the-key-up-by-hand).
+> Do it first: [Setting Git and SSH Up by Hand](#setting-git-and-ssh-up-by-hand).
 
 Sign in to the Mac with an administrator account and complete the initial macOS onboarding.
 
@@ -139,20 +137,21 @@ The setup is idempotent and can be rerun after resolving a manual prerequisite.
 
 After the command finishes, open the offline [interactive setup guide](docs/setup-guide.html) to complete permissions, remaining application logins, and application onboarding.
 
-The global agent skills are installed by hand from [docs/agent-skills.md](docs/agent-skills.md), which records which skills belong on the machine and the exact command for each source.
+The global agent skills are installed by hand from [docs/agent-skills.md](docs/agent-skills.md), which documents the install commands and excluded sources.
 
 ## What the Bootstrap Does
 
 The bootstrap:
 
 - Verifies Apple Silicon macOS.
+- Verifies that a global Git identity exists, before installing anything, because the GitHub SSH stage needs it and runs last.
 - Ensures the Xcode Command Line Tools are available.
 - Installs Homebrew when necessary.
 - Applies `Brewfile`.
 - Removes Homebrew formulae, casks, and taps that are not required by `Brewfile`.
 - Trusts the repository `mise.toml`.
 - Installs the locked language runtimes, then the locked global CLIs.
-- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Git, SSH, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
+- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
 - Installs the saved VS Code and Cursor extensions through their native command-line interfaces.
 - Creates `~/Developer` and applies the confirmed macOS defaults.
@@ -162,7 +161,7 @@ The bootstrap:
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
 - Runs the setup doctor.
 
-It does not install agent skills. Those are a personal, fast-moving choice and are listed in [docs/agent-skills.md](docs/agent-skills.md) for manual installation.
+It does not install agent skills. Those are a personal, fast-moving choice and are covered in [docs/agent-skills.md](docs/agent-skills.md) for manual installation.
 
 The runtimes install before the remaining CLIs because the other backends depend on them: the pipx backend needs uv, and every npm-backed tool needs bun as its package manager.
 
@@ -204,6 +203,7 @@ The repository keeps configuration in the native declarative format of the tool 
 - `mise.lock` contains the resolved mise tool versions. Only mise writes it, it is local to each machine, and it is not tracked.
 - `home/` contains public configuration that mise symlinks into the home directory.
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
+- Git owns nothing here. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand, because a managed Git configuration is applied before the SSH key it depends on exists.
 
 `bootstrap.sh` is the only setup entry point.
 
@@ -555,8 +555,8 @@ The setup does not install agent skills.
 Skill sources are renamed, split, and retired far faster than the rest of this inventory, and a stale entry fails the whole run without adding anything a fresh Mac needs to work.
 They are installed by hand instead.
 
-[docs/agent-skills.md](docs/agent-skills.md) is the record of which skills belong on the machine.
-It lists every skill with its purpose, the exact `bunx --bun skills@1.5.21` command for each source, what is deliberately left out, and how to verify the result.
+[docs/agent-skills.md](docs/agent-skills.md) documents how to install global agent skills by hand.
+It covers the `bunx skills` install command, excluded sources, and how to verify the result.
 
 The repository does not copy local plugin caches or private skill folders.
 
@@ -564,13 +564,19 @@ The Claude plugins enabled in `home/.claude/settings.json` ship their own skills
 
 ## Git and SSH
 
-The public `~/.gitconfig` manages the GitHub Noreply identity, the standard SSH signing key path, SSH commit signing, and the default branch.
+Git is the one tool this repository does not configure.
 
-The public SSH config loads the same `~/.ssh/id_ed25519` key through the macOS Keychain for GitHub authentication.
+`~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` were managed dotfiles until they were removed on purpose.
+They are now written by hand on each machine and this repository holds no copy of them.
 
-Using the public GitHub Noreply address keeps the personal email address private without requiring a separate local Git configuration.
+The reason is ordering. A managed `~/.gitconfig` that enables commit signing is applied long before the key it signs with exists, and in that window `git commit` fails with `fatal: failed to write commit object`.
+Configuration that only works once a later stage has run is configuration this repository should not own.
+
+What remains automated is the part that genuinely benefits from it: creating the key, registering it with GitHub, and verifying the connection.
 
 `scripts/setup-github-ssh.sh` follows GitHub's documented macOS flow and owns the local key setup.
+
+It reads `user.email` from the global Git configuration to label the key and the allowed signers entry, and stops with exit code 2 when no identity is configured.
 
 It creates the Ed25519 key only when neither key file exists, asks interactively for a new passphrase, and prompts to unlock an existing encrypted key when required.
 It sets restrictive permissions, loads the key into the native SSH agent and macOS Keychain, and maintains `~/.ssh/allowed_signers`.
@@ -589,12 +595,40 @@ This implements the official [Connecting to GitHub with SSH](https://docs.github
 
 SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authentication state are never copied into this repository.
 
-### Setting the Key Up by Hand
+### Setting Git and SSH Up by Hand
 
-The bootstrap owns this stage and runs it automatically, but it runs it after applying the dotfiles.
-Because `~/.gitconfig` makes commit signing mandatory, Git cannot commit in the window between those two stages, or on any machine where the dotfiles were applied without completing the SSH stage.
+Do this on a new Mac before running `./bootstrap.sh`.
 
-Run GitHub's documented macOS flow by hand when Git has to work before or without a full bootstrap:
+Set the identity. The GitHub Noreply address keeps the personal address private:
+
+```sh
+git config --global user.name "phoenix-error"
+git config --global user.email "42442490+phoenix-error@users.noreply.github.com"
+git config --global init.defaultBranch main
+```
+
+Create `~/.ssh/config` so the key is loaded from the macOS Keychain and the passphrase is asked once rather than on every connection:
+
+```sh
+cat > ~/.ssh/config <<'EOF'
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+  ServerAliveInterval 60
+  ServerAliveCountMax 3
+
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+EOF
+chmod 600 ~/.ssh/config
+```
+
+From here `./bootstrap.sh` creates the key, registers it with GitHub, and verifies the connection.
+
+To do the key by hand as well, follow GitHub's documented macOS flow:
 
 ```sh
 ssh-keygen -t ed25519 -C "42442490+phoenix-error@users.noreply.github.com"
@@ -604,7 +638,7 @@ pbcopy < ~/.ssh/id_ed25519.pub
 ```
 
 Add the copied public key at [GitHub SSH and GPG keys](https://github.com/settings/keys) twice, once as an Authentication Key and once as a Signing Key.
-Registering it only for authentication leaves commit signing broken, and Git keeps failing the same way.
+Registering it only for authentication leaves commit signing broken.
 
 Verify the connection, comparing the offered host fingerprint against [GitHub's published fingerprints](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints) on first use:
 
@@ -612,14 +646,45 @@ Verify the connection, comparing the offered host fingerprint against [GitHub's 
 ssh -T git@github.com
 ```
 
-Doing this by hand does not conflict with the bootstrap.
-`scripts/setup-github-ssh.sh` creates a key only when neither key file exists and checks GitHub before each upload, so the later automated stage finds the work already done and skips it.
+Doing the key by hand does not conflict with the bootstrap.
+`scripts/setup-github-ssh.sh` creates a key only when no private key exists and checks GitHub before each upload, so the automated stage finds the work already done and skips it.
+
+Enable commit signing once the key exists, never before:
+
+```sh
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
+git config --global commit.gpgsign true
+```
 
 Confirm the complete local and remote state at any time:
 
 ```sh
 ./scripts/setup-github-ssh.sh --status
 ```
+
+### Settings That Are No Longer Reproduced
+
+Removing the managed files also removed everything else they carried.
+None of it is required for a working Mac, and all of it is a one-line `git config --global` away:
+
+| Setting | Value it had |
+| --- | --- |
+| `fetch.prune` | `true` |
+| `pull.rebase` | `true` |
+| `push.autoSetupRemote` | `true` |
+| `rebase.autoStash` | `true` |
+| `rerere.enabled` | `true` |
+| `diff.algorithm` | `histogram` |
+| `merge.conflictStyle` | `zdiff3` |
+| `credential.helper` | `osxkeychain` |
+| `core.excludesFile` | `~/.config/git/ignore` |
+| `filter "lfs"` | the three `git-lfs` filter entries |
+
+`~/.config/git/ignore` held `.DS_Store`, `.idea/`, `*.swp`, and `*~`.
+
+`git lfs install` writes the `filter "lfs"` section itself, so that one should be restored with the tool rather than by hand.
 
 ## Secrets with Infisical
 
@@ -702,6 +767,11 @@ These applications have no suitable Homebrew cask or Mac App Store entry in the 
 
 ### Git and GitHub
 
+- [ ] Set `user.name` and `user.email` before running the setup, as described in [Setting Git and SSH Up by Hand](#setting-git-and-ssh-up-by-hand).
+- [ ] Create `~/.ssh/config` so the key is loaded from the macOS Keychain.
+- [ ] Restore any wanted Git defaults from [Settings That Are No Longer Reproduced](#settings-that-are-no-longer-reproduced).
+- [ ] Run `git lfs install` to restore the Git LFS filter configuration.
+- [ ] Enable commit signing after the key exists, never before.
 - [ ] Confirm that bootstrap created `~/.ssh/id_ed25519` and prompted for a secure passphrase.
 - [ ] Confirm that bootstrap paused for GitHub CLI browser login when authentication was missing.
 - [ ] Confirm that bootstrap registered `~/.ssh/id_ed25519.pub` as both an Authentication Key and a Signing Key.
@@ -934,9 +1004,11 @@ Never commit:
 
 The setup uses exactly one managed file per tool and deliberately has no `*.local` override layer.
 
-That includes `~/.claude/settings.local.json`, `~/.gitconfig.local`, `~/.ssh/config.local`, and `mise.local.toml`.
+That includes `~/.claude/settings.local.json` and `mise.local.toml`.
 
 A setting that would otherwise land in a local override belongs in the managed file, so a new Mac reproduces it. The Claude plugin toggles and the reduced-motion preference were moved into `home/.claude/settings.json` for exactly that reason.
+
+Git is the deliberate exception. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are not managed at all, so they need no override layer. See [Git and SSH](#git-and-ssh).
 
 The matching `.gitignore` entries stay as a safety net against accidental commits, not as an invitation to create such files.
 

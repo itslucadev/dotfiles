@@ -3,7 +3,6 @@
 set -Eeuo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-readonly MANAGED_GIT_CONFIG="$REPO_ROOT/home/.gitconfig"
 readonly GITHUB_HOST="github.com"
 readonly SSH_DIRECTORY="$HOME/.ssh"
 readonly PRIVATE_KEY="$SSH_DIRECTORY/id_ed25519"
@@ -63,18 +62,17 @@ if [[ "$DRY_RUN" == true && "$STATUS_ONLY" == true ]]; then
   exit 64
 fi
 
-if [[ ! -r "$MANAGED_GIT_CONFIG" ]]; then
-  printf 'Managed Git configuration is missing: %s\n' "$MANAGED_GIT_CONFIG" >&2
-  exit 1
-fi
-
-readonly GITHUB_EMAIL="$(
-  git config --file "$MANAGED_GIT_CONFIG" --get user.email
-)"
+# The Git identity is configured by hand and is no longer part of this
+# repository, so the key comment and the allowed signers entry come from the
+# identity that is actually in effect on this machine.
+readonly GITHUB_EMAIL="$(git config --global --get user.email || true)"
 
 if [[ -z "$GITHUB_EMAIL" ]]; then
-  printf 'Managed Git email is missing from %s.\n' "$MANAGED_GIT_CONFIG" >&2
-  exit 1
+  printf 'Git has no global user.email, so the SSH key cannot be labelled.\n' >&2
+  printf 'Configure the Git identity first, then rerun this script:\n' >&2
+  printf '  git config --global user.name "your-github-username"\n' >&2
+  printf '  git config --global user.email "your-github-noreply-address"\n' >&2
+  exit "$MANUAL_ACTION_EXIT"
 fi
 
 print_command() {

@@ -85,6 +85,19 @@ if [[ "$REPO_ROOT" != "$EXPECTED_REPO_ROOT" && "$DRY_RUN" != true ]]; then
   exit 1
 fi
 
+# The Git identity is no longer a managed dotfile. The GitHub SSH stage needs it
+# to label the key, and that stage runs late, so the check happens here instead
+# of after everything else has already been installed.
+if [[ "$DRY_RUN" != true ]] &&
+  { ! git config --global user.name >/dev/null 2>&1 ||
+    ! git config --global user.email >/dev/null 2>&1; }; then
+  printf 'Configure the Git identity before running the setup.\n' >&2
+  printf 'It is set up by hand and is not part of this repository:\n' >&2
+  printf '  git config --global user.name "your-github-username"\n' >&2
+  printf '  git config --global user.email "your-github-noreply-address"\n' >&2
+  exit "$MANUAL_ACTION_EXIT"
+fi
+
 log "Checking Xcode Command Line Tools"
 if ! xcode-select -p >/dev/null 2>&1; then
   if [[ "$DRY_RUN" == true ]]; then

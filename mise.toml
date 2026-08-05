@@ -50,15 +50,12 @@ _.path = [
 "~/.claude/rules/context7.md" = {}
 "~/.claude/settings.json" = {}
 "~/.claude/statusline.ts" = {}
-"~/.config/git/ignore" = {}
 "~/.config/ghostty" = {}
 "~/.config/herdr/config.toml" = {}
 "~/.homebrew/Brewfile" = { source = "Brewfile" }
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}
 "~/.config/wezterm/wezterm.lua" = {}
-"~/.gitconfig" = {}
-"~/.ssh/config" = {}
 "~/Library/Application Support/Code/User/settings.json" = { source = "home/.config/editors/vscode/settings.json" }
 "~/Library/Application Support/Cursor/User/settings.json" = { source = "home/.config/editors/cursor/settings.json" }
 "~/.zprofile" = {}

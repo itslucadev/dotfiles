@@ -346,8 +346,6 @@ fi
 local_override_found=false
 for local_override in \
   "$HOME/.claude/settings.local.json" \
-  "$HOME/.gitconfig.local" \
-  "$HOME/.ssh/config.local" \
   "$HOME/.config/mise/config.local.toml"; do
   if [[ -e "$local_override" ]]; then
     warn "Unmanaged local override file exists: ${local_override/#$HOME/\~}"
@@ -390,10 +388,19 @@ else
   warn "GitHub SSH key or allowed signers file is missing"
 fi
 
-if ssh -G github.com >/dev/null 2>&1; then
-  pass "SSH configuration is valid for GitHub"
+# ~/.ssh/config is configured by hand. Asking ssh for the options it would
+# actually use covers a Host * block as well as a github.com specific one,
+# which grepping the file would not. Without any configuration ssh reports
+# addkeystoagent as false and offers every default key instead.
+ssh_add_keys_to_agent="$(
+  ssh -G github.com 2>/dev/null |
+    awk '$1 == "addkeystoagent" { print $2; exit }'
+)"
+
+if [[ -n "$ssh_add_keys_to_agent" && "$ssh_add_keys_to_agent" != "false" ]]; then
+  pass "SSH loads the GitHub key into the agent"
 else
-  fail "SSH configuration is invalid for GitHub"
+  warn "Set AddKeysToAgent and UseKeychain in ~/.ssh/config so the passphrase is asked once"
 fi
 
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then

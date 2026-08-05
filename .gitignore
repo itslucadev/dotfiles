@@ -18,8 +18,6 @@ mise.lock
 *.local
 .zsh_history
 .zsh_sessions/
-home/.gitconfig.local
-home/.ssh/config.local
 home/.claude/settings.local.json
 
 # Environment files and package-manager credentials

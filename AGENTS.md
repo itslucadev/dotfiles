@@ -15,7 +15,7 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 - `mise.toml` owns runtimes, global npm-backed CLIs, setup tasks, dotfile mappings, and scalar macOS defaults.
 - `mise.lock` owns resolved mise tool versions. Only mise writes it, it stays local to each machine, and it must never be tracked.
 - `home/.zsh_plugins.txt` owns every Zsh plugin.
-- `docs/agent-skills.md` documents the global agent skills, which are installed by hand and not by this setup.
+- `docs/agent-skills.md` documents how global agent skills are installed by hand and which sources to skip.
 - `home/.config/editors/extensions.txt` owns extensions shared by VS Code and Cursor.
 - `home/.config/editors/{vscode,cursor}/extensions.txt` own editor-specific extensions.
 - `home/` owns public dotfiles that mise links into the home directory.
@@ -131,13 +131,11 @@ This repository does not install agent skills, and no script may start doing so.
 
 Skill sources move faster than the rest of the inventory, so the user installs them by hand.
 
-`docs/agent-skills.md` is the record of which skills belong on the machine. Keep it accurate when a skill is added, renamed, or dropped.
-
-Verify a skill name against its source repository before writing it into that file. Upstream renames are the usual reason an entry goes stale.
+`docs/agent-skills.md` documents install commands and excluded sources. Keep it accurate when the install flow or policy changes.
 
 Do not add a skill source without an explicit decision from the user.
 
-Document BunX with a pinned Skills CLI version. Do not document `npx`, manually copied skill directories, or plugin-cache contents.
+Document BunX, not `npx`, manually copied skill directories, or plugin-cache contents.
 
 The four agent targets are Claude Code, Codex, Cursor, and Pi. Oh My Pi extends Pi and reads Pi's skill directory, so it needs no separate target.
 
@@ -171,7 +169,9 @@ Do not copy a generated `herdr-agent-state` hook into `home/`, and do not manage
 
 This setup uses exactly one managed file per tool.
 
-Do not create, document, or read `*.local` override files. That includes `~/.claude/settings.local.json`, `~/.gitconfig.local`, `~/.ssh/config.local`, and `mise.local.toml`.
+Do not create, document, or read `*.local` override files. That includes `~/.claude/settings.local.json` and `mise.local.toml`.
+
+Git and SSH are the exception to the one-managed-file rule. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are configured by hand and are deliberately not part of this repository. Do not reintroduce them as managed dotfiles.
 
 Settings that would otherwise land in a local override belong in the managed file so a new Mac reproduces them.
 
