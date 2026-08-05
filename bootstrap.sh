@@ -229,9 +229,6 @@ run mise bootstrap dotfiles apply --yes
 log "Installing Herdr agent integrations"
 run_script "$REPO_ROOT/scripts/install-herdr-integrations.sh"
 
-log "Installing managed editor extensions"
-run_script "$REPO_ROOT/scripts/install-editor-extensions.sh"
-
 log "Applying macOS defaults"
 run mkdir -p "$HOME/Developer/appzudio"
 run mise bootstrap macos defaults apply --yes

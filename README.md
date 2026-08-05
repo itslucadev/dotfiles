@@ -153,7 +153,6 @@ The bootstrap:
 - Installs the locked language runtimes, then the locked global CLIs.
 - Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
-- Installs the saved VS Code and Cursor extensions through their native command-line interfaces.
 - Creates `~/Developer` and applies the confirmed macOS defaults.
 - Reserves shortcuts for Raycast and CleanShot.
 - Installs the signed Raycast v2 Beta beside Raycast v1.
@@ -206,10 +205,9 @@ The repository keeps configuration in the native declarative format of the tool 
 
 It installs the first dependencies needed before mise is available, then runs the remaining stages in the required order, because Homebrew must install mise before mise can orchestrate the rest.
 
-It calls five helper scripts that can change the Mac or connected accounts:
+It calls four helper scripts that can change the Mac or connected accounts:
 
 - `scripts/configure-macos.sh` owns the dynamic screenshot path and nested `AppleSymbolicHotKeys` dictionary that mise macOS defaults cannot represent correctly.
-- `scripts/install-editor-extensions.sh` installs the declarative extension inventories through the native VS Code and Cursor CLIs.
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
 - `scripts/install-raycast-beta.sh` installs and verifies Raycast Beta because it has no official Homebrew cask.
@@ -425,69 +423,26 @@ Neovim is intentionally not part of this setup.
 
 Homebrew installs both Visual Studio Code and Cursor.
 
-mise symlinks separate global `settings.json` files into the native macOS user settings location for each editor.
+mise symlinks one shared `settings.json` into the native macOS user settings location for both editors.
 
 Both editors use Hack Nerd Font Mono, Rosé Pine Moon, automatic import updates, and the shared editor preferences already present on the current Mac.
 
-Cursor keeps its Cursor-specific composer and terminal preferences in its own settings file.
+Cursor-specific composer and terminal keys live in that same file. VS Code ignores them.
 
-The shared Python setup includes the Microsoft Python and debugger extensions, Python Environments, Ruff, uv-backed environment management, and the editor-specific Pyright or Pylance language server.
+This repository does not manage editor extensions.
 
-Ruff formats Python, applies safe fixes, and organizes imports on save.
+VS Code Settings Sync owns the installed VS Code extension set across machines after you sign in and turn sync on.
 
-Project-level `pyproject.toml` or `ruff.toml` settings take priority over the global editor defaults.
+Cursor has no Microsoft Settings Sync.
+When Cursor should mirror the VS Code extension set, spawn a Claude agent with the example prompt in [docs/setup-guide.html](docs/setup-guide.html).
+The agent installs every VS Code extension that Cursor can load, skips Marketplace-only IDs such as Modernized, and substitutes `anysphere.cursorpyright` for Pylance.
 
-The shared React and React Native setup includes Biome, Prettier, ESLint, Tailwind CSS IntelliSense, Pretty TypeScript Errors, Error Lens, Path IntelliSense, Auto Rename Tag, Import Cost, Indent Rainbow, and the ES7+ React snippets.
+The shared `settings.json` still owns language-specific formatters: Ruff for Python, Biome for JavaScript, TypeScript, JSON, and JSONC, and Prettier for CSS, SCSS, HTML, GraphQL, Markdown, and YAML.
 
-Both editors also receive GitLens and the Claude Code extension.
+Project-level `pyproject.toml`, `ruff.toml`, Biome, Prettier, and ESLint configuration take priority over the global editor defaults.
 
-Modernized is the one VS Code specific addition beyond Pylance. It is published only on the Visual Studio Marketplace, so Cursor cannot install it.
-
-Swift, Java, Kotlin, clangd, LLDB, and the .NET extensions are deliberately excluded. Xcode owns Swift and Objective-C, Android Studio owns Java and Kotlin, and both are part of this setup.
-
-Fallow reports unused code, circular dependencies, duplication, complexity hotspots, and architecture boundary violations in TypeScript and JavaScript.
-
-Homebrew installs its `fallow` command, and both editors install the `fallow-rs.fallow-vscode` extension, which is published on the Visual Studio Marketplace and on Open VSX.
-
-The Homebrew formula builds only the CLI crate, so it does not provide `fallow-lsp`. The language server therefore resolves a project-local install, and every project that wants editor diagnostics should add `fallow` as a development dependency at the matching version.
-
-The extension keeps its `fallow.autoDownload` default, so it fetches a managed language server when a project has none.
-
-Biome formats JavaScript, JSX, TypeScript, TSX, JSON, and JSONC on save.
-
-Prettier formats CSS, SCSS, HTML, GraphQL, Markdown, and YAML on save.
-
-Each project should still declare its own Biome, Prettier, and ESLint dependencies and configuration so the repository controls exact tool versions and rules.
-
-Both editors deliberately run the same extension set.
-
-`home/.config/editors/extensions.txt` is the shared inventory and holds every extension that both editors can install.
-
-The two editor-specific inventories exist only for extensions that genuinely cannot be shared. Today that is a single pair: Microsoft licenses Pylance for official Microsoft products only, so VS Code gets `ms-python.vscode-pylance` and Cursor gets its replacement `anysphere.cursorpyright`.
-
-Add a new extension to the shared inventory unless installing it in the other editor is impossible.
-
-`scripts/install-editor-extensions.sh` is the single adapter that reads those declarative inventories and invokes each editor's native `--install-extension` command.
-
-mise has no native VS Code extension backend.
-
-Homebrew Bundle supports `vscode` entries, but it uses only the first supported editor CLI found on `PATH`.
-
-With both applications installed, it would configure VS Code through `code` and leave Cursor unsynchronized.
-
-The repository therefore keeps one shared manifest plus editor-specific additions and lets the mise task drive both native CLIs explicitly.
-
-The installer reads each editor's installed extension list once and installs only missing entries.
-
-Run the extension installer through mise after changing either inventory:
-
-```sh
-mise run editors:extensions
-```
-
-The inventories start from the current Mac and add the confirmed shared Python, React, and React Native tooling.
-
-The Graphite extension was deliberately removed.
+Fallow's CLI stays in `Brewfile`.
+Projects that want editor diagnostics should add a matching `fallow` development dependency themselves.
 
 Zed is not installed or configured.
 
@@ -776,13 +731,13 @@ Never commit an alternate Git identity file, SSH private key, private SSH host i
 
 ### VS Code and Cursor
 
-- [ ] Launch VS Code and confirm that Rosé Pine Moon and Hack Nerd Font Mono load.
+- [ ] Launch VS Code, sign in, and confirm that Settings Sync is on.
+- [ ] Confirm that Rosé Pine Moon and Hack Nerd Font Mono load in VS Code.
 - [ ] Launch Cursor and sign in.
 - [ ] Confirm that Rosé Pine Moon and Hack Nerd Font Mono load in Cursor.
+- [ ] If Cursor should mirror VS Code extensions, run the example Claude agent prompt from the offline setup guide.
 - [ ] Open a Python project and confirm that its `.venv` is discovered and Ruff formats on save.
 - [ ] Open a React Native project and confirm that Biome, Prettier, ESLint, and Tailwind activate only where their project configuration applies.
-- [ ] Review extension publisher trust prompts in both editors.
-- [ ] Run `mise run editors:extensions` again if an extension was temporarily unavailable during bootstrap.
 
 ### Raycast
 
@@ -871,7 +826,7 @@ The setup configures macOS so pressing Fn or Globe has no native action, leaving
 ### Final Verification
 
 - [ ] Open new WezTerm and Ghostty windows so the managed shell configuration is active.
-- [ ] Verify the managed extension inventories in VS Code and Cursor.
+- [ ] Confirm VS Code Settings Sync and, if wanted, the Cursor extension mirror.
 - [ ] Run `mise doctor`.
 - [ ] Run `mise run doctor`.
 - [ ] Install the global agent skills by hand from [docs/agent-skills.md](docs/agent-skills.md).

@@ -2,7 +2,7 @@
 
 This repository does not install agent skills.
 
-The setup owns everything that a fresh Mac needs in order to work: Homebrew, mise, dotfiles, editor extensions, macOS defaults, and the GitHub key.
+The setup owns everything that a fresh Mac needs in order to work: Homebrew, mise, dotfiles, macOS defaults, and the GitHub key.
 Skills are a personal, fast-moving choice, so they stay out of `bootstrap.sh` and are installed by hand.
 
 This file documents how to install them, which sources to skip, and how to verify the result.

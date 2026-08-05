@@ -16,8 +16,7 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 - `mise.lock` owns resolved mise tool versions. Only mise writes it, it stays local to each machine, and it must never be tracked.
 - `home/.zsh_plugins.txt` owns every Zsh plugin.
 - `docs/agent-skills.md` documents how global agent skills are installed by hand and which sources to skip.
-- `home/.config/editors/extensions.txt` owns extensions shared by VS Code and Cursor.
-- `home/.config/editors/{vscode,cursor}/extensions.txt` own editor-specific extensions.
+- `home/.config/editors/settings.json` owns the shared VS Code and Cursor user settings.
 - `home/` owns public dotfiles that mise links into the home directory.
 - `home/.claude/rules/` owns the Claude rules that this setup supports.
 - `bootstrap.sh` is the only setup entry point and owns the required stage order.
@@ -47,15 +46,15 @@ The rule covers declarations, not dependency closures. Homebrew formulae pull th
 
 ## Editor Extension Policy
 
-Both editors run the same extension set.
+This repository does not manage editor extensions.
 
-Put every extension in the shared inventory. Use an editor-specific inventory only when the extension cannot be installed in the other editor at all, and record the reason in a comment.
+VS Code Settings Sync owns the installed VS Code extension set across machines.
 
-Install extensions only through `scripts/install-editor-extensions.sh` or the matching mise task.
+Cursor has no Microsoft Settings Sync. When Cursor should mirror VS Code, spawn a Claude agent with the example prompt in `docs/setup-guide.html` and install only extensions that Cursor can actually load.
 
 Do not add `vscode` entries to `Brewfile`.
 
-Homebrew Bundle configures only the first supported editor CLI it finds, so it cannot keep both VS Code and Cursor synchronized.
+Do not reintroduce extension inventories, an installer script, or a mise task for extensions.
 
 Keep formatter defaults language-specific so one tool does not take over unrelated languages.
 

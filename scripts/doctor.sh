@@ -67,40 +67,6 @@ check_manual_app() {
   fi
 }
 
-check_editor_extensions() {
-  local editor="$1"
-  local extension_file="$2"
-  local installed_extensions=""
-  local extension=""
-
-  if ! command -v "$editor" >/dev/null 2>&1; then
-    fail "Cannot check extensions, editor command missing: $editor"
-    return
-  fi
-
-  # A failing --list-extensions would otherwise yield an empty list, which reads
-  # as "nothing is installed" and reports every extension as missing without
-  # ever showing the real reason.
-  if ! installed_extensions="$("$editor" --list-extensions 2>&1)"; then
-    fail "Could not list installed extensions for $editor: $installed_extensions"
-    return
-  fi
-
-  installed_extensions="$(printf '%s' "$installed_extensions" | tr '[:upper:]' '[:lower:]')"
-
-  while IFS= read -r extension || [[ -n "$extension" ]]; do
-    if [[ -z "$extension" || "$extension" == \#* ]]; then
-      continue
-    fi
-
-    if grep -Fxiq "$extension" <<<"$installed_extensions"; then
-      pass "$editor extension installed: $extension"
-    else
-      fail "$editor extension missing: $extension"
-    fi
-  done <"$extension_file"
-}
-
 printf 'Mac setup doctor\n\n'
 
 if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then
@@ -290,19 +256,6 @@ for application_name in \
   "SimCam"; do
   check_manual_app "$application_name"
 done
-
-check_editor_extensions \
-  code \
-  "$HOME/github/phoenix-error/dotfiles/home/.config/editors/extensions.txt"
-check_editor_extensions \
-  code \
-  "$HOME/github/phoenix-error/dotfiles/home/.config/editors/vscode/extensions.txt"
-check_editor_extensions \
-  cursor \
-  "$HOME/github/phoenix-error/dotfiles/home/.config/editors/extensions.txt"
-check_editor_extensions \
-  cursor \
-  "$HOME/github/phoenix-error/dotfiles/home/.config/editors/cursor/extensions.txt"
 
 if [[ "${ANDROID_HOME:-}" == "$HOME/Library/Android/sdk" ]]; then
   pass "ANDROID_HOME points to the standard macOS Android SDK"

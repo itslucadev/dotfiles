@@ -56,8 +56,8 @@ _.path = [
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}
 "~/.config/wezterm/wezterm.lua" = {}
-"~/Library/Application Support/Code/User/settings.json" = { source = "home/.config/editors/vscode/settings.json" }
-"~/Library/Application Support/Cursor/User/settings.json" = { source = "home/.config/editors/cursor/settings.json" }
+"~/Library/Application Support/Code/User/settings.json" = { source = "home/.config/editors/settings.json" }
+"~/Library/Application Support/Cursor/User/settings.json" = { source = "home/.config/editors/settings.json" }
 "~/.zprofile" = {}
 "~/.zsh_plugins.txt" = {}
 "~/.zshrc" = {}
@@ -104,10 +104,6 @@ run = "./scripts/install-raycast-beta.sh"
 [tasks."agents:herdr"]
 description = "Install the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi"
 run = "./scripts/install-herdr-integrations.sh"
-
-[tasks."editors:extensions"]
-description = "Install the managed VS Code and Cursor extensions"
-run = "./scripts/install-editor-extensions.sh"
 
 [tasks.doctor]
 description = "Report setup status and remaining manual actions"

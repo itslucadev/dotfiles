@@ -1,7 +1,0 @@
-# Cursor only.
-# Add an entry here only when the extension cannot be installed in VS Code, or
-# when it replaces a VS Code extension that Cursor cannot install.
-#
-# Cursor Pyright is Cursor's replacement for Pylance, which Microsoft licenses
-# for official Microsoft products only.
-anysphere.cursorpyright

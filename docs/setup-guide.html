@@ -1324,9 +1324,9 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                     </div>
                     <p class="task-note">
                       Installiert Homebrew-Pakete, pausiert danach für Git und SSH von Hand,
-                      setzt dann Runtimes, globale CLIs, Editor-Erweiterungen, Dotfile-Symlinks,
-                      bestätigte macOS-Defaults, Raycast Beta und nach Möglichkeit die MAS-Apps
-                      fort.
+                      setzt dann Runtimes, globale CLIs, Dotfile-Symlinks, bestätigte
+                      macOS-Defaults, Raycast Beta und nach Möglichkeit die MAS-Apps fort.
+                      Editor-Extensions gehören nicht dazu.
                     </p>
                   </div>
                 </article>
@@ -1934,6 +1934,52 @@ gh auth status</code></pre>
                       VS Code, Cursor, Ghostty und Herdr durchgehen. Für FluxMarkdown die
                       Finder-Quick-Look-Vorschau prüfen.
                     </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="apps-vscode-sync">
+                  <input class="task-check" type="checkbox" aria-label="VS Code Settings Sync aktiviert" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">VS Code Settings Sync einschalten</h3>
+                      <span class="badge manual">Sync</span>
+                    </div>
+                    <p class="task-note">
+                      In VS Code anmelden und Settings Sync aktivieren. Extensions, Keybindings
+                      und UI-State wandern damit über den Microsoft- oder GitHub-Account.
+                      Dieses Repo verwaltet keine Extension-Inventare mehr, nur die gemeinsame
+                      <code>settings.json</code>.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="apps-cursor-extensions">
+                  <input class="task-check" type="checkbox" aria-label="Cursor Extensions gespiegelt" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Cursor-Extensions optional von VS Code spiegeln</h3>
+                      <span class="badge manual">Optional</span>
+                    </div>
+                    <p class="task-note">
+                      Cursor hat kein Microsoft Settings Sync. Wenn Cursor denselben Extension-Satz
+                      wie VS Code bekommen soll, einen Claude Agent mit dem Prompt unten spawnen.
+                      Er installiert alles, was Cursor laden kann, und überspringt IDs, die nur im
+                      Visual Studio Marketplace existieren, zum Beispiel Modernized.
+                    </p>
+                    <div class="command">
+                      <pre><code>Mirror my currently installed VS Code extensions into Cursor.
+
+1. Run `code --list-extensions` and capture every installed extension ID.
+2. For each ID, try `cursor --install-extension &lt;id&gt;`.
+3. Skip extensions Cursor cannot install. Known cases:
+   - `sukarth.vscode-modernized` (Visual Studio Marketplace only)
+   - `ms-python.vscode-pylance` (Microsoft license; install `anysphere.cursorpyright` instead)
+4. If VS Code has Pylance, ensure Cursor has `anysphere.cursorpyright`.
+5. Report three lists: installed, already present, and failed with the exact error.
+
+Do not change VS Code. Do not edit settings.json. Only install Cursor extensions.</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
                   </div>
                 </article>
               </div>
