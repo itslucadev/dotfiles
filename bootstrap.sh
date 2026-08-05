@@ -123,9 +123,10 @@ if ! xcode-select -p >/dev/null 2>&1; then
   else
     xcode-select --install || true
     until xcode-select -p >/dev/null 2>&1; do
-      wait_for_manual_action \
-        "Finish the Xcode Command Line Tools installation." \
-        "./bootstrap.sh"
+      manual_step "Finish the Xcode Command Line Tools installation"
+      printf '\n  macOS has opened the installer. It brings the compiler\n'
+      printf '  toolchain and Git, which every later stage depends on.\n'
+      confirm_manual_step "./bootstrap.sh"
     done
   fi
 fi

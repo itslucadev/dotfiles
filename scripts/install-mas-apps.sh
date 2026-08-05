@@ -3,7 +3,8 @@
 set -Eeuo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-readonly MANUAL_ACTION_EXIT=2
+
+source "${REPO_ROOT}/scripts/lib.sh"
 
 DRY_RUN=false
 TEMPORARY_OUTPUT=""
@@ -70,21 +71,18 @@ while true; do
     exit "$bundle_status"
   fi
 
-  printf '\nManual action required.\n' >&2
-  printf 'Resolve the App Store error above.\n' >&2
-  printf 'Sign in and claim any managed application that this Apple Account has never downloaded.\n' >&2
+  manual_step "Sign in to the Mac App Store and claim the applications"
 
-  if [[ ! -t 0 ]]; then
-    printf 'Then run: mise run apps:mas\n' >&2
-    printf 'To continue the complete setup afterward, run: ./bootstrap.sh\n' >&2
-    exit "$MANUAL_ACTION_EXIT"
+  printf '\n  The App Store reported the error above. An application that this\n'
+  printf '  Apple Account has never downloaded has to be claimed once, by hand,\n'
+  printf '  before it can be installed without a person at the keyboard.\n'
+  printf '\n  Sign in, then claim every managed application the error names.\n'
+
+  if [[ -t 0 ]]; then
+    open -a "App Store" || true
   fi
 
-  open -a "App Store" || true
-  printf 'Press Return after completing the action. The setup will verify it before continuing.\n'
-  if ! read -r; then
-    exit "$MANUAL_ACTION_EXIT"
-  fi
+  confirm_manual_step "mise run apps:mas"
 done
 
 printf 'Mac App Store applications are installed.\n'

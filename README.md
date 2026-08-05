@@ -228,7 +228,7 @@ The setup treats every manual prerequisite for a later automated stage as a gate
 In an interactive terminal, it pauses at the gate, explains the required action, waits for completion, verifies the result, and only then continues.
 
 In a non-interactive environment, it stops with Exit code 2 and prints the command that must be rerun after the action is complete.
-That command is `./bootstrap.sh` for the two initialization gates and `mise run setup` for the later ones.
+That command is `./bootstrap.sh` for the two initialization gates, `mise run setup` for the Git and SSH gate and the coding agent gate, and `mise run apps:mas` for the Mac App Store gate.
 
 The gated interactions are:
 

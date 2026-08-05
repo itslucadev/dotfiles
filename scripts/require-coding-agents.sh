@@ -77,41 +77,42 @@ print_pending_instructions() {
   local pending="$1"
   local entry=""
 
-  printf '\nSign in to every managed coding agent now.\n'
-  printf 'Herdr installs its agent integrations right after this step, and it can\n'
-  printf 'only hook an agent that has been started and signed in at least once.\n\n'
+  manual_step "Sign in to the managed coding agents"
+
+  printf '\n  Herdr installs its agent integrations right after this step, and\n'
+  printf '  it can only hook an agent that has been started and signed in at\n'
+  printf '  least once.\n'
+  printf '\n  Still waiting on:\n'
 
   while IFS= read -r entry; do
     [[ -n "$entry" ]] || continue
 
+    printf '\n  %s%s%s\n' "$BOLD" "$(agent_field "$entry" 2)" "$RESET"
+
     if ! command -v "$(agent_field "$entry" 3)" >/dev/null 2>&1; then
-      printf '  %s: %s is missing. Apply the Brewfile first.\n' \
-        "$(agent_field "$entry" 2)" "$(agent_field "$entry" 3)"
+      printf '       %s is missing. Apply the Brewfile first.\n' \
+        "$(agent_field "$entry" 3)"
       continue
     fi
 
-    printf '  %s: %s\n' "$(agent_field "$entry" 2)" "$(agent_field "$entry" 4)"
+    printf '       %s\n' "$(agent_field "$entry" 4)"
   done <<<"$pending"
 
-  printf '\nUse a second terminal window, the setup keeps waiting in this one.\n'
+  printf '\n  Use a second terminal window, the setup keeps waiting in this one.\n'
 }
 
-log "Waiting for the managed coding agents"
+log "Checking the managed coding agents"
 
 pending="$(pending_agents)"
 
+# The block is reprinted on every round on purpose. It lists what is still
+# pending, so a shorter list is the report on what the last round achieved.
 while [[ -n "$pending" ]]; do
   print_pending_instructions "$pending"
 
-  wait_for_manual_action \
-    "Sign in to the coding agents listed above, then confirm." \
-    "mise run setup"
+  confirm_manual_step "mise run setup"
 
   pending="$(pending_agents)"
-
-  if [[ -n "$pending" ]]; then
-    printf 'Some coding agents are still not signed in.\n' >&2
-  fi
 done
 
 printf 'Every managed coding agent is signed in.\n'
