@@ -57,7 +57,7 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 | Runtimes and global CLIs | mise | `mise.toml` |
 | Dotfiles and macOS defaults | mise | `mise.toml` and `home/` |
 | Bare-metal initialization | Bash | `bootstrap.sh` |
-| Managed setup stages | mise | `mise.toml` task `setup` |
+| Managed setup stages | mise | `mise.toml` task `setup` and `[bootstrap.hooks]` |
 | Git identity, signing, SSH | you, by hand | nothing here, [see why](#git-and-ssh) |
 
 ## Contents
@@ -159,7 +159,7 @@ The global agent skills are installed by hand from [docs/agent-skills.md](docs/a
 - Verifies Apple Silicon macOS and the expected clone path.
 - Ensures the Xcode Command Line Tools are available.
 - Installs Homebrew from `https://brew.sh` when necessary.
-- Installs mise from `https://mise.run` into `~/.local/bin/mise` when necessary.
+- Installs mise into `~/.local/bin/mise` when necessary, with the committed copy of the `https://mise.run` installer in `scripts/setup-mise.sh`.
 - Trusts the repository `mise.toml`.
 - Links `~/.zprofile`, `~/.zshrc`, and `~/.zsh_plugins.txt`, the files that put Homebrew and mise on `PATH` and that the shell configuration reads.
 
@@ -167,6 +167,12 @@ Then it stops. It installs no declared package and applies no other configuratio
 
 mise.run is the method the mise documentation recommends for macOS, with Homebrew listed only as the alternative.
 The official binaries are built with the optimized release profile, are updatable with `mise self-update`, and are available immediately after a release.
+
+The installer itself is committed as `scripts/setup-mise.sh` rather than downloaded on every fresh Mac.
+It carries the release checksums, so a copy that was reviewed once in a diff is a smaller trust surface than a script fetched unseen and piped into a shell.
+The mise documentation recommends the same for exactly that reason.
+The version it pins is irrelevant here, because the setup runs `mise self-update` before anything else.
+Refresh the copy with `mise run update:mise-installer` and review the diff.
 
 Linking the two shell files is the last initialization step rather than a setup stage because neither Homebrew nor mise is on a fresh Mac's default `PATH`, and those two files are what put them there.
 It runs without `--force`, so mise refuses to replace a hand-written `~/.zshrc` instead of overwriting it.
@@ -179,18 +185,25 @@ mise is deliberately absent from `Brewfile`.
 It has to exist before the `Brewfile` is applied, and `brew bundle cleanup` must never be able to remove the binary that is driving the setup.
 The check targets the install path rather than `PATH`, so a Mac that still carries an older Homebrew mise gets the self-managed copy before cleanup removes the Homebrew one.
 
-The `setup` task in `mise.toml` runs `scripts/setup.sh` and owns every managed stage:
+The `setup` task in `mise.toml` updates mise itself and then runs `mise bootstrap --yes`, which owns the stage order:
 
 - Updates mise itself, because `Brewfile` no longer keeps it current.
 - Applies `Brewfile`.
 - Removes Homebrew formulae, casks, and taps that are not required by `Brewfile`.
 - Pauses for the manual Git identity and GitHub SSH setup, then verifies them before continuing.
-- Installs the locked language runtimes, then the locked global CLIs.
 - Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
-- Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
 - Creates `~/Developer` and applies the confirmed macOS defaults.
+- Installs the locked language runtimes, then the locked global CLIs.
+- Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
 - Runs the setup doctor.
+
+Dotfiles, macOS defaults, and tools are native `mise bootstrap` phases, and mise converges them itself.
+The remaining stages are `[bootstrap.hooks]` entries in `mise.toml`, which run before or after a phase and halt the setup when they fail.
+
+Homebrew stays in `Brewfile` instead of moving into `[bootstrap.packages]`.
+mise only converges forward and never removes a package that the configuration stopped declaring, while `brew bundle cleanup` does exactly that.
+The Mac App Store applications stay in `Brewfile.mas` for the same reason, and because their installation needs a gate for App Store sign-in and claiming.
 
 It does not install agent skills. Those are a personal, fast-moving choice and are covered in [docs/agent-skills.md](docs/agent-skills.md) for manual installation.
 
@@ -238,14 +251,16 @@ The repository keeps configuration in the native declarative format of the tool 
 
 `mise run setup` is the entry point for everything else, including every rerun.
 
-`scripts/setup.sh` calls two helper scripts that can change the Mac or connected accounts:
+The `[bootstrap.hooks]` entries in `mise.toml` call four helper scripts that can change the Mac or connected accounts:
 
+- `scripts/install-homebrew-packages.sh` applies `Brewfile` and removes what it no longer declares.
+- `scripts/require-git-and-github.sh` gates the manual Git identity and GitHub SSH setup.
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
 
 The read-only `scripts/doctor.sh` inspects the result without configuring the Mac.
 
-This repository has no test suite. Configuration is verified with `./scripts/setup.sh --dry-run` and the setup doctor.
+This repository has no test suite. Configuration is verified with `mise run setup:preview` and the setup doctor.
 
 All scalar macOS settings with static values use mise's friendly or raw defaults sections.
 
@@ -272,12 +287,12 @@ mise reserves the `bootstrap` name for its built-in bootstrap pipeline and autom
 Inspect the setup without changing the Mac:
 
 ```sh
-./scripts/setup.sh --dry-run
+mise run setup:preview
 ```
 
-The dry run prints every command instead of running it and is called directly rather than through mise, so it also works on a Mac where mise is missing.
+The preview runs `mise bootstrap --dry-run`, which reports every package, dotfile, macOS default, and tool that is not in its desired state, and prints the hook commands instead of running them.
 
-`./bootstrap.sh --dry-run` does the same for the three initialization steps.
+`./bootstrap.sh --dry-run` does the same for the three initialization steps, and needs no mise.
 
 ## Managed Applications
 
@@ -872,7 +887,7 @@ The repository can be tested on the current Mac later, but that is not equivalen
 
 Use this order:
 
-1. Run `./bootstrap.sh --dry-run` and `./scripts/setup.sh --dry-run` while preparing the repository.
+1. Run `./bootstrap.sh --dry-run` and `mise run setup:preview` while preparing the repository.
 2. Use a disposable macOS virtual machine for a clean bootstrap when possible.
 3. Use a separate macOS user only for per-user dotfiles and defaults, remembering that `/Applications` and Homebrew remain shared.
 4. If desired, run the real bootstrap on the current user only immediately before the planned erase and only after verifying a Time Machine or equivalent backup.
@@ -964,7 +979,7 @@ Inspect a change without touching the Mac:
 
 ```sh
 ./bootstrap.sh --dry-run
-./scripts/setup.sh --dry-run
+mise run setup:preview
 ./scripts/doctor.sh
 ```
 

@@ -89,9 +89,54 @@ NSGlobalDomain = { AppleInterfaceStyle = "Dark", AppleShowAllExtensions = true, 
 "com.apple.finder" = { AppleShowAllExtensions = true, CreateDesktop = false }
 "com.apple.screencapture" = { "disable-shadow" = true }
 
+# `mise bootstrap` owns the stage order of the managed setup. It converges its
+# own phases, dotfiles, macOS defaults, and tools, and these hooks add the
+# stages it cannot express. Hooks halt the bootstrap when they fail, and
+# `mise bootstrap --dry-run` prints them instead of running them.
+#
+# Homebrew and the manual Git gate run before the dotfiles phase, so Git,
+# Homebrew casks, and every native CLI exist before anything depends on them.
+[bootstrap.hooks.pre-dotfiles]
+run = [
+  "~/github/phoenix-error/dotfiles/scripts/install-homebrew-packages.sh",
+  "~/github/phoenix-error/dotfiles/scripts/require-git-and-github.sh",
+]
+
+[bootstrap.hooks.pre-defaults]
+run = "mkdir -p ~/Developer/appzudio"
+
+# The runtimes install before the tools phase because other backends depend on
+# them. The pipx backend needs uv, and every npm-backed tool needs bun as its
+# package manager.
+[bootstrap.hooks.pre-tools]
+run = "mise install uv bun node python java ruff"
+
+# Everything that needs the fully installed machine. The doctor reports and
+# never fails the setup.
+[bootstrap.hooks.final]
+run = [
+  "~/github/phoenix-error/dotfiles/scripts/install-herdr-integrations.sh",
+  "~/github/phoenix-error/dotfiles/scripts/install-mas-apps.sh",
+  "mise exec -- ~/github/phoenix-error/dotfiles/scripts/doctor.sh || true",
+]
+
 [tasks.setup]
-description = "Apply the managed setup, from Brewfile through the setup doctor"
-run = "./scripts/setup.sh"
+description = "Apply the managed setup, from Homebrew through the setup doctor"
+run = [
+  "mise self-update --yes",
+  "mise bootstrap --yes",
+]
+
+[tasks."setup:preview"]
+description = "Print every change the managed setup would make, without making one"
+run = "mise bootstrap --dry-run"
+
+[tasks."update:mise-installer"]
+description = "Refresh the committed mise installer from https://mise.run"
+run = [
+  "curl -fsSL https://mise.run -o scripts/setup-mise.sh",
+  "chmod +x scripts/setup-mise.sh",
+]
 
 [tasks."apps:mas"]
 description = "Install the managed Mac App Store applications"

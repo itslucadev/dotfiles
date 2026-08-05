@@ -20,11 +20,14 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 - `home/` owns public dotfiles that mise links into the home directory.
 - `home/.claude/rules/` owns the Claude rules that this setup supports.
 - `bootstrap.sh` owns bare-metal initialization only: Xcode Command Line Tools, Homebrew, mise, `mise trust`, and linking `~/.zprofile`, `~/.zshrc`, and `~/.zsh_plugins.txt` so both tools are reachable as ordinary commands. It stops there and installs no declared package.
-- `scripts/setup.sh` owns every managed setup stage and the required stage order. The `setup` task in `mise.toml` is its only caller.
+- `mise bootstrap` owns the stage order of the managed setup. The `[bootstrap.hooks]` entries in `mise.toml` own the stages that are not one of its native phases, and the `setup` task is the documented entry point.
+- `scripts/setup-mise.sh` is the committed copy of the `https://mise.run` installer. Never edit it by hand. Refresh it with `mise run update:mise-installer` and review the diff, which is a checksum and version bump.
 - `scripts/lib.sh` owns the shared logging, dry-run, and manual-gate helpers. Source it, do not execute it.
 - `scripts/` owns idempotent setup behavior that cannot be expressed safely as scalar mise configuration.
 
-New setup behavior belongs in `scripts/setup.sh` or in a `scripts/` helper that it calls.
+New setup behavior belongs in a `mise bootstrap` phase when mise can express it, and otherwise in a `scripts/` helper that a `[bootstrap.hooks]` entry calls.
+
+Homebrew stays in `Brewfile` and never moves into `[bootstrap.packages]`. mise converges forward only, so that move would silently drop the `brew bundle cleanup` pass that removes undeclared formulae, casks, and taps.
 
 Only add a stage to `bootstrap.sh` when it must run before mise exists. Everything else is a managed stage.
 
@@ -45,7 +48,7 @@ A tool that ships both a native binary and a runtime package follows rule 4 unle
 Never declare the same tool in both `Brewfile` and `mise.toml`.
 
 mise itself is the one exception to the rule and belongs in neither inventory.
-`bootstrap.sh` installs it from `https://mise.run` into `~/.local/bin/mise`, which is the method the mise documentation recommends for macOS.
+`bootstrap.sh` installs it into `~/.local/bin/mise` with the committed `https://mise.run` installer in `scripts/setup-mise.sh`, which is the method the mise documentation recommends for macOS.
 It has to exist before `Brewfile` is applied, and `brew bundle cleanup` would otherwise uninstall the binary that is running the setup.
 Do not add `brew "mise"` back.
 
@@ -213,6 +216,6 @@ Never commit Infisical tokens, project identifiers that should remain private, e
 
 This repository has no test suite. Do not add one.
 
-Verify a change with `./bootstrap.sh --dry-run`, `./scripts/setup.sh --dry-run`, and `./scripts/doctor.sh`, all of which are read-only.
+Verify a change with `./bootstrap.sh --dry-run`, `mise run setup:preview`, and `./scripts/doctor.sh`, all of which are read-only.
 
 Do not install, upgrade, uninstall, clean up, or apply macOS settings on the current Mac while preparing this repository.

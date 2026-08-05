@@ -2,8 +2,11 @@
 
 # Shared helpers for the setup scripts. Source this file, do not execute it.
 #
-# Every consumer declares its own DRY_RUN variable before sourcing. The helpers
-# read it lazily so a script can flip it while parsing its arguments.
+# `run` exists for bootstrap.sh, which owns its own --dry-run. The managed
+# stages need no equivalent, because `mise bootstrap --dry-run` prints their
+# hooks instead of running them. Every consumer of `run` declares its own
+# DRY_RUN variable before sourcing, and the helper reads it lazily so a script
+# can flip it while parsing its arguments.
 
 readonly MANUAL_ACTION_EXIT=2
 
@@ -21,17 +24,6 @@ run() {
   fi
 
   "$@"
-}
-
-# Run a script that implements its own --dry-run handling.
-run_script() {
-  local script="$1"
-
-  if [[ "${DRY_RUN:-false}" == true ]]; then
-    "$script" --dry-run
-  else
-    "$script"
-  fi
 }
 
 # Block until the operator confirms a step that cannot be automated.

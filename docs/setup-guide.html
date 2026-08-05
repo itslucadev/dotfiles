@@ -1352,9 +1352,10 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                       Meldet <code>./bootstrap.sh</code>, dass die Shell-Konfiguration nicht
                       verlinkt werden konnte, liegen dort schon handgeschriebene Dateien. Dann
                       stattdessen <code>~/.local/bin/mise run setup</code> aufrufen. Der Task
-                      installiert Homebrew-Pakete, pausiert danach für Git und SSH von Hand,
-                      setzt dann Runtimes, globale CLIs, Dotfile-Symlinks, bestätigte
-                      macOS-Defaults und nach Möglichkeit die MAS-Apps fort.
+                      aktualisiert mise und übergibt dann an <code>mise bootstrap</code>: erst
+                      Homebrew-Pakete, danach die Pause für Git und SSH von Hand, dann
+                      Dotfile-Symlinks, bestätigte macOS-Defaults, Runtimes, globale CLIs und
+                      nach Möglichkeit die MAS-Apps.
                       Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
                     </p>
                   </div>
@@ -1386,8 +1387,9 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Der Repository-Task heißt bewusst <code>setup</code>, weil
-                      <code>mise bootstrap</code> bereits ein eingebauter mise-Ablauf ist.
+                      Der Repository-Task heißt bewusst <code>setup</code>. Ein Task namens
+                      <code>bootstrap</code> würde von <code>mise bootstrap</code> selbst noch
+                      einmal aufgerufen und den ganzen Ablauf wiederholen.
                     </p>
                   </div>
                 </article>
