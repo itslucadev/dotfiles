@@ -108,7 +108,6 @@ for command_name in \
   lazygit \
   fzf \
   herdr \
-  infisical \
   starship \
   tmux \
   agent-device \
@@ -264,7 +263,6 @@ for application_name in \
 done
 
 for application_name in \
-  "GatherOS" \
   "Maestro Studio" \
   "Recordly" \
   "SimCam"; do
@@ -379,15 +377,8 @@ else
   warn "GitHub CLI is not authenticated"
 fi
 
-if command -v infisical >/dev/null 2>&1 &&
-  infisical login status >/dev/null 2>&1; then
-  pass "Infisical CLI is authenticated"
-else
-  warn "Infisical CLI is not authenticated"
-fi
-
 printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
-printf 'Review the manual checklist in README.md for permissions and logins.\n'
+printf 'Open docs/setup-guide.html for the remaining manual permissions and logins.\n'
 
 if [[ "$STRICT" == true && "$failures" -gt 0 ]]; then
   exit 1

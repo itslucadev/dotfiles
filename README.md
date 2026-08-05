@@ -58,12 +58,17 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 | Dotfiles and macOS defaults | mise | `mise.toml` and `home/` |
 | Bare-metal initialization | Bash | `bootstrap.sh` |
 | Managed setup stages | mise | `mise.toml` task `setup` and `[bootstrap.hooks]` |
-| Git identity, signing, SSH | you, by hand | nothing here, [see why](#git-and-ssh) |
+| Git identity, signing, SSH | you, by hand | nothing here, [see why](#declarative-ownership) |
+| Every manual step on a new Mac | you, by hand | [`docs/setup-guide.html`](docs/setup-guide.html) |
 
 ## Contents
 
+**Walkthrough**
+[docs/setup-guide.html](docs/setup-guide.html) is the step-by-step guide for a new Mac ·
+[docs/agent-skills.md](docs/agent-skills.md) covers the global agent skills
+
 **Setup**
-[Quick Start](#quick-start-on-a-new-mac) ·
+[Setting Up a New Mac](#setting-up-a-new-mac) ·
 [What the Two Commands Do](#what-the-two-commands-do) ·
 [Manual Interaction Gates](#manual-interaction-gates) ·
 [Declarative Ownership](#declarative-ownership) ·
@@ -72,17 +77,12 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 **Inventory**
 [Managed Applications](#managed-applications) ·
 [Runtimes and Global CLIs](#managed-runtimes-and-global-clis) ·
+[Mobile Toolchains](#mobile-toolchains) ·
 [Shell and Terminal](#shell-and-terminal) ·
 [VS Code and Cursor](#vs-code-and-cursor) ·
-[Agent Configuration](#agent-configuration) ·
-[Global Agent Skills](#global-agent-skills)
+[Agent Configuration](#agent-configuration)
 
 **Operations**
-[Git and SSH](#git-and-ssh) ·
-[Secrets with Infisical](#secrets-with-infisical) ·
-[Manual Setup Checklist](#manual-setup-checklist) ·
-[Safe Test Strategy](#safe-test-strategy) ·
-[Keyboard Shortcuts](#keyboard-shortcuts) ·
 [Homebrew 6 Trust](#homebrew-6-trust) ·
 [Updating Tool Versions](#updating-tool-versions) ·
 [Repository Validation](#repository-validation) ·
@@ -98,37 +98,24 @@ The recommended first complete acceptance test is a disposable macOS VM or a spa
 
 The current Mac can also be used for a final rehearsal immediately before it is erased, after a verified backup exists.
 
-## Quick Start on a New Mac
+## Setting Up a New Mac
 
 > [!IMPORTANT]
-> **Git identity and GitHub SSH are set up by hand during bootstrap.**
+> **[docs/setup-guide.html](docs/setup-guide.html) is the instruction manual, not this file.**
 >
-> Git is deliberately not part of this repository. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand, so a fresh Mac has no Git identity, no commit signing, and no SSH configuration until they are created.
+> It is an offline, checkable guide covering every step in ten phases, from macOS onboarding through the final reboot, and it remembers which boxes are already ticked.
+> Open it first and work through it to the end.
 >
-> Cloning needs none of it. The repository is public and the command below clones over HTTPS.
-> After `Brewfile` installs Git, the `setup` task pauses for the manual Git and SSH checklist, then verifies the identity, the Ed25519 key, and `ssh -T git@github.com` before continuing.
->
-> See: [Setting Git and SSH Up by Hand](#setting-git-and-ssh-up-by-hand).
+> This README documents what the repository owns and why it is built the way it is.
+> It deliberately does not repeat the walkthrough.
 
-Sign in to the Mac with an administrator account and complete the initial macOS onboarding.
-
-Install the Xcode Command Line Tools:
-
-```sh
-xcode-select --install
-```
-
-Create the expected parent directory and clone the repository:
+Clone the repository to the fixed path, then initialize the Mac:
 
 ```sh
 mkdir -p ~/github/phoenix-error
 git clone https://github.com/phoenix-error/dotfiles.git ~/github/phoenix-error/dotfiles
 cd ~/github/phoenix-error/dotfiles
-```
 
-Initialize the Mac. This installs the Xcode Command Line Tools, Homebrew, and mise, and nothing else:
-
-```sh
 ./bootstrap.sh
 ```
 
@@ -138,7 +125,11 @@ Open a new terminal, then apply the setup:
 mise run setup
 ```
 
-That is the whole command sequence. The task pauses at every step that needs a person, explains what to do, verifies the result, and continues.
+Those two commands are the whole automated part.
+Everything else is manual on purpose and is walked through in the setup guide: Xcode Command Line Tools, Apple Account and Mac App Store, Xcode, Android Studio, Git identity and GitHub SSH, privacy permissions, application logins, keyboard shortcuts, and the smoke tests.
+
+The `setup` task pauses at every step that needs a person, explains what to do, verifies the result, and continues.
+Both commands are idempotent and can be rerun after resolving a manual prerequisite.
 
 The new terminal is needed because `bootstrap.sh` links `~/.zprofile` and `~/.zshrc` as its last step, which is what puts Homebrew and mise on `PATH`.
 If that step reported that it could not link them, the Mac already has hand-written files there.
@@ -146,9 +137,8 @@ Nothing is lost, and the setup runs as `~/.local/bin/mise run setup` instead.
 
 The fixed clone path allows the repository `mise.toml` to serve as the global mise configuration while keeping dotfile sources predictable.
 
-Both commands are idempotent and can be rerun after resolving a manual prerequisite.
-
-After `mise run setup` finishes, open the offline [interactive setup guide](docs/setup-guide.html) to complete permissions, remaining application logins, and application onboarding.
+Cloning needs no Git identity and no SSH key, because the repository is public and the command above clones over HTTPS.
+Both are created by hand later, at the gate the setup opens for them, and the setup guide carries the whole sequence.
 
 The global agent skills are installed by hand from [docs/agent-skills.md](docs/agent-skills.md), which documents the install commands and excluded sources.
 
@@ -245,7 +235,7 @@ The repository keeps configuration in the native declarative format of the tool 
 - `mise.lock` contains the resolved mise tool versions. Only mise writes it, it is local to each machine, and it is not tracked.
 - `home/` contains public configuration that mise symlinks into the home directory.
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
-- Git owns nothing here. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand, because a managed Git configuration is applied before the SSH key it depends on exists.
+- Git owns nothing here. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand. A managed `~/.gitconfig` that enables commit signing would be applied long before the key it signs with exists, and in that window `git commit` fails with `fatal: failed to write commit object`. Configuration that only works once a later stage has run is configuration this repository should not own. SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authentication state are never copied here either.
 
 `bootstrap.sh` runs once per Mac, or again after a macOS upgrade removed the Xcode Command Line Tools.
 
@@ -336,7 +326,7 @@ Homebrew installs these applications:
 
 Homebrew also installs Claude Code and the Codex CLI as casks.
 
-Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, CocoaPods, Fallow, Fastlane, fd, Git LFS, Gitleaks, the Infisical CLI, jq, LazyGit, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, the Pi coding agent, the Resend CLI, ripgrep, the Sentry CLI, the Sentry Wizard, Tmux, Watchman, and YouTube-DLP.
+Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, CocoaPods, Fallow, Fastlane, fd, Git LFS, Gitleaks, jq, LazyGit, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, the Pi coding agent, the Resend CLI, ripgrep, the Sentry CLI, the Sentry Wizard, Tmux, Watchman, and YouTube-DLP.
 
 The interactive shell tools Antidote, bat, eza, fd, FZF, ripgrep, Starship, and Zoxide are covered in the shell section below.
 
@@ -350,7 +340,7 @@ Raycast v1 comes from Homebrew. Raycast v2 Beta is a direct download from [rayca
 
 The setup does not install Rosetta 2. No managed cask declares an Intel requirement, and Minecraft Java Edition has shipped a native Apple Silicon launcher since version 1.19 in June 2022.
 
-GatherOS, Maestro Studio, Recordly, SimCam, and Raycast v2 Beta are direct-download applications covered by the manual setup checklist.
+Maestro Studio, Recordly, SimCam, and Raycast v2 Beta have no suitable Homebrew cask or Mac App Store entry and are downloaded by hand in [the setup guide](docs/setup-guide.html).
 
 Sentry Spotlight and Xcode Beta are excluded as well.
 
@@ -406,6 +396,27 @@ Global `npm` and `undici` are not installed as separate tools.
 Fastlane is installed through Homebrew for iOS and Android release automation.
 
 XcodeGen is intentionally not installed because React Native does not require it and no managed project currently uses an XcodeGen `project.yml` specification.
+
+## Mobile Toolchains
+
+The repository installs the containers for the iOS and Android toolchains and nothing inside them.
+
+Homebrew installs Android Studio, the Mac App Store installs stable Xcode, and mise installs Zulu JDK 17.
+The shell configuration exposes `ANDROID_HOME`, `emulator`, and `platform-tools`, and mise exposes `JAVA_HOME` for Zulu JDK 17 wherever its shell activation is active.
+
+It does not install Android SDK packages, accept Android licenses, create an emulator, install a Simulator runtime, or accept the Xcode license.
+
+Android Studio owns that state and provides the SDK Manager and Device Manager that the official React Native instructions drive.
+Pinning SDK versions here would freeze what that guide keeps moving.
+Android Studio must use `~/Library/Android/sdk`, which is the path the shell configuration sets.
+
+[React Native currently recommends Zulu JDK 17](https://reactnative.dev/docs/set-up-your-environment?platform=android).
+
+[mise installs that JDK and automatically points `JAVA_HOME` at the active Java installation](https://mise.jdx.dev/lang/java.html), so the separate Homebrew `zulu@17` cask is intentionally unnecessary.
+
+Xcode Beta is deliberately kept out of the active developer path.
+
+The Xcode and Android Studio phases of [the setup guide](docs/setup-guide.html) walk through the onboarding both applications need.
 
 ## Shell and Terminal
 
@@ -547,375 +558,13 @@ The Claude Codex plugin and its marketplace remain excluded.
 
 The global agent instructions tell agents to use PostHog CLI for deterministic PostHog work without storing its credentials in the repository.
 
-## Global Agent Skills
-
-The setup does not install agent skills.
-
-Skill sources are renamed, split, and retired far faster than the rest of this inventory, and a stale entry fails the whole run without adding anything a fresh Mac needs to work.
-They are installed by hand instead.
-
-[docs/agent-skills.md](docs/agent-skills.md) documents how to install global agent skills by hand.
-It covers the `bunx skills` install command, Gemini Notebook MCP and skill setup, excluded sources, and how to verify the result.
+The setup owns no agent skills.
+Skill sources are renamed, split, and retired far faster than the rest of this inventory, and a stale entry would fail the whole run without adding anything a fresh Mac needs to work.
+They are installed by hand from [docs/agent-skills.md](docs/agent-skills.md) instead.
 
 The repository does not copy local plugin caches or private skill folders.
 
 The Claude plugins enabled in `home/.claude/settings.json` ship their own skills, which that file does not govern.
-
-## Git and SSH
-
-Git is the one tool this repository does not configure.
-
-`~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` were managed dotfiles until they were removed on purpose.
-They are now written by hand on each machine and this repository holds no copy of them.
-
-The reason is ordering. A managed `~/.gitconfig` that enables commit signing is applied long before the key it signs with exists, and in that window `git commit` fails with `fatal: failed to write commit object`.
-Configuration that only works once a later stage has run is configuration this repository should not own.
-
-Creating the key, registering it with GitHub, and verifying the connection are also manual.
-The `setup` task only pauses after `Brewfile` installs Git, prints the checklist, and continues once the identity, the Ed25519 key, and `ssh -T git@github.com` succeed.
-
-This follows the official [Connecting to GitHub with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) workflow.
-
-SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authentication state are never copied into this repository.
-
-### Setting Git and SSH Up by Hand
-
-Do this when the setup pauses after applying `Brewfile`, or earlier on a Mac that already has Homebrew Git.
-
-Set the identity. The GitHub Noreply address keeps the personal address private:
-
-```sh
-git config --global user.name "phoenix-error"
-git config --global user.email "42442490+phoenix-error@users.noreply.github.com"
-git config --global init.defaultBranch main
-```
-
-Create `~/.ssh/config` so the key is loaded from the macOS Keychain and the passphrase is asked once rather than on every connection:
-
-```sh
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
-cat > ~/.ssh/config <<'EOF'
-Host *
-  AddKeysToAgent yes
-  UseKeychain yes
-  ServerAliveInterval 60
-  ServerAliveCountMax 3
-
-Host github.com
-  HostName github.com
-  User git
-  IdentityFile ~/.ssh/id_ed25519
-  IdentitiesOnly yes
-EOF
-chmod 600 ~/.ssh/config
-```
-
-Create the Ed25519 key, load it into the macOS Keychain, and copy the public key:
-
-```sh
-ssh-keygen -t ed25519 -C "42442490+phoenix-error@users.noreply.github.com"
-ssh-add --apple-use-keychain ~/.ssh/id_ed25519
-pbcopy < ~/.ssh/id_ed25519.pub
-```
-
-Add the copied public key at [GitHub SSH and GPG keys](https://github.com/settings/keys) twice, once as an Authentication Key and once as a Signing Key.
-Registering it only for authentication leaves commit signing broken.
-
-Verify the connection, comparing the offered host fingerprint against [GitHub's published fingerprints](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints) on first use:
-
-```sh
-ssh -T git@github.com
-```
-
-Press Return in the bootstrap terminal once authentication succeeds.
-
-Enable commit signing once the key exists, never before.
-Create the allowed signers file first so Git can verify local signatures:
-
-```sh
-printf '%s %s\n' \
-  "$(git config --global --get user.email)" \
-  "$(awk 'NR == 1 { print $1 " " $2 }' ~/.ssh/id_ed25519.pub)" \
-  > ~/.ssh/allowed_signers
-chmod 644 ~/.ssh/allowed_signers
-git config --global gpg.format ssh
-git config --global user.signingkey ~/.ssh/id_ed25519.pub
-git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
-git config --global commit.gpgsign true
-```
-
-Confirm the local pieces at any time:
-
-```sh
-git config --global --get user.name
-git config --global --get user.email
-ls -l ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub ~/.ssh/allowed_signers
-ssh-keygen -lf ~/.ssh/id_ed25519.pub
-ssh -T git@github.com
-git config --global --get gpg.format
-git config --global --get commit.gpgsign
-```
-
-GitHub CLI login is optional and can wait until a later workflow needs `gh`.
-
-### Settings That Are No Longer Reproduced
-
-Removing the managed files also removed everything else they carried.
-None of it is required for a working Mac, and all of it is a one-line `git config --global` away:
-
-| Setting | Value it had |
-| --- | --- |
-| `fetch.prune` | `true` |
-| `pull.rebase` | `true` |
-| `push.autoSetupRemote` | `true` |
-| `rebase.autoStash` | `true` |
-| `rerere.enabled` | `true` |
-| `diff.algorithm` | `histogram` |
-| `merge.conflictStyle` | `zdiff3` |
-| `credential.helper` | `osxkeychain` |
-| `core.excludesFile` | `~/.config/git/ignore` |
-| `filter "lfs"` | the three `git-lfs` filter entries |
-
-`~/.config/git/ignore` held `.DS_Store`, `.idea/`, `*.swp`, and `*~`.
-
-`git lfs install` writes the `filter "lfs"` section itself, so that one should be restored with the tool rather than by hand.
-
-## Secrets with Infisical
-
-Infisical manages project and environment secrets without placing plaintext values in the public dotfiles repository.
-
-The CLI stores its interactive login session in the system keyring and injects selected secrets only into the child process:
-
-```sh
-infisical login
-infisical run -- bun run dev
-```
-
-Run `infisical init` inside an individual project when that project should be connected to an Infisical project.
-
-The generated project reference can live in that project's repository when its visibility is appropriate, but it does not belong in these global dotfiles.
-
-Do not source exported secrets globally from `.zshrc`, write them into this repository, or use Infisical as storage for SSH private keys.
-
-GitHub CLI, Claude, EAS, Sentry, and similar tools keep using their own authentication stores.
-
-## Manual Setup Checklist
-
-### Apple Account and Mac App Store
-
-- [ ] Sign in to the Mac App Store.
-- [ ] Claim each managed App Store application once if the Apple Account has never downloaded it.
-- [ ] Run `mise run apps:mas`.
-
-### Xcode
-
-- [ ] Launch `/Applications/Xcode.app` once and allow it to install additional components.
-- [ ] Accept the Xcode license with `sudo xcodebuild -license accept`.
-- [ ] Select stable Xcode with `sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer`.
-- [ ] Install the required iOS simulator runtime in Xcode Settings under Platforms or Components.
-- [ ] Keep Xcode Beta out of the active developer path.
-
-### Android Studio
-
-- [ ] Launch Android Studio and complete its setup wizard.
-- [ ] Let Android Studio install the Android SDK, Android SDK Platform, and Android Virtual Device components.
-- [ ] Follow the current [React Native Android environment guide](https://reactnative.dev/docs/set-up-your-environment?platform=android) in Android Studio.
-- [ ] Confirm that Android Studio uses `~/Library/Android/sdk`.
-- [ ] Create and start the required Android Virtual Device through Android Studio.
-- [ ] Enable Developer options and USB debugging on any physical Android test device.
-
-The shell configuration exposes `ANDROID_HOME`, `emulator`, and `platform-tools`.
-
-mise exposes `JAVA_HOME` for Zulu JDK 17 when its shell activation is active.
-
-The repository does not install Android SDK packages, accept Android licenses, or create an emulator.
-
-Android Studio owns that state and provides the SDK Manager and Device Manager used by the official React Native instructions.
-
-[React Native currently recommends Zulu JDK 17](https://reactnative.dev/docs/set-up-your-environment?platform=android).
-
-[mise installs that JDK and automatically points `JAVA_HOME` at the active Java installation](https://mise.jdx.dev/lang/java.html), so the separate Homebrew `zulu@17` cask is intentionally unnecessary.
-
-### Direct-download Applications
-
-- [ ] Download [Raycast v2 Beta](https://www.raycast.com/new) (Apple Silicon, macOS Tahoe or newer) and move it to `/Applications`. Keep Raycast v1 beside it until migration is done.
-- [ ] Download [GatherOS](https://www.gatheros.co/) and move it to `/Applications`.
-- [ ] Download [Maestro Studio](https://docs.maestro.dev/get-started/quickstart) for macOS and move it to `/Applications`.
-- [ ] Download [Recordly](https://recordly.dev/) for macOS and move it to `/Applications`.
-- [ ] Download [SimCam](https://simcam.swmansion.com/) and move it to `/Applications`.
-- [ ] Grant GatherOS the capture permissions requested by the features that are used.
-- [ ] Select a workspace in Maestro Studio and verify that it can see an iOS Simulator and Android emulator.
-- [ ] Grant Recordly Screen Recording, Microphone, Camera, and System Audio permissions as needed.
-- [ ] Complete the SimCam trial or license activation and approve its camera components when prompted.
-
-These applications have no suitable Homebrew cask or Mac App Store entry in the managed setup.
-
-### Additional Application Onboarding
-
-- [ ] Sign in to Dia and choose whether browser data should sync.
-- [ ] Link WhatsApp to the existing account.
-- [ ] Sign in to Spark and add the required mail accounts.
-- [ ] Sign in to CurseForge if account-backed mod synchronization is needed.
-- [ ] Grant LocalSend Local Network access.
-- [ ] Launch OpenUsage and review which local developer tools it may inspect.
-- [ ] Verify that FluxMarkdown provides Finder Quick Look previews for Markdown files.
-
-### Git and GitHub
-
-- [ ] When bootstrap pauses after `Brewfile`, complete [Setting Git and SSH Up by Hand](#setting-git-and-ssh-up-by-hand).
-- [ ] Set `user.name` and `user.email`.
-- [ ] Create `~/.ssh/config` so the key is loaded from the macOS Keychain.
-- [ ] Create `~/.ssh/id_ed25519`, load it with `ssh-add --apple-use-keychain`, and register the public key on GitHub for authentication and signing.
-- [ ] Compare the first-connection fingerprint with GitHub's published fingerprint and confirm `ssh -T git@github.com` succeeds before pressing Return in bootstrap.
-- [ ] Create `~/.ssh/allowed_signers` and enable commit signing after the key exists, never before.
-- [ ] Restore any wanted Git defaults from [Settings That Are No Longer Reproduced](#settings-that-are-no-longer-reproduced).
-- [ ] Run `git lfs install` to restore the Git LFS filter configuration.
-- [ ] Push a signed commit and confirm that GitHub displays it as verified.
-- [ ] Sign in with `gh auth login` later if a workflow needs the GitHub CLI.
-
-Never commit an alternate Git identity file, SSH private key, private SSH host inventory, or GitHub CLI authentication files.
-
-### VS Code and Cursor
-
-- [ ] Launch VS Code, sign in, and confirm that Settings Sync is on.
-- [ ] Confirm that Rosé Pine Moon and Hack Nerd Font Mono load in VS Code.
-- [ ] Launch Cursor and sign in.
-- [ ] Confirm that Rosé Pine Moon and Hack Nerd Font Mono load in Cursor.
-- [ ] If Cursor should mirror VS Code extensions, run the example Claude agent prompt from the offline setup guide.
-- [ ] Open a Python project and confirm that its `.venv` is discovered and Ruff formats on save.
-- [ ] Open a React Native project and confirm that Biome, Prettier, ESLint, and Tailwind activate only where their project configuration applies.
-
-### Raycast
-
-- [ ] Install Raycast v2 Beta from [raycast.com/new](https://www.raycast.com/new) into `/Applications` (Apple Silicon, macOS Tahoe or newer).
-- [ ] Launch Raycast v1 and complete its onboarding.
-- [ ] Launch Raycast v2 Beta.
-- [ ] Run `Migrate from Raycast v1` inside Raycast Beta.
-- [ ] Confirm that migrated shortcuts are disabled in v1 to avoid conflicts.
-- [ ] Set Raycast Beta as the login launcher.
-- [ ] In System Settings → Keyboard → Keyboard Shortcuts → Spotlight, disable Show Spotlight search (Command-Space).
-- [ ] Set Command-Space as the primary Raycast shortcut.
-- [ ] Grant Accessibility access when requested.
-- [ ] Configure Raycast Window Management shortcuts.
-
-Raycast settings exports are not committed because they may contain clipboard history, AI conversations, authenticated extension data, and MCP configuration.
-
-### AltTab
-
-- [ ] Set Command-Tab as the AltTab shortcut.
-- [ ] Grant Accessibility access.
-- [ ] Grant Screen Recording access when requested.
-
-### CleanShot
-
-- [ ] Grant Screen Recording access.
-- [ ] Grant Microphone access for recordings.
-- [ ] Grant Accessibility access when requested.
-- [ ] In System Settings → Keyboard → Keyboard Shortcuts → Screenshots, disable the native full-screen, selection, and recording shortcuts.
-- [ ] Set Command-Shift-3 to full-screen capture.
-- [ ] Set Command-Shift-4 to area capture.
-- [ ] Set Command-Shift-5 to all-in-one capture and recording.
-- [ ] Set Command-Shift-6 to text capture.
-- [ ] Choose CleanShot's save location inside CleanShot; leave the native macOS screenshot folder alone.
-
-### Aqua Voice
-
-- [ ] Sign in to Aqua Voice.
-- [ ] Grant Microphone access.
-- [ ] Grant Accessibility access when requested.
-- [ ] Set the Fn or Globe key as push-to-talk.
-
-The setup configures macOS so pressing Fn or Globe has no native action, leaving the key available to Aqua Voice.
-
-### CleanMyMac
-
-- [ ] Activate the existing CleanMyMac license.
-- [ ] Grant Full Disk Access when requested.
-- [ ] Review background-item and notification prompts.
-
-### Tailscale and Proton VPN
-
-- [ ] Sign in to Tailscale.
-- [ ] Approve the Tailscale network or system extension.
-- [ ] Sign in to Proton VPN.
-- [ ] Approve the Proton VPN configuration.
-
-### RocketSim
-
-- [ ] Launch RocketSim after Xcode and at least one Simulator runtime are installed.
-- [ ] Grant Screen Recording or Accessibility access only when RocketSim requests it for a used feature.
-
-### Agent and Developer Logins
-
-- [ ] Authenticate Infisical with `infisical login`.
-- [ ] Confirm the stored session with `infisical login status`.
-- [ ] Launch ChatGPT, sign in, and select Codex when doing local software development.
-- [ ] Launch Claude Desktop and sign in.
-- [ ] Run Claude Code and complete its login.
-- [ ] Confirm that Claude Auto mode is available for the active plan and model.
-- [ ] Confirm that the Pyright and TypeScript LSP plugins are active.
-- [ ] Authenticate PostHog CLI with `posthog-cli login`.
-- [ ] Authenticate Sentry CLI with `sentry auth login`.
-- [ ] Authenticate EAS with `eas login`.
-- [ ] Authenticate Vercel with `vercel login`.
-- [ ] Authenticate Fallow if a project uses the optional paid runtime layer.
-- [ ] Run `nlm login`, then configure Gemini Notebook with `nlm setup add` and `nlm skill install` as documented in [docs/agent-skills.md](docs/agent-skills.md).
-- [ ] Configure other agent tools without committing their credentials or histories.
-
-### Ghostty and Herdr
-
-- [ ] Launch Ghostty once and verify that Rose Pine Moon and Hack Nerd Font load.
-- [ ] Grant Ghostty Accessibility access only if global terminal shortcuts are added later.
-- [ ] Launch Herdr and verify its Rose Pine theme and system notification delivery.
-- [ ] Keep Herdr's built-in keyboard shortcuts unless this repository explicitly changes that policy.
-
-### Final Verification
-
-- [ ] Open new WezTerm and Ghostty windows so the managed shell configuration is active.
-- [ ] Confirm VS Code Settings Sync and, if wanted, the Cursor extension mirror.
-- [ ] Run `mise doctor`.
-- [ ] Run `mise run doctor`.
-- [ ] Install the global agent skills by hand from [docs/agent-skills.md](docs/agent-skills.md).
-- [ ] Build and launch one React Native project on an iOS Simulator.
-- [ ] Build and launch one React Native project on the Android emulator.
-- [ ] Reboot once and verify login items, shortcuts, VPNs, and permissions.
-
-## Safe Test Strategy
-
-The repository can be tested on the current Mac later, but that is not equivalent to a clean-machine test because Homebrew packages, applications, Keychain entries, permissions, and caches already exist.
-
-Use this order:
-
-1. Run `./bootstrap.sh --dry-run` and `mise run setup:preview` while preparing the repository.
-2. Use a disposable macOS virtual machine for a clean bootstrap when possible.
-3. Use a separate macOS user only for per-user dotfiles and defaults, remembering that `/Applications` and Homebrew remain shared.
-4. If desired, run the real bootstrap on the current user only immediately before the planned erase and only after verifying a Time Machine or equivalent backup.
-5. Perform the final acceptance test on the new Mac before erasing the old one.
-
-The bootstrap uninstalls unmanaged Homebrew formulae and casks, untaps unmanaged taps, installs managed applications, links dotfiles, and applies macOS defaults.
-
-It preserves recursive formula dependencies, formula dependencies required by managed casks, Mac App Store applications, editor extensions, and application data belonging to removed casks.
-
-For that reason, the dry-run and virtual-machine stages should happen before any live rehearsal on the current user.
-
-## Keyboard Shortcuts
-
-The intended ownership is:
-
-| Shortcut | Owner | Action |
-| --- | --- | --- |
-| Command-Space | Raycast Beta | Open Raycast |
-| Command-Tab | AltTab | Switch applications |
-| Fn or Globe | Aqua Voice | Push-to-talk |
-| Command-Shift-3 | CleanShot | Full-screen capture |
-| Command-Shift-4 | CleanShot | Area capture |
-| Command-Shift-5 | CleanShot | All-in-one capture and recording |
-| Command-Shift-6 | CleanShot | Text capture |
-
-macOS shortcut reservations are manual in System Settings before the matching application shortcuts are assigned.
-
-Application-specific shortcut assignment remains manual because those applications own their settings and permissions.
 
 ## Homebrew 6 Trust
 
@@ -923,7 +572,7 @@ mise symlinks the root `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 
 Official Homebrew taps require no additional trust.
 
-The AXe CLI, Infisical CLI, Linear CLI, Maestro CLI, Oh My Pi, Resend CLI, Sentry CLI, Sentry Wizard, Pear Desktop, and FluxMarkdown come from third-party taps.
+The AXe CLI, Linear CLI, Maestro CLI, Oh My Pi, Resend CLI, Sentry CLI, Sentry Wizard, Pear Desktop, and FluxMarkdown come from third-party taps.
 
 Each of those packages declares item-scoped `trusted: true` in `Brewfile`, so the repository does not trust the rest of its tap.
 
@@ -1004,7 +653,7 @@ That includes `~/.claude/settings.local.json` and `mise.local.toml`.
 
 A setting that would otherwise land in a local override belongs in the managed file, so a new Mac reproduces it. The Claude plugin toggles and the reduced-motion preference were moved into `home/.claude/settings.json` for exactly that reason.
 
-Git is the deliberate exception. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are not managed at all, so they need no override layer. See [Git and SSH](#git-and-ssh).
+Git is the deliberate exception. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are not managed at all, so they need no override layer. See [Declarative Ownership](#declarative-ownership).
 
 The matching `.gitignore` entries stay as a safety net against accidental commits, not as an invitation to create such files.
 

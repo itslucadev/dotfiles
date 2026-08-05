@@ -1301,6 +1301,12 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                       <pre><code>./bootstrap.sh --dry-run</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
+                    <p class="task-note">
+                      Das deckt nur die drei Initialisierungsschritte ab: Command Line Tools,
+                      Homebrew und mise. Der Trockenlauf für alles Weitere ist
+                      <code>mise run setup:preview</code> und braucht ein installiertes mise,
+                      läuft also erst nach <code>./bootstrap.sh</code>.
+                    </p>
                   </div>
                 </article>
               </div>
@@ -1354,9 +1360,30 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                       stattdessen <code>~/.local/bin/mise run setup</code> aufrufen. Der Task
                       aktualisiert mise und übergibt dann an <code>mise bootstrap</code>: erst
                       Homebrew-Pakete, danach die Pause für Git und SSH von Hand, dann
-                      Dotfile-Symlinks, bestätigte macOS-Defaults, Runtimes, globale CLIs und
-                      nach Möglichkeit die MAS-Apps.
+                      Dotfile-Symlinks, bestätigte macOS-Defaults, Runtimes, globale CLIs,
+                      die Herdr-Agent-Integrationen, nach Möglichkeit die MAS-Apps und zum
+                      Schluss den Setup Doctor.
                       Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="bootstrap-preview">
+                  <input class="task-check" type="checkbox" aria-label="Setup-Vorschau geprüft" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Das verwaltete Setup trocken ansehen</h3>
+                      <span class="badge auto">Sicherer Test</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>mise run setup:preview</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Führt <code>mise bootstrap --dry-run</code> aus und meldet jedes Paket,
+                      jeden Dotfile-Symlink, jeden macOS-Default und jedes Tool, das nicht im
+                      gewünschten Zustand ist. Die Hooks werden nur ausgegeben, nicht ausgeführt.
+                      Lohnt sich vor dem ersten echten Lauf und nach jedem <code>git pull</code>.
                     </p>
                   </div>
                 </article>
@@ -1815,6 +1842,50 @@ git log --show-signature -1</code></pre>
                   </div>
                 </article>
 
+                <article class="task" data-task-id="git-defaults">
+                  <input class="task-check" type="checkbox" aria-label="Gewünschte Git-Defaults wiederhergestellt" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Gewünschte Git-Defaults und Git LFS wiederherstellen</h3>
+                      <span class="badge manual">Optional</span>
+                    </div>
+                    <p class="task-note">
+                      Mit der verwalteten <code>~/.gitconfig</code> sind auch diese Einstellungen
+                      verschwunden. Keine davon ist für einen funktionierenden Mac nötig, alle
+                      sind eine Zeile weit entfernt. Nur setzen, was wirklich gewollt ist.
+                    </p>
+                    <div class="command">
+                      <pre><code>git config --global fetch.prune true
+git config --global pull.rebase true
+git config --global push.autoSetupRemote true
+git config --global rebase.autoStash true
+git config --global rerere.enabled true
+git config --global diff.algorithm histogram
+git config --global merge.conflictStyle zdiff3
+git config --global credential.helper osxkeychain
+git config --global core.excludesFile ~/.config/git/ignore</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      <code>~/.config/git/ignore</code> enthielt <code>.DS_Store</code>,
+                      <code>.idea/</code>, <code>*.swp</code> und <code>*~</code>.
+                    </p>
+                    <div class="command">
+                      <pre><code>mkdir -p ~/.config/git
+printf '%s\n' '.DS_Store' '.idea/' '*.swp' '*~' > ~/.config/git/ignore</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Die <code>filter "lfs"</code>-Sektion schreibt das Tool selbst. Sie gehört
+                      nicht von Hand gesetzt.
+                    </p>
+                    <div class="command">
+                      <pre><code>git lfs install</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                  </div>
+                </article>
+
                 <article class="task" data-task-id="github-cli-later">
                   <input class="task-check" type="checkbox" aria-label="GitHub CLI später angemeldet" />
                   <div class="task-content">
@@ -1854,6 +1925,16 @@ gh auth status</code></pre>
               <p class="phase-intro">
                 macOS erlaubt keine sichere öffentliche Automatisierung von TCC-Rechten.
                 Deshalb bleiben Screen Recording, Accessibility, Mikrofon und VPN-Freigaben sichtbar.
+                Am Ende dieser Phase soll die Tastatur so belegt sein:
+                <strong>Command-Space</strong> Raycast Beta,
+                <strong>Command-Tab</strong> AltTab,
+                <strong>Fn oder Globe</strong> Aqua Voice Push-to-talk,
+                <strong>Command-Shift-3</strong> CleanShot Vollbild,
+                <strong>Command-Shift-4</strong> CleanShot Bereich,
+                <strong>Command-Shift-5</strong> CleanShot All-in-one,
+                <strong>Command-Shift-6</strong> CleanShot Texterfassung.
+                Die native macOS-Belegung muss jeweils zuerst in den Systemeinstellungen
+                freigegeben werden, danach erst die App-Belegung setzen.
               </p>
               <div class="task-list">
                 <article class="task" data-task-id="apps-direct">
@@ -1873,10 +1954,6 @@ gh auth status</code></pre>
                         <a href="https://www.raycast.com/new" rel="noopener noreferrer" target="_blank">Raycast v2 Beta</a>
                         (Apple Silicon, macOS Tahoe oder neuer) — DMG laden, App nach
                         <code>/Applications</code> legen. v1 bleibt vorerst neben Beta.
-                      </li>
-                      <li>
-                        <a href="https://www.gatheros.co/" rel="noopener noreferrer" target="_blank">GatherOS</a>
-                        — Capture-Rechte für die genutzten Features freigeben.
                       </li>
                       <li>
                         <a href="https://docs.maestro.dev/get-started/quickstart" rel="noopener noreferrer" target="_blank">Maestro Studio</a>
@@ -2000,6 +2077,24 @@ gh auth status</code></pre>
                       VS Code, Cursor, Ghostty und Herdr durchgehen. Für FluxMarkdown die
                       Finder-Quick-Look-Vorschau prüfen.
                     </p>
+                    <ul class="task-steps">
+                      <li>
+                        RocketSim erst starten, wenn Xcode und mindestens eine
+                        Simulator-Runtime installiert sind. Screen Recording oder
+                        Accessibility nur freigeben, wenn RocketSim es für ein
+                        genutztes Feature verlangt.
+                      </li>
+                      <li>
+                        Ghostty braucht Accessibility nur, wenn später globale
+                        Terminal-Shortcuts dazukommen.
+                      </li>
+                      <li>
+                        Bei Herdr die Rose-Pine-Darstellung und die Zustellung der
+                        System-Benachrichtigungen prüfen. Herdrs eigene Tastenkürzel
+                        bleiben unverändert, solange dieses Repository das nicht
+                        ausdrücklich ändert.
+                      </li>
+                    </ul>
                   </div>
                 </article>
 
@@ -2117,6 +2212,12 @@ eas login
 vercel login</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
+                    <p class="task-note">
+                      Fallow nur anmelden, wenn ein Projekt die optionale kostenpflichtige
+                      Runtime-Ebene nutzt. Die CLI liegt im <code>Brewfile</code>,
+                      Editor-Diagnosen kommen aus der projekteigenen
+                      <code>fallow</code>-Dev-Dependency.
+                    </p>
                   </div>
                 </article>
 
@@ -2132,6 +2233,12 @@ vercel login</code></pre>
                       ausgeschlossen sind, steht in <code>docs/agent-skills.md</code>. Die Befehle
                       verwenden <code>bunx skills</code>, niemals <code>npx</code>, und richten sich
                       an Claude Code, Codex, Cursor und Pi.
+                    </p>
+                    <p class="task-note">
+                      Skill-Quellen werden umbenannt, geteilt und eingestellt, und zwar deutlich
+                      schneller als der Rest des Inventars. Ein veralteter Eintrag würde den ganzen
+                      Setup-Lauf scheitern lassen, ohne dass ein frischer Mac dadurch etwas gewinnt.
+                      Deshalb bleibt dieser Schritt bewusst Handarbeit.
                     </p>
                     <div class="command">
                       <pre><code>open docs/agent-skills.md</code></pre>
@@ -2167,30 +2274,6 @@ nlm doctor</code></pre>
                   </div>
                 </article>
 
-                <article class="task" data-task-id="agents-infisical">
-                  <input class="task-check" type="checkbox" aria-label="Infisical angemeldet und getestet" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Infisical für Projekt-Secrets anmelden und testen</h3>
-                      <span class="badge manual">Login</span>
-                    </div>
-                    <p class="task-note">
-                      Die CLI liegt im Brewfile, speichert ihre Sitzung im System-Keyring und
-                      injiziert ausgewählte Secrets nur in den gestarteten Kindprozess.
-                    </p>
-                    <div class="command">
-                      <pre><code>infisical login
-infisical login status
-infisical run -- bun run dev</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <div class="callout warning">
-                      Keine Infisical-Projekt-ID, Tokens, Secret-Werte oder Login-Artefakte in das
-                      öffentliche Dotfiles-Repository übernehmen. Projekte bei Bedarf innerhalb
-                      ihres eigenen Verzeichnisses mit <code>infisical init</code> verbinden.
-                    </div>
-                  </div>
-                </article>
               </div>
             </div>
           </section>
@@ -2284,6 +2367,10 @@ infisical run -- bun run dev</code></pre>
                       Rosé Pine Moon, Hack Nerd Font Mono, LSP-Diagnosen, Ruff, Biome, Prettier,
                       ESLint und Tailwind nur dort prüfen, wo das Projekt sie aktiviert.
                     </p>
+                    <p class="task-note">
+                      Zusätzlich ein Python-Projekt öffnen und prüfen, dass dessen
+                      <code>.venv</code> gefunden wird und Ruff beim Speichern formatiert.
+                    </p>
                   </div>
                 </article>
               </div>
@@ -2333,9 +2420,16 @@ mise run doctor</code></pre>
                     </div>
                     <div class="command">
                       <pre><code>./bootstrap.sh --dry-run
+mise run setup:preview
+./scripts/doctor.sh
 git diff --check</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
+                    <p class="task-note">
+                      Auf einem fertigen Mac soll <code>mise run setup:preview</code> nichts
+                      mehr zu ändern haben. Meldet es weiterhin Abweichungen, ist eine Stufe
+                      nicht durchgelaufen.
+                    </p>
                   </div>
                 </article>
 
@@ -2427,7 +2521,7 @@ mise run doctor</code></pre>
     </main>
 
     <footer class="footer">
-      Offline-Dokument · Quelle: README.md im Dotfiles-Repository · Stand 30.07.2026 ·
+      Offline-Dokument · Die verbindliche Anleitung für einen neuen Mac · Stand 05.08.2026 ·
       Fortschritt wird nur unter <code>dotfiles.setup-guide.v1</code> in localStorage gespeichert.
     </footer>
 

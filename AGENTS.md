@@ -202,15 +202,13 @@ The `.gitignore` entries for these paths stay as a safety net against accidental
 
 Never commit credentials, tokens, private keys, login state, shell history, application databases, or machine identifiers.
 
-Infisical is the managed backend for project and environment secrets.
+This repository prescribes no secrets backend. Do not introduce one without deciding that question first.
 
-Use `infisical run -- <command>` to inject secrets only into the process that needs them.
-
-Do not export Infisical secrets globally from `.zshrc` or persist them in generated `.env` files.
+Do not export secrets globally from `.zshrc` or persist them in generated `.env` files.
 
 Keep SSH private keys and native CLI login state in their own macOS Keychain or application-managed storage.
 
-Never commit Infisical tokens, project identifiers that should remain private, exported secrets, or machine identity credentials.
+Never commit exported secrets, project identifiers that should remain private, or machine identity credentials.
 
 ## Verification
 

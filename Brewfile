@@ -19,7 +19,6 @@ brew "git"
 brew "git-lfs"
 brew "gitleaks"
 brew "herdr"
-brew "infisical/get-cli/infisical", trusted: true
 brew "jq"
 brew "lazygit"
 brew "mas"
