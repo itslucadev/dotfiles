@@ -115,6 +115,10 @@ for command_name in \
   eas \
   react-doctor \
   claude \
+  codex \
+  cursor-agent \
+  omp \
+  pi \
   code \
   cursor \
   tsc; do
@@ -302,10 +306,19 @@ else
   fail "Managed Claude rule is missing: ~/.claude/rules/context7.md"
 fi
 
-if [[ -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]]; then
-  pass "Herdr installed its Claude Code integration"
-else
-  warn "Run mise run agents:herdr to install the Herdr agent integrations"
+# Herdr reports every integration it knows. An agent that was never started has
+# no configuration directory, so its integration stays uninstalled until
+# `mise run agents:login` and `mise run agents:herdr` have both run.
+if command -v herdr >/dev/null 2>&1; then
+  herdr_status="$(herdr integration status 2>/dev/null || true)"
+
+  for herdr_integration in claude codex cursor omp pi; do
+    if grep -Eq "^${herdr_integration}: (current|outdated)" <<<"$herdr_status"; then
+      pass "Herdr integration installed: $herdr_integration"
+    else
+      warn "Herdr integration missing: $herdr_integration. Sign the agent in, then run mise run agents:herdr"
+    fi
+  done
 fi
 
 local_override_found=false

@@ -46,6 +46,7 @@ cask "visual-studio-code"
 # Agents
 cask "claude-code"
 cask "codex"
+cask "cursor-cli"
 
 # Agents Desktop Apps
 cask "chatgpt"

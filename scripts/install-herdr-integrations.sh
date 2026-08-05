@@ -3,6 +3,10 @@
 # Herdr owns its own agent hooks. This repository never copies a generated hook
 # file into home/; it only asks Herdr to install and verify its integrations.
 # See https://herdr.dev/docs/integrations/
+#
+# Herdr can only hook an agent that has created its configuration directory, so
+# require-coding-agents.sh runs first and blocks until every managed agent is
+# signed in. A failure here is therefore a real failure, not a fresh machine.
 
 set -Eeuo pipefail
 

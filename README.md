@@ -196,6 +196,7 @@ The `setup` task in `mise.toml` updates mise itself and then runs `mise bootstra
 - Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Creates `~/Developer` and applies the confirmed macOS defaults.
 - Installs the locked language runtimes, then the locked global CLIs.
+- Pauses for the coding agent sign-ins, then verifies them before continuing.
 - Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
 - Runs the setup doctor.
@@ -211,7 +212,10 @@ It does not install agent skills. Those are a personal, fast-moving choice and a
 
 The runtimes install before the remaining CLIs because the other backends depend on them: the pipx backend needs uv, and every npm-backed tool needs bun as its package manager.
 
-After the Git and SSH gate, the remaining unattended stages run until the Mac App Store installs, which again need a person at the keyboard.
+After the Git and SSH gate, the remaining unattended stages run until the coding agent sign-ins, and then again until the Mac App Store installs, which both need a person at the keyboard.
+
+The coding agent gate sits directly before the Herdr integrations, because Herdr can only hook an agent that has created its configuration directory, and an agent does that on its first run.
+The agents themselves arrive with `Brewfile` in the same run, so the sign-ins cannot happen any earlier than this.
 
 The Homebrew reconciliation uses regular cask uninstall behavior and never passes `--zap`, so application data and shared support files are preserved.
 
@@ -231,6 +235,7 @@ The gated interactions are:
 - Finishing the Xcode Command Line Tools installer.
 - Confirming administrator rights before Homebrew creates `/opt/homebrew`, which needs `sudo -v` first in a non-interactive environment.
 - Completing the manual Git identity and GitHub SSH checklist after `Brewfile` installs Git, including comparing GitHub's SSH host fingerprint on the first connection.
+- Signing in to Claude Code, Codex, the Cursor CLI, Oh My Pi, and Pi, so Herdr can install its integration for each of them.
 - Signing in to the Mac App Store and claiming applications that the Apple Account has never downloaded.
 
 The final success message is printed only after all of these gates and their dependent automated stages have completed.
@@ -254,16 +259,17 @@ The repository keeps configuration in the native declarative format of the tool 
 
 `mise run setup` is the entry point for everything else, including every rerun.
 
-The `[bootstrap.hooks]` entries in `mise.toml` call four helper scripts that can change the Mac or connected accounts:
+The `[bootstrap.hooks]` entries in `mise.toml` call five helper scripts that can change the Mac or connected accounts:
 
 - `scripts/install-homebrew-packages.sh` applies `Brewfile` and removes what it no longer declares.
 - `scripts/require-git-and-github.sh` gates the manual Git identity and GitHub SSH setup.
+- `scripts/require-coding-agents.sh` gates the coding agent sign-ins that Herdr depends on.
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
 
 The read-only `scripts/doctor.sh` inspects the result without configuring the Mac.
 
-This repository has no test suite. Configuration is verified with `mise run setup:preview` and the setup doctor.
+This repository has no test suite. Configuration is verified with `./bootstrap.sh --dry-run` and the setup doctor.
 
 All scalar macOS settings with static values use mise's friendly or raw defaults sections.
 
@@ -287,15 +293,17 @@ mise reserves the `bootstrap` name for its built-in bootstrap pipeline and autom
 
 `./bootstrap.sh` is not part of a rerun. It only reverifies the Xcode Command Line Tools, Homebrew, and mise, which a working Mac already has.
 
-Inspect the setup without changing the Mac:
+Inspect the three initialization steps without changing the Mac:
 
 ```sh
-mise run setup:preview
+./bootstrap.sh --dry-run
 ```
 
-The preview runs `mise bootstrap --dry-run`, which reports every package, dotfile, macOS default, and tool that is not in its desired state, and prints the hook commands instead of running them.
+The setup doctor reports the state of everything else and never changes the Mac either:
 
-`./bootstrap.sh --dry-run` does the same for the three initialization steps, and needs no mise.
+```sh
+mise run doctor
+```
 
 ## Managed Applications
 
@@ -337,7 +345,7 @@ Homebrew installs these applications:
 - WezTerm
 - WhatsApp
 
-Homebrew also installs Claude Code and the Codex CLI as casks.
+Homebrew also installs Claude Code, the Codex CLI, and the Cursor CLI as casks.
 
 Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, CocoaPods, Fallow, Fastlane, fd, Git LFS, Gitleaks, jq, LazyGit, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, the Pi coding agent, the Resend CLI, ripgrep, the Sentry CLI, the Sentry Wizard, Tmux, Watchman, and YouTube-DLP.
 
@@ -539,7 +547,10 @@ OpenCode is not part of the setup.
 
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
 
-Homebrew installs every coding agent: Claude Code and Codex as casks, the Pi coding agent and Oh My Pi as formulae.
+Homebrew installs every coding agent: Claude Code, Codex, and the Cursor CLI as casks, the Pi coding agent and Oh My Pi as formulae.
+
+The `cursor-cli` cask provides the `cursor-agent` binary, which is the command-line agent and a separate artifact from the `cursor` editor cask.
+Herdr hooks that CLI, not the editor, so both casks are declared.
 
 Agent binaries update themselves at runtime, so a mise lockfile could not hold their versions and the seven-day minimum release age would buy nothing. Anthropic also deprecated the Claude Code npm package in January 2026 with version 2.1.15 in favour of the native binary.
 
@@ -641,7 +652,6 @@ Inspect a change without touching the Mac:
 
 ```sh
 ./bootstrap.sh --dry-run
-mise run setup:preview
 ./scripts/doctor.sh
 ```
 

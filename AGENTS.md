@@ -220,6 +220,6 @@ Never commit exported secrets, project identifiers that should remain private, o
 
 This repository has no test suite. Do not add one.
 
-Verify a change with `./bootstrap.sh --dry-run`, `mise run setup:preview`, and `./scripts/doctor.sh`, all of which are read-only.
+Verify a change with `./bootstrap.sh --dry-run` and `./scripts/doctor.sh`, both of which are read-only.
 
 Do not install, upgrade, uninstall, clean up, or apply macOS settings on the current Mac while preparing this repository.

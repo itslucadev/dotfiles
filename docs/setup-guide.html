@@ -1305,9 +1305,8 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                     </div>
                     <p class="task-note">
                       Das deckt nur die drei Initialisierungsschritte ab: Command Line Tools,
-                      Homebrew und mise. Der Trockenlauf für alles Weitere ist
-                      <code>mise run setup:preview</code> und braucht ein installiertes mise,
-                      läuft also erst nach <code>./bootstrap.sh</code>.
+                      Homebrew und mise. Alles Weitere übernimmt danach
+                      <code>mise run setup</code>.
                     </p>
                   </div>
                 </article>
@@ -1334,11 +1333,11 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                 einem behobenen Fehler erneut gestartet werden.
               </p>
               <div class="task-list">
-                <article class="task" data-task-id="bootstrap-run">
-                  <input class="task-check" type="checkbox" aria-label="Bootstrap erfolgreich ausgeführt" />
+                <article class="task" data-task-id="bootstrap-init">
+                  <input class="task-check" type="checkbox" aria-label="Mac initialisiert" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Den Mac initialisieren, dann das Setup anwenden</h3>
+                      <h3 class="task-title">Den Mac initialisieren</h3>
                       <span class="badge auto">Automatisch</span>
                     </div>
                     <div class="command">
@@ -1358,40 +1357,77 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                       Weitere dem eigenen Benutzer gehören muss. Es fragt das Passwort genau
                       einmal ab, direkt bevor Homebrew <code>/opt/homebrew</code> anlegt.
                     </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="bootstrap-run">
+                  <input class="task-check" type="checkbox" aria-label="Verwaltetes Setup ausgeführt" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Das verwaltete Setup anwenden</h3>
+                      <span class="badge auto">Automatisch</span>
+                    </div>
                     <div class="command">
                       <pre><code>mise run setup</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
+                      Der Task aktualisiert mise und übergibt dann an
+                      <code>mise bootstrap</code>: erst Homebrew-Pakete, danach die Pause für
+                      Git und SSH von Hand, dann Dotfile-Symlinks, bestätigte macOS-Defaults,
+                      Runtimes, globale CLIs, die Pause für die Coding-Agent-Anmeldungen, die
+                      Herdr-Agent-Integrationen, nach Möglichkeit die MAS-Apps und zum Schluss
+                      den Setup Doctor.
+                      Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
+                    </p>
+                    <p class="task-note">
                       Meldet <code>./bootstrap.sh</code>, dass die Shell-Konfiguration nicht
                       verlinkt werden konnte, liegen dort schon handgeschriebene Dateien. Dann
-                      stattdessen <code>~/.local/bin/mise run setup</code> aufrufen. Der Task
-                      aktualisiert mise und übergibt dann an <code>mise bootstrap</code>: erst
-                      Homebrew-Pakete, danach die Pause für Git und SSH von Hand, dann
-                      Dotfile-Symlinks, bestätigte macOS-Defaults, Runtimes, globale CLIs,
-                      die Herdr-Agent-Integrationen, nach Möglichkeit die MAS-Apps und zum
-                      Schluss den Setup Doctor.
-                      Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
+                      stattdessen <code>~/.local/bin/mise run setup</code> aufrufen.
+                    </p>
+                    <p class="task-note">
+                      Derselbe Befehl ist auch der Wiederholungsbefehl. Der Lauf ist idempotent
+                      und wird nach jeder behobenen Voraussetzung einfach erneut gestartet. Der
+                      Repository-Task heißt bewusst <code>setup</code>. Ein Task namens
+                      <code>bootstrap</code> würde von <code>mise bootstrap</code> selbst noch
+                      einmal aufgerufen und den ganzen Ablauf wiederholen.
                     </p>
                   </div>
                 </article>
 
-                <article class="task" data-task-id="bootstrap-preview">
-                  <input class="task-check" type="checkbox" aria-label="Setup-Vorschau geprüft" />
+                <article class="task" data-task-id="bootstrap-agent-logins">
+                  <input class="task-check" type="checkbox" aria-label="Coding Agents angemeldet" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Das verwaltete Setup trocken ansehen</h3>
-                      <span class="badge auto">Sicherer Test</span>
+                      <h3 class="task-title">An der Agent-Pause alle fünf Coding Agents anmelden</h3>
+                      <span class="badge manual">Login</span>
                     </div>
+                    <p class="task-note">
+                      Der Lauf hält vor den Herdr-Integrationen an, weil Herdr einen Agent nur
+                      dann einhängen kann, wenn dieser einmal gestartet und angemeldet war. Auf
+                      einem frischen Mac existieren die Agents vorher noch gar nicht, Homebrew
+                      installiert sie erst in diesem Lauf. Deshalb ist die Anmeldung genau hier
+                      fällig und nicht früher.
+                    </p>
+                    <p class="task-note">
+                      Das Setup wartet in seinem Fenster. Die Anmeldungen in einem zweiten
+                      Terminal erledigen, danach im Setup-Fenster mit Return bestätigen. Das
+                      Gate prüft das Ergebnis und fragt so lange erneut, bis alle fünf bereit
+                      sind.
+                    </p>
                     <div class="command">
-                      <pre><code>mise run setup:preview</code></pre>
+                      <pre><code>claude          # danach /login
+codex login
+cursor-agent login
+omp             # Onboarding und Anmeldung, dann /exit
+pi              # Anmeldung, dann /exit</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Führt <code>mise bootstrap --dry-run</code> aus und meldet jedes Paket,
-                      jeden Dotfile-Symlink, jeden macOS-Default und jedes Tool, das nicht im
-                      gewünschten Zustand ist. Die Hooks werden nur ausgegeben, nicht ausgeführt.
-                      Lohnt sich vor dem ersten echten Lauf und nach jedem <code>git pull</code>.
+                      Ohne interaktives Terminal beendet sich das Gate mit Exit-Code 2 und nennt
+                      <code>mise run setup</code> als erneut auszuführenden Befehl. Einzeln
+                      nachholen lässt es sich mit <code>mise run agents:login</code>, gefolgt von
+                      <code>mise run agents:herdr</code>.
                     </p>
                   </div>
                 </article>
@@ -1406,25 +1442,6 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                     <p class="task-note">
                       Mac-App-Store-Installationen können eine Anmeldung oder einen früheren
                       App-Kauf benötigen. Ein solcher Fehler lässt sich später gezielt wiederholen.
-                    </p>
-                  </div>
-                </article>
-
-                <article class="task" data-task-id="bootstrap-reapply">
-                  <input class="task-check" type="checkbox" aria-label="Idempotenter zweiter Lauf bestätigt" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Nach behobenen Voraussetzungen denselben Setup-Task erneut ausführen</h3>
-                      <span class="badge auto">Automatisch</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>mise run setup</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Der Repository-Task heißt bewusst <code>setup</code>. Ein Task namens
-                      <code>bootstrap</code> würde von <code>mise bootstrap</code> selbst noch
-                      einmal aufgerufen und den ganzen Ablauf wiederholen.
                     </p>
                   </div>
                 </article>
@@ -2182,8 +2199,9 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
                       <span class="badge manual">Login</span>
                     </div>
                     <p class="task-note">
-                      Die ChatGPT-App enthält den Codex-Desktop-Bereich. Homebrew installiert
-                      zusätzlich die eigenständige Codex CLI, die sich separat anmeldet.
+                      Die ChatGPT-App enthält den Codex-Desktop-Bereich. Die eigenständige
+                      Codex CLI meldet sich getrennt an und ist an der Agent-Pause in der
+                      Bootstrap-Phase bereits erledigt.
                     </p>
                   </div>
                 </article>
@@ -2192,16 +2210,18 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
                   <input class="task-check" type="checkbox" aria-label="Claude Code angemeldet und geprüft" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Claude Code anmelden und Agent-Konfiguration prüfen</h3>
-                      <span class="badge manual">Login</span>
+                      <h3 class="task-title">Agent-Konfiguration von Claude Code prüfen</h3>
+                      <span class="badge manual">Kontrolle</span>
                     </div>
                     <div class="command">
                       <pre><code>claude</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Auto Mode, Pyright-LSP, TypeScript-LSP und Tmux-Split-Panes für Agent Teams
-                      prüfen. Herdr bleibt der primäre Multiplexer für persistente Sessions.
+                      Die Anmeldung ist an der Agent-Pause in der Bootstrap-Phase schon passiert.
+                      Hier nur noch Auto Mode, Pyright-LSP, TypeScript-LSP und Tmux-Split-Panes
+                      für Agent Teams prüfen. Herdr bleibt der primäre Multiplexer für
+                      persistente Sessions.
                     </p>
                   </div>
                 </article>
@@ -2428,15 +2448,13 @@ mise run doctor</code></pre>
                     </div>
                     <div class="command">
                       <pre><code>./bootstrap.sh --dry-run
-mise run setup:preview
 ./scripts/doctor.sh
 git diff --check</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Auf einem fertigen Mac soll <code>mise run setup:preview</code> nichts
-                      mehr zu ändern haben. Meldet es weiterhin Abweichungen, ist eine Stufe
-                      nicht durchgelaufen.
+                      Auf einem fertigen Mac soll der Doctor keine Fehler mehr melden. Bleiben
+                      welche übrig, ist eine Stufe nicht durchgelaufen.
                     </p>
                   </div>
                 </article>

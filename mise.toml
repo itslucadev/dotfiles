@@ -111,10 +111,12 @@ run = "mkdir -p ~/Developer/appzudio"
 [bootstrap.hooks.pre-tools]
 run = "mise install uv bun node python java ruff"
 
-# Everything that needs the fully installed machine. The doctor reports and
-# never fails the setup.
+# Everything that needs the fully installed machine. The coding agent gate runs
+# before the Herdr integrations, because Herdr can only hook an agent that has
+# been started and signed in once. The doctor reports and never fails the setup.
 [bootstrap.hooks.final]
 run = [
+  "~/github/phoenix-error/dotfiles/scripts/require-coding-agents.sh",
   "~/github/phoenix-error/dotfiles/scripts/install-herdr-integrations.sh",
   "~/github/phoenix-error/dotfiles/scripts/install-mas-apps.sh",
   "mise exec -- ~/github/phoenix-error/dotfiles/scripts/doctor.sh || true",
@@ -127,12 +129,14 @@ run = [
   "mise bootstrap --yes",
 ]
 
-[tasks."setup:preview"]
-description = "Print every change the managed setup would make, without making one"
-run = "mise bootstrap --dry-run"
-
+# Every task below runs a repository file, and this file is also the global mise
+# configuration through the ~/.config/mise/config.toml symlink. mise derives a
+# task's working directory from the configuration root, which is the home
+# directory for a global configuration, so each of these declares the repository
+# as its directory instead of relying on the caller's shell.
 [tasks."update:mise-installer"]
 description = "Refresh the committed mise installer from https://mise.run"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = [
   "curl -fsSL https://mise.run -o scripts/setup-mise.sh",
   "chmod +x scripts/setup-mise.sh",
@@ -140,12 +144,20 @@ run = [
 
 [tasks."apps:mas"]
 description = "Install the managed Mac App Store applications"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/install-mas-apps.sh"
+
+[tasks."agents:login"]
+description = "Wait until Claude Code, Codex, Cursor CLI, Oh My Pi, and Pi are signed in"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/require-coding-agents.sh"
 
 [tasks."agents:herdr"]
 description = "Install the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/install-herdr-integrations.sh"
 
 [tasks.doctor]
 description = "Report setup status and remaining manual actions"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/doctor.sh"
