@@ -60,6 +60,9 @@ _.path = [
 "~/.config/ghostty" = {}
 "~/.config/herdr/config.toml" = {}
 "~/.homebrew/Brewfile" = { source = "~/github/phoenix-error/dotfiles/Brewfile" }
+# Empty on purpose. `/usr/bin/login` only checks that this file exists, and its
+# presence silences the "Last login" banner in every login shell.
+"~/.hushlogin" = {}
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}
 "~/.config/wezterm/wezterm.lua" = {}

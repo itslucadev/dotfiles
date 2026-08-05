@@ -482,6 +482,10 @@ Ghostty uses the same Rose Pine Moon theme, Hack Nerd Font, 14-point font size, 
 
 Its configuration file is named `config` with no extension, because that is the only name Ghostty reads inside `~/.config/ghostty`.
 
+Ghostty starts every surface through `/usr/bin/login`, the way Terminal.app does, so a new window or tab would print a `Last login` banner.
+
+Ghostty has no setting for that line, because it comes from `login` itself. The managed empty `~/.hushlogin` silences it for every program that goes through `login`.
+
 Herdr starts from its built-in Rose Pine theme and overrides the supported color tokens with the official Rose Pine Moon palette.
 
 Its panel background is reset so it inherits opacity and blur from the host terminal.

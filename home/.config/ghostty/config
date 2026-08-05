@@ -20,3 +20,7 @@ confirm-close-surface = false
 
 # Install Ghostty terminfo on SSH hosts when possible.
 shell-integration-features = ssh-env,ssh-terminfo
+
+# Ghostty has no setting for the "Last login" banner. It starts every surface
+# through `/usr/bin/login`, the way Terminal.app does, and that banner is
+# silenced by the managed `~/.hushlogin` instead.
