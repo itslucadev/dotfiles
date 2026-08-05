@@ -46,14 +46,14 @@ cask "textmate"
 cask "visual-studio-code"
 
 # Agents
-# Agent binaries update themselves, so a mise lockfile cannot hold their
-# version anyway. Homebrew is their single declared channel.
 cask "claude-code"
 cask "codex"
 
-# Browsers and communication
+# Agents Desktop Apps
 cask "chatgpt"
 cask "claude"
+
+# Browsers and communication
 cask "google-chrome"
 cask "thebrowsercompany-dia"
 cask "whatsapp"
