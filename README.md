@@ -314,7 +314,6 @@ Homebrew installs these applications:
 - Aqua Voice
 - ChatGPT
 - Claude Desktop
-- CleanMyMac
 - CleanShot
 - CurseForge
 - Cursor

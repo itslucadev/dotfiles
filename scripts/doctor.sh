@@ -78,7 +78,6 @@ fi
 for command_name in \
   brew \
   mise \
-  antidote \
   node \
   bun \
   python \
@@ -124,6 +123,14 @@ for command_name in \
   tsc; do
   check_command "$command_name"
 done
+
+# Antidote ships no executable on PATH. It is a set of zsh functions that
+# ~/.zshrc sources from this file, so the file is what tells us it is usable.
+if [[ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ]]; then
+  pass "Antidote is installed for zsh to source"
+else
+  fail "Antidote is missing at /opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
+fi
 
 # mise is installed by bootstrap.sh from its own installer, never by Homebrew.
 # A Homebrew copy would be removed by brew bundle cleanup mid-setup.
@@ -222,7 +229,6 @@ for application_name in \
   "Aqua Voice" \
   "ChatGPT" \
   "Claude" \
-  "CleanMyMac_5" \
   "CleanShot X" \
   "CurseForge" \
   "Cursor" \
