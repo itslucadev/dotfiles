@@ -71,7 +71,7 @@ The bootstrap:
 - Creates or reuses one Ed25519 key for GitHub authentication and commit signing, loads it through the macOS Keychain, and maintains the local allowed signers file.
 - Installs the signed Raycast v2 Beta beside Raycast v1.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
-- Installs the commit-pinned global skills for Claude Code and Cursor through BunX, and the NotebookLM skill through its own CLI.
+- Installs the global agent skills for Claude Code, Codex, Cursor, and Pi through BunX, and the NotebookLM skill through its own CLI.
 - Runs the setup doctor.
 
 The runtimes install before the remaining CLIs because the other backends depend on them: the pipx backend needs uv, and every npm-backed tool needs bun as its package manager.
@@ -124,7 +124,7 @@ It installs the first dependencies needed before mise is available, then runs th
 It calls seven helper scripts that can change the Mac or connected accounts:
 
 - `scripts/configure-macos.sh` owns the dynamic screenshot path and nested `AppleSymbolicHotKeys` dictionary that mise macOS defaults cannot represent correctly.
-- `scripts/install-agent-skills.sh` reconciles the pinned global skill profile for Claude Code and Cursor through BunX, then installs the NotebookLM skill through its own CLI.
+- `scripts/install-agent-skills.sh` installs the global skill profile for Claude Code, Codex, Cursor, and Pi through BunX, then installs the NotebookLM skill through its own CLI.
 - `scripts/install-editor-extensions.sh` installs the declarative extension inventories through the native VS Code and Cursor CLIs.
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
@@ -465,13 +465,9 @@ The global agent instructions tell agents to use PostHog CLI for deterministic P
 
 The global skill profile is declared in `home/.config/skills/default-skills.txt`.
 
-Every source is pinned to a full Git commit so a new Mac receives reviewed skill contents instead of whatever happens to be on a moving default branch.
+The installer uses `bunx --bun skills@1.5.21`, never `npx`, and installs the selected skills for Claude Code, Codex, Cursor, and Pi in one call.
 
-The installer uses `bunx --bun skills@1.5.21`, never `npx`, and links the selected skills through the central `~/.agents/skills` store for Claude Code and Cursor.
-
-It cannot hand the pinned URL to that CLI directly. The Skills CLI clones a source with `git clone --branch <ref>`, and git accepts only a branch or tag name there, never a commit SHA. Its one commit-aware path is a blob download restricted to a short allowlist of repository owners.
-
-`scripts/install-agent-skills.sh` therefore fetches the exact commit itself with `git fetch --depth 1`, checks it out into a temporary directory, and passes that local path to the CLI. The commit pin survives, and the temporary checkouts are removed when the script exits.
+Oh My Pi extends the Pi agent and reads Pi's skill directory, so the `pi` target covers both.
 
 The profile is deliberately small. It contains Matt Pocock's engineering, productivity, and misc skills, and nothing else.
 
@@ -489,7 +485,7 @@ Reconcile the profile after changing the inventory:
 mise run agents:skills
 ```
 
-To update a source, review the upstream `SKILL.md` changes, replace its full commit SHA in the inventory, and run the installer.
+To change the profile, edit the inventory and run the installer again.
 
 The repository does not copy local plugin caches or private skill folders.
 

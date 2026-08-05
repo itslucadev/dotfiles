@@ -127,7 +127,7 @@ Do not add a managed `~/.tmux.conf` unless the user explicitly requests Tmux cus
 
 ## Agent Skill Policy
 
-The pinned inventory in `home/.config/skills/default-skills.txt` is the only source of global agent skills.
+`home/.config/skills/default-skills.txt` is the only source of global agent skills that this repository installs.
 
 The profile is deliberately small. Matt Pocock's engineering, productivity, and misc skills are the only global agent skills.
 
@@ -137,9 +137,9 @@ Install or reconcile the inventory only through `scripts/install-agent-skills.sh
 
 Use BunX with the pinned Skills CLI version.
 
-Do not replace it with `npx`, manually copied skill directories, plugin-cache contents, or moving default-branch URLs.
+Do not replace it with `npx`, manually copied skill directories, or plugin-cache contents.
 
-Review upstream `SKILL.md` changes before updating a source commit SHA.
+The installer targets Claude Code, Codex, Cursor, and Pi in one call. Oh My Pi extends Pi and reads Pi's skill directory, so it needs no separate target.
 
 The NotebookLM skill is the one exception. It ships inside the NotebookLM CLI package, so `scripts/install-agent-skills.sh` installs it with `nlm skill install` instead of pinning a Git tree.
 

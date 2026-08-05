@@ -5,7 +5,7 @@ set -Eeuo pipefail
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly INVENTORY="$REPO_ROOT/home/.config/skills/default-skills.txt"
 readonly SKILLS_CLI_VERSION="1.5.21"
-readonly TARGET_AGENTS=("claude-code" "cursor")
+readonly TARGET_AGENTS=("claude-code" "codex" "cursor" "pi")
 
 DRY_RUN=false
 
@@ -35,27 +35,9 @@ if [[ ! -r "$INVENTORY" ]]; then
 fi
 
 if [[ "$DRY_RUN" != true ]] && ! command -v bunx >/dev/null 2>&1; then
-  printf 'bunx is required. Install the Mise-managed Bun runtime first.\n' >&2
+  printf 'bunx is required. Install the mise-managed Bun runtime first.\n' >&2
   exit 1
 fi
-
-CHECKOUT_DIRECTORIES=()
-
-cleanup_checkouts() {
-  local directory=""
-
-  for directory in "${CHECKOUT_DIRECTORIES[@]-}"; do
-    if [[ -n "$directory" ]]; then
-      rm -rf "$directory"
-    fi
-  done
-
-  # An EXIT trap replaces the script's status with its own last command, so it
-  # has to end successfully or every run reports failure.
-  return 0
-}
-
-trap cleanup_checkouts EXIT
 
 print_command() {
   local argument=""
@@ -67,44 +49,21 @@ print_command() {
   printf '\n'
 }
 
-# The Skills CLI clones a source with `git clone --branch <ref>`, and git only
-# accepts a branch or tag name there, never a commit SHA. Handing it a pinned
-# tree URL therefore fails outright for every repository outside its own blob
-# download allowlist. Fetching the exact commit here and passing the resulting
-# local path keeps the commit pin and gives the CLI something it can read.
-fetch_pinned_tree() {
-  local owner_repo="$1"
-  local commit="$2"
-  local destination="$3"
-
-  git init --quiet "$destination" </dev/null
-  git -C "$destination" remote add origin "https://github.com/${owner_repo}.git" </dev/null
-  GIT_TERMINAL_PROMPT=0 git -C "$destination" fetch --quiet --depth 1 origin "$commit" </dev/null
-  git -C "$destination" checkout --quiet FETCH_HEAD </dev/null
-}
-
 install_source() {
   local source_url="$1"
   local skill_names="$2"
   local agent=""
   local skill=""
-  local owner_repo=""
-  local commit=""
-  local subpath=""
-  local checkout_directory=""
-  local skill_directory=""
-  local -a command=()
+  local -a command=(
+    bunx
+    --bun
+    "skills@${SKILLS_CLI_VERSION}"
+    add
+    "$source_url"
+    --global
+    --yes
+  )
   local -a skills=()
-
-  if [[ ! "$source_url" =~ ^https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/tree/([0-9a-f]{40})(/(.+))?$ ]]; then
-    printf 'Source must be a GitHub tree URL pinned to a full commit SHA: %s\n' \
-      "$source_url" >&2
-    return 1
-  fi
-
-  owner_repo="${BASH_REMATCH[1]}"
-  commit="${BASH_REMATCH[2]}"
-  subpath="${BASH_REMATCH[4]}"
 
   read -r -a skills <<<"$skill_names"
 
@@ -118,39 +77,6 @@ install_source() {
       printf 'Invalid skill name in inventory: %s\n' "$skill" >&2
       return 1
     fi
-  done
-
-  if [[ "$DRY_RUN" == true ]]; then
-    print_command git fetch --depth 1 \
-      "https://github.com/${owner_repo}.git" "$commit"
-    checkout_directory="<checkout>"
-  else
-    checkout_directory="$(mktemp -d)"
-    CHECKOUT_DIRECTORIES+=("$checkout_directory")
-    fetch_pinned_tree "$owner_repo" "$commit" "$checkout_directory"
-  fi
-
-  skill_directory="$checkout_directory"
-  if [[ -n "$subpath" ]]; then
-    skill_directory="$checkout_directory/$subpath"
-  fi
-
-  if [[ "$DRY_RUN" != true && ! -d "$skill_directory" ]]; then
-    printf 'Pinned commit %s has no directory %s\n' "$commit" "$subpath" >&2
-    return 1
-  fi
-
-  command=(
-    bunx
-    --bun
-    "skills@${SKILLS_CLI_VERSION}"
-    add
-    "$skill_directory"
-    --global
-    --yes
-  )
-
-  for skill in "${skills[@]}"; do
     command+=(--skill "$skill")
   done
 
@@ -167,7 +93,7 @@ install_source() {
   fi
 }
 
-printf 'Installing pinned global agent skills for Claude Code and Cursor\n'
+printf 'Installing the global agent skills for Claude Code, Codex, Cursor, and Pi\n'
 
 source_count=0
 skill_count=0
@@ -184,9 +110,8 @@ while IFS='|' read -r source_url skill_names || [[ -n "$source_url$skill_names" 
     exit 1
   fi
 
-  if [[ ! "$source_url" =~ ^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/tree/[0-9a-f]{40}(/[A-Za-z0-9_.@/-]+)?$ ]]; then
-    printf 'Source must be a GitHub tree URL pinned to a full commit SHA: %s\n' \
-      "$source_url" >&2
+  if [[ ! "$source_url" =~ ^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(/tree/[A-Za-z0-9_./-]+)?$ ]]; then
+    printf 'Source must be a GitHub repository or tree URL: %s\n' "$source_url" >&2
     exit 1
   fi
 
@@ -203,15 +128,13 @@ if [[ "$source_count" -eq 0 ]]; then
 fi
 
 if [[ "$DRY_RUN" == true ]]; then
-  printf 'Would reconcile %d pinned skills from %d sources.\n' \
-    "$skill_count" "$source_count"
+  printf 'Would install %d skills from %d sources.\n' "$skill_count" "$source_count"
 else
-  printf 'Reconciled %d pinned skills from %d sources.\n' \
-    "$skill_count" "$source_count"
+  printf 'Installed %d skills from %d sources.\n' "$skill_count" "$source_count"
 fi
 
 # The NotebookLM skill ships inside the NotebookLM CLI package and is installed
-# by that CLI, so it cannot be pinned through the skills inventory above.
+# by that CLI, so it cannot come from the inventory above.
 printf '\nInstalling the NotebookLM skill through its own CLI\n'
 
 if [[ "$DRY_RUN" != true ]] && ! command -v nlm >/dev/null 2>&1; then
@@ -219,7 +142,7 @@ if [[ "$DRY_RUN" != true ]] && ! command -v nlm >/dev/null 2>&1; then
   exit 1
 fi
 
-for agent in "${TARGET_AGENTS[@]}"; do
+for agent in "claude-code" "cursor" "codex"; do
   if [[ "$DRY_RUN" == true ]]; then
     print_command nlm skill install "$agent" --level user
   else

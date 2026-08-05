@@ -108,7 +108,9 @@ check_agent_skills() {
   local store="$HOME/.agents/skills"
   local -a agent_directories=(
     "$HOME/.claude/skills"
+    "$HOME/.codex/skills"
     "$HOME/.cursor/skills"
+    "$HOME/.pi/agent/skills"
   )
 
   if [[ ! -r "$inventory" ]]; then
