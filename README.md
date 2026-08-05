@@ -59,13 +59,12 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 | Bare-metal initialization | Bash | `bootstrap.sh` |
 | Managed setup stages | mise | `mise.toml` task `setup` and `[bootstrap.hooks]` |
 | Git identity and SSH | you, by hand | nothing here, [see why](#declarative-ownership) |
-| Every manual step on a new Mac | you, by hand | [`docs/setup-guide.html`](docs/setup-guide.html) |
+| Every manual step on a new Mac | you, by hand | [`setup-guide.html`](setup-guide.html) |
 
 ## Contents
 
 **Walkthrough**
-[docs/setup-guide.html](docs/setup-guide.html) is the step-by-step guide for a new Mac ·
-[docs/agent-skills.md](docs/agent-skills.md) covers the global agent skills
+[setup-guide.html](setup-guide.html) is the step-by-step guide for a new Mac, including the global agent skills
 
 **Setup**
 [Setting Up a New Mac](#setting-up-a-new-mac) ·
@@ -101,9 +100,9 @@ The current Mac can also be used for a final rehearsal immediately before it is 
 ## Setting Up a New Mac
 
 > [!IMPORTANT]
-> **[docs/setup-guide.html](docs/setup-guide.html) is the instruction manual, not this file.**
+> **[setup-guide.html](setup-guide.html) is the instruction manual, not this file.**
 >
-> It is an offline, checkable guide covering every step in ten phases, from macOS onboarding through the final reboot, and it remembers which boxes are already ticked.
+> It is an offline, checkable guide covering every step in twelve phases, from macOS onboarding through the final reboot, and it remembers which boxes are already ticked.
 > Open it first and work through it to the end.
 >
 > This README documents what the repository owns and why it is built the way it is.
@@ -143,7 +142,7 @@ The fixed clone path allows the repository `mise.toml` to serve as the global mi
 Cloning needs no Git identity and no SSH key, because the repository is public and the command above clones over HTTPS.
 Both are created by hand later, at the gate the setup opens for them, and the setup guide carries the whole sequence.
 
-The global agent skills are installed by hand from [docs/agent-skills.md](docs/agent-skills.md), which documents the install commands and excluded sources.
+The global agent skills are installed by hand from the Agents phase of [setup-guide.html](setup-guide.html), which carries the install commands and the sources that arrive another way.
 
 ## What the Two Commands Do
 
@@ -208,7 +207,7 @@ Homebrew stays in `Brewfile` instead of moving into `[bootstrap.packages]`.
 mise only converges forward and never removes a package that the configuration stopped declaring, while `brew bundle cleanup` does exactly that.
 The Mac App Store applications stay in `Brewfile.mas` for the same reason, and because their installation needs a gate for App Store sign-in and claiming.
 
-It does not install agent skills. Those are a personal, fast-moving choice and are covered in [docs/agent-skills.md](docs/agent-skills.md) for manual installation.
+It does not install agent skills. Those are a personal, fast-moving choice and are covered in the Agents phase of [setup-guide.html](setup-guide.html) for manual installation.
 
 The runtimes install before the remaining CLIs because the other backends depend on them: the pipx backend needs uv, and every npm-backed tool needs bun as its package manager.
 
@@ -253,7 +252,7 @@ The repository keeps configuration in the native declarative format of the tool 
 - `mise.lock` contains the resolved mise tool versions. Only mise writes it, it is local to each machine, and it is not tracked.
 - `home/` contains public configuration that mise symlinks into the home directory.
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
-- Git owns nothing here. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand. A managed `~/.gitconfig` carrying an identity would be applied long before the person it names has decided on one, and configuration that only works once a later stage has run is configuration this repository should not own. SSH private keys, `known_hosts`, `authorized_keys`, and authentication state are never copied here either. Commit signing is not part of this setup at all: nothing depends on it, and GitHub accepts unsigned pushes.
+- Git owns nothing here. `~/.gitconfig`, `~/.ssh/config`, and anything under `~/.config/git/` are written by hand. A managed `~/.gitconfig` carrying an identity would be applied long before the person it names has decided on one, and configuration that only works once a later stage has run is configuration this repository should not own. SSH private keys, `known_hosts`, `authorized_keys`, and authentication state are never copied here either. Commit signing is not managed here either: nothing depends on it, and GitHub accepts unsigned pushes. The setup guide documents SSH commit signing with the same key as an optional step.
 
 `bootstrap.sh` runs once per Mac, or again after a macOS upgrade removed the Xcode Command Line Tools.
 
@@ -360,7 +359,7 @@ Raycast v1 comes from Homebrew. Raycast v2 Beta is a direct download from [rayca
 
 The setup does not install Rosetta 2. No managed cask declares an Intel requirement, and Minecraft Java Edition has shipped a native Apple Silicon launcher since version 1.19 in June 2022.
 
-Maestro Studio, Recordly, SimCam, and Raycast v2 Beta have no suitable Homebrew cask or Mac App Store entry and are downloaded by hand in [the setup guide](docs/setup-guide.html).
+Maestro Studio, Recordly, and Raycast v2 Beta have no suitable Homebrew cask or Mac App Store entry and are downloaded by hand in [the setup guide](setup-guide.html).
 
 Sentry Spotlight is excluded as well.
 
@@ -434,7 +433,7 @@ Android Studio must use `~/Library/Android/sdk`, which is the path the shell con
 
 [mise installs that JDK and automatically points `JAVA_HOME` at the active Java installation](https://mise.jdx.dev/lang/java.html), so the separate Homebrew `zulu@17` cask is intentionally unnecessary.
 
-The Xcode and Android Studio phases of [the setup guide](docs/setup-guide.html) walk through the onboarding both applications need.
+The Xcode and Android Studio phases of [the setup guide](setup-guide.html) walk through the onboarding both applications need.
 
 ## Shell and Terminal
 
@@ -513,7 +512,7 @@ This repository does not manage editor extensions.
 VS Code Settings Sync owns the installed VS Code extension set across machines after you sign in and turn sync on.
 
 Cursor has no Microsoft Settings Sync.
-When Cursor should mirror the VS Code extension set, spawn a Claude agent with the example prompt in [docs/setup-guide.html](docs/setup-guide.html).
+When Cursor should mirror the VS Code extension set, spawn a Claude agent with the example prompt in [setup-guide.html](setup-guide.html).
 The agent installs every VS Code extension that Cursor can load, skips Marketplace-only IDs such as Modernized, and substitutes `anysphere.cursorpyright` for Pylance.
 
 The shared `settings.json` still owns language-specific formatters: Ruff for Python, Biome for JavaScript, TypeScript, JSON, and JSONC, and Prettier for CSS, SCSS, HTML, GraphQL, Markdown, and YAML.
@@ -585,7 +584,7 @@ The global agent instructions tell agents to use PostHog CLI for deterministic P
 
 The setup owns no agent skills.
 Skill sources are renamed, split, and retired far faster than the rest of this inventory, and a stale entry would fail the whole run without adding anything a fresh Mac needs to work.
-They are installed by hand from [docs/agent-skills.md](docs/agent-skills.md) instead.
+They are installed by hand from the Agents phase of [setup-guide.html](setup-guide.html) instead.
 
 The repository does not copy local plugin caches or private skill folders.
 
@@ -677,7 +676,7 @@ That includes `~/.claude/settings.local.json` and `mise.local.toml`.
 
 A setting that would otherwise land in a local override belongs in the managed file, so a new Mac reproduces it. The Claude plugin toggles and the reduced-motion preference were moved into `home/.claude/settings.json` for exactly that reason.
 
-Git is the deliberate exception. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are not managed at all, so they need no override layer. See [Declarative Ownership](#declarative-ownership).
+Git is the deliberate exception. `~/.gitconfig`, `~/.ssh/config`, and anything under `~/.config/git/` are not managed at all, so they need no override layer. See [Declarative Ownership](#declarative-ownership).
 
 The matching `.gitignore` entries stay as a safety net against accidental commits, not as an invitation to create such files.
 

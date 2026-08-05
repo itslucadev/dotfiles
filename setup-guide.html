@@ -769,6 +769,54 @@
         background: var(--foam);
       }
 
+      .explain {
+        min-width: 0;
+        margin: 0.75rem 0 0;
+        padding: 0.85rem 0.95rem;
+        border: 1px solid rgb(144 140 170 / 0.22);
+        border-left: 3px solid var(--foam);
+        background: rgb(35 33 54 / 0.55);
+      }
+
+      .explain-title {
+        margin: 0 0 0.7rem;
+        color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      .explain-list {
+        margin: 0;
+      }
+
+      .explain-list dt {
+        color: var(--foam);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+      }
+
+      .explain-list dd {
+        margin: 0.25rem 0 0;
+        color: var(--subtle);
+        font-size: 0.81rem;
+        overflow-wrap: anywhere;
+      }
+
+      .explain-list dd + dt {
+        margin-top: 0.8rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid rgb(144 140 170 / 0.12);
+      }
+
+      .explain-list code {
+        color: var(--text);
+      }
+
       .callout {
         margin: 0.9rem 0 0;
         padding: 0.8rem 0.9rem;
@@ -1108,6 +1156,21 @@
           white-space: pre-wrap;
         }
 
+        .explain {
+          break-inside: avoid;
+          border-color: #908caa;
+          background: #f4f2f7;
+        }
+
+        .explain-list dt {
+          color: #232136;
+        }
+
+        .explain-title,
+        .explain-list dd {
+          color: #56526e;
+        }
+
         .badge {
           color: #232136 !important;
         }
@@ -1175,6 +1238,10 @@
             <div class="legend-row">
               <span class="legend-dot manual" aria-hidden="true"></span>
               Manuell
+            </div>
+            <div class="legend-row">
+              <span class="legend-dot option" aria-hidden="true"></span>
+              Optional
             </div>
           </div>
         </div>
@@ -1318,7 +1385,7 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
             <button class="phase-toggle" type="button" aria-expanded="true">
               <span class="phase-index">01</span>
               <span class="phase-heading">
-                <span class="phase-name" role="heading" aria-level="2">Bootstrap</span>
+                <span class="phase-name" role="heading" aria-level="2">Bootstrap starten</span>
                 <span>Homebrew, mise, Apps, Dotfiles und Systemeinstellungen</span>
               </span>
               <span class="phase-meter">
@@ -1330,7 +1397,10 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
             <div class="phase-body">
               <p class="phase-intro">
                 Ab hier übernimmt das Repository. Der Durchlauf ist idempotent und darf nach
-                einem behobenen Fehler erneut gestartet werden.
+                einem behobenen Fehler erneut gestartet werden. Er hält an genau drei Stellen an
+                und wartet auf dich: Git und SSH, die Anmeldung der Coding Agents und der
+                Mac App Store. Diese drei Pausen sind die nächsten drei Phasen, in genau der
+                Reihenfolge, in der sie im Terminal erscheinen.
               </p>
               <div class="task-list">
                 <article class="task" data-task-id="bootstrap-init">
@@ -1361,10 +1431,10 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                 </article>
 
                 <article class="task" data-task-id="bootstrap-run">
-                  <input class="task-check" type="checkbox" aria-label="Verwaltetes Setup ausgeführt" />
+                  <input class="task-check" type="checkbox" aria-label="Verwaltetes Setup gestartet" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Das verwaltete Setup anwenden</h3>
+                      <h3 class="task-title">Das verwaltete Setup starten</h3>
                       <span class="badge auto">Automatisch</span>
                     </div>
                     <div class="command">
@@ -1373,11 +1443,12 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                     </div>
                     <p class="task-note">
                       Der Task aktualisiert mise und übergibt dann an
-                      <code>mise bootstrap</code>: erst Homebrew-Pakete, danach die Pause für
-                      Git und SSH von Hand, dann Dotfile-Symlinks, bestätigte macOS-Defaults,
-                      Runtimes, globale CLIs, die Pause für die Coding-Agent-Anmeldungen, die
-                      Herdr-Agent-Integrationen, nach Möglichkeit die MAS-Apps und zum Schluss
-                      den Setup Doctor.
+                      <code>mise bootstrap</code>. Die Stufen laufen in dieser Reihenfolge:
+                      Homebrew-Pakete, <strong>Pause für Git und SSH</strong>,
+                      Dotfile-Symlinks, bestätigte macOS-Defaults, Runtimes, globale CLIs,
+                      <strong>Pause für die Coding-Agent-Anmeldungen</strong>, die
+                      Herdr-Agent-Integrationen, <strong>Pause für den Mac App Store</strong>
+                      und zum Schluss der Setup Doctor.
                       Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
                     </p>
                     <p class="task-note">
@@ -1394,21 +1465,446 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                     </p>
                   </div>
                 </article>
+              </div>
+            </div>
+          </section>
 
-                <article class="task" data-task-id="bootstrap-agent-logins">
+          <section class="phase" id="phase-git" data-phase="git">
+            <button class="phase-toggle" type="button" aria-expanded="true">
+              <span class="phase-index">02</span>
+              <span class="phase-heading">
+                <span class="phase-name" role="heading" aria-level="2">Pause 1: Git, SSH und GitHub</span>
+                <span>Private Identität lokal halten und Auth einrichten</span>
+              </span>
+              <span class="phase-meter">
+                <span class="phase-meter-track"><span class="phase-meter-fill"></span></span>
+                <span class="phase-count">0 / 0</span>
+                <span class="chevron" aria-hidden="true">⌄</span>
+              </span>
+            </button>
+            <div class="phase-body">
+              <p class="phase-intro">
+                Direkt nach dem <code>Brewfile</code> hält <code>mise run setup</code> zum
+                ersten Mal an. Git ist ab hier installiert, aber bewusst nicht Teil des Repos:
+                <code>~/.gitconfig</code> und <code>~/.ssh/config</code> werden von Hand gesetzt,
+                weil eine verwaltete Git-Konfiguration schon aktiv wäre, bevor der Schlüssel
+                existiert, auf den sie sich bezieht. Das Gate prüft am Ende genau eine Sache:
+                dass <code>ssh -T git@github.com</code> erfolgreich authentifiziert. Private
+                Schlüssel, Hosts und Logins bleiben ausschließlich lokal.
+              </p>
+              <div class="task-list">
+                <article class="task" data-task-id="git-identity">
+                  <input class="task-check" type="checkbox" aria-label="Git-Identität von Hand gesetzt" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Git-Identität von Hand setzen</h3>
+                      <span class="badge manual">Bootstrap-Gate</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>git config --global user.name "Luca Becker"
+git config --global user.email "luca.dev@outlook.de"
+git config --global init.defaultBranch main</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <div class="explain">
+                      <p class="explain-title">Was die Befehle tun</p>
+                      <dl class="explain-list">
+                        <dt>git config --global user.name "Luca Becker"</dt>
+                        <dd>
+                          Schreibt den Autornamen nach <code>~/.gitconfig</code>. Er steht später
+                          in jedem Commit. <code>--global</code> heißt: gilt für alle Repositories
+                          dieses Benutzerkontos, nicht nur für das aktuelle.
+                        </dd>
+                        <dt>git config --global user.email "luca.dev@outlook.de"</dt>
+                        <dd>
+                          Setzt die Autoradresse. GitHub ordnet Commits über sie deinem Account zu.
+                        </dd>
+                        <dt>git config --global init.defaultBranch main</dt>
+                        <dd>
+                          Neu angelegte Repositories starten mit dem Branch <code>main</code>
+                          statt mit <code>master</code>.
+                        </dd>
+                      </dl>
+                    </div>
+                    <div class="callout warning">
+                      Diese Adresse ist in jedem öffentlichen Commit sichtbar und dauerhaft
+                      lesbar. Soll sie das nicht sein, stattdessen die GitHub-Noreply-Adresse
+                      <code>42442490+phoenix-error@users.noreply.github.com</code> setzen und in
+                      den GitHub-Einstellungen <strong>Keep my email addresses private</strong>
+                      aktivieren.
+                    </div>
+                    <p class="task-note">
+                      Sobald Homebrew Git installiert hat, pausiert der Bootstrap und wartet auf
+                      diese Schritte.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="git-ssh-config">
+                  <input class="task-check" type="checkbox" aria-label="SSH-Konfiguration angelegt" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">~/.ssh/config anlegen</h3>
+                      <span class="badge manual">Manuell</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+cat &gt; ~/.ssh/config &lt;&lt;'EOF'
+Host github.com
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile ~/.ssh/id_ed25519
+EOF
+chmod 600 ~/.ssh/config</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <div class="explain">
+                      <p class="explain-title">Was die Befehle tun</p>
+                      <dl class="explain-list">
+                        <dt>mkdir -p ~/.ssh</dt>
+                        <dd>
+                          Legt das SSH-Verzeichnis an. <code>-p</code> sorgt dafür, dass der Befehl
+                          nicht meckert, wenn es schon existiert.
+                        </dd>
+                        <dt>chmod 700 ~/.ssh</dt>
+                        <dd>
+                          Setzt die Rechte so, dass nur dein Benutzer hineinschauen darf. Sind sie
+                          weiter offen, verweigert SSH die Arbeit mit den Schlüsseln darin.
+                        </dd>
+                        <dt>cat &gt; ~/.ssh/config &lt;&lt;'EOF' … EOF</dt>
+                        <dd>
+                          Schreibt alles zwischen den beiden <code>EOF</code>-Zeilen in die Datei.
+                          Die Anführungszeichen um <code>'EOF'</code> verhindern, dass die Shell
+                          den Text vorher noch ersetzt.
+                        </dd>
+                        <dt>Host github.com</dt>
+                        <dd>Die eingerückten Zeilen darunter gelten nur für github.com.</dd>
+                        <dt>AddKeysToAgent yes</dt>
+                        <dd>
+                          Ein einmal entsperrter Schlüssel wandert automatisch in den laufenden
+                          ssh-agent, statt bei jeder Verbindung neu geladen zu werden.
+                        </dd>
+                        <dt>UseKeychain yes</dt>
+                        <dd>
+                          macOS legt die Passphrase in den Schlüsselbund. Ohne diese Zeile fragt
+                          SSH sie bei jeder Verbindung erneut ab.
+                        </dd>
+                        <dt>IdentityFile ~/.ssh/id_ed25519</dt>
+                        <dd>
+                          Benennt den Schlüssel, den SSH github.com anbietet, statt der Reihe nach
+                          alle vorhandenen durchzuprobieren.
+                        </dd>
+                        <dt>chmod 600 ~/.ssh/config</dt>
+                        <dd>Nur dein Benutzer darf die Datei lesen und schreiben.</dd>
+                      </dl>
+                    </div>
+                    <p class="task-note">
+                      Das ist genau die Konfiguration, die auf dem aktuellen Mac läuft. Ein
+                      <code>Host *</code>-Block mit Keepalive-Optionen wäre möglich, ist hier aber
+                      nichts, was das Setup braucht.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="git-key">
+                  <input class="task-check" type="checkbox" aria-label="SSH-Schlüssel generiert und geladen" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Ed25519-Schlüssel erzeugen und laden</h3>
+                      <span class="badge manual">Manuell</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>ssh-keygen -t ed25519 -C "luca.dev@outlook.de"
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+pbcopy &lt; ~/.ssh/id_ed25519.pub
+ls -l ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub
+ssh-keygen -lf ~/.ssh/id_ed25519.pub</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <div class="explain">
+                      <p class="explain-title">Was die Befehle tun</p>
+                      <dl class="explain-list">
+                        <dt>ssh-keygen -t ed25519 -C "luca.dev@outlook.de"</dt>
+                        <dd>
+                          Erzeugt das Schlüsselpaar: den privaten Schlüssel
+                          <code>~/.ssh/id_ed25519</code> und den öffentlichen
+                          <code>~/.ssh/id_ed25519.pub</code>. <code>-t ed25519</code> wählt das
+                          Verfahren, das GitHub empfiehlt. <code>-C</code> hängt einen Kommentar
+                          an den öffentlichen Schlüssel, an dem du ihn später in der GitHub-Liste
+                          wiedererkennst. Der Befehl fragt zuerst nach dem Speicherort, dort
+                          einfach Return für den Vorschlag, und danach zweimal nach der Passphrase.
+                        </dd>
+                        <dt>ssh-add --apple-use-keychain ~/.ssh/id_ed25519</dt>
+                        <dd>
+                          Lädt den privaten Schlüssel in den laufenden ssh-agent und legt die
+                          Passphrase in den macOS-Schlüsselbund, sodass du sie nicht wieder
+                          eintippen musst.
+                        </dd>
+                        <dt>pbcopy &lt; ~/.ssh/id_ed25519.pub</dt>
+                        <dd>
+                          <code>pbcopy</code> ist die Zwischenablage von macOS,
+                          <code>&lt;</code> schiebt ihr den Inhalt der Datei hinein. Danach hängt
+                          der öffentliche Schlüssel an der Zwischenablage und kann bei GitHub
+                          eingefügt werden.
+                        </dd>
+                        <dt>ls -l ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub</dt>
+                        <dd>
+                          <code>ls</code> listet Dateien auf, <code>-l</code> tut das im langen
+                          Format mit Rechten, Besitzer, Größe und Datum. Hier ist es reine
+                          Kontrolle: beide Dateien müssen existieren, und links soll
+                          <code>-rw-------</code> für den privaten und <code>-rw-r--r--</code> für
+                          den öffentlichen Schlüssel stehen. Der private Schlüssel darf für
+                          niemanden außer dich lesbar sein, sonst weigert sich SSH, ihn zu benutzen.
+                        </dd>
+                        <dt>ssh-keygen -lf ~/.ssh/id_ed25519.pub</dt>
+                        <dd>
+                          Derselbe Befehl wie oben, aber im Anzeigemodus: <code>-l</code> heißt
+                          „zeig mir den Fingerprint“, <code>-f</code> benennt die Datei dazu. Der
+                          Fingerprint ist die kurze Prüfsumme des Schlüssels. GitHub zeigt sie
+                          neben dem hinterlegten Schlüssel an, sodass du beide vergleichen kannst.
+                        </dd>
+                      </dl>
+                    </div>
+                    <div class="callout danger">
+                      Nur <code>~/.ssh/id_ed25519.pub</code> darf geteilt werden.
+                      <code>~/.ssh/id_ed25519</code> ist der private Schlüssel und bleibt auf dem Mac.
+                    </div>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="github-key">
+                  <input class="task-check" type="checkbox" aria-label="Public Key bei GitHub hinterlegt" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Public Key bei GitHub als Authentication Key hinterlegen</h3>
+                      <span class="badge manual">Manuell</span>
+                    </div>
+                    <p class="task-note">
+                      Den kopierten Schlüssel unter
+                      <a href="https://github.com/settings/keys">GitHub SSH and GPG keys</a>
+                      als <strong>Authentication Key</strong> hinzufügen. Danach den dort
+                      angezeigten Fingerprint mit der Ausgabe von
+                      <code>ssh-keygen -lf</code> vergleichen.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="github-test">
+                  <input class="task-check" type="checkbox" aria-label="GitHub SSH getestet" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">GitHub-SSH-Verbindung prüfen und das Gate schließen</h3>
+                      <span class="badge manual">Bootstrap-Gate</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>ssh -T git@github.com</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <div class="explain">
+                      <p class="explain-title">Was der Befehl tut</p>
+                      <dl class="explain-list">
+                        <dt>ssh -T git@github.com</dt>
+                        <dd>
+                          Baut eine SSH-Verbindung zu GitHub auf, um zu sehen, ob der Schlüssel
+                          akzeptiert wird. <code>-T</code> verlangt dabei kein Terminal, denn
+                          GitHub gibt keine Shell heraus, sondern antwortet nur mit einer
+                          Begrüßung und beendet die Verbindung wieder. Beim ersten Mal fragt SSH
+                          zusätzlich, ob der Host bekannt ist, und zeigt dessen Fingerprint.
+                        </dd>
+                      </dl>
+                    </div>
+                    <p class="task-note">
+                      Den angezeigten Host-Fingerprint mit
+                      <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints">GitHubs veröffentlichten Fingerprints</a>
+                      vergleichen und erst dann <code>yes</code> tippen. Erst nach
+                      <code>successfully authenticated</code> im Bootstrap-Terminal Return drücken.
+                      Das Gate prüft genau diese Verbindung und fragt so lange erneut, bis sie steht.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="git-lfs">
+                  <input class="task-check" type="checkbox" aria-label="Git LFS mit Git verbunden" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Git LFS einmal pro Benutzerkonto aktivieren</h3>
+                      <span class="badge manual">Einmalig</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>git lfs install</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <div class="explain">
+                      <p class="explain-title">Was der Befehl tut</p>
+                      <dl class="explain-list">
+                        <dt>git lfs install</dt>
+                        <dd>
+                          Trägt die <code>filter "lfs"</code>-Sektion in <code>~/.gitconfig</code>
+                          ein. Sie sagt Git, dass es LFS-Dateien beim Auschecken durch das echte
+                          Original und beim Committen wieder durch einen Zeiger ersetzen soll.
+                        </dd>
+                      </dl>
+                    </div>
+                    <p class="task-note">
+                      Homebrew installiert über das <code>Brewfile</code> nur das Programm
+                      <code>git-lfs</code>. Dieser Befehl installiert nichts nach, er verbindet Git
+                      einmal pro Benutzerkonto damit. Ohne ihn liegen in einem LFS-Repository
+                      nur kleine Textdateien mit Zeigern statt der eigentlichen Inhalte. Ob er
+                      schon gelaufen ist, zeigt
+                      <code>git config --global --get-regexp filter.lfs</code>.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="git-signing">
+                  <input class="task-check" type="checkbox" aria-label="Commit Signing eingerichtet" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Commits mit dem SSH-Schlüssel signieren</h3>
+                      <span class="badge option">Optional</span>
+                    </div>
+                    <p class="task-note">
+                      Das ist der Weg, den GitHub für ein bestehendes SSH-Setup dokumentiert:
+                      derselbe Ed25519-Schlüssel signiert, es kommt kein zweiter Schlüsseltyp und
+                      keine GPG-Verwaltung dazu. Alles hier ist freiwillig.
+                    </p>
+                    <div class="command">
+                      <pre><code>git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true
+git config --global tag.gpgsign true</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <div class="explain">
+                      <p class="explain-title">Was die Befehle tun</p>
+                      <dl class="explain-list">
+                        <dt>git config --global gpg.format ssh</dt>
+                        <dd>
+                          Stellt Git von GPG auf SSH als Signaturverfahren um.
+                        </dd>
+                        <dt>git config --global user.signingkey ~/.ssh/id_ed25519.pub</dt>
+                        <dd>
+                          Benennt den öffentlichen Schlüssel, dessen privates Gegenstück signiert.
+                          Es ist derselbe Schlüssel wie für die Anmeldung.
+                        </dd>
+                        <dt>git config --global commit.gpgsign true</dt>
+                        <dd>
+                          Signiert ab jetzt jeden Commit automatisch. Der Name der Option stammt
+                          noch aus der GPG-Zeit und gilt trotzdem für SSH-Signaturen.
+                        </dd>
+                        <dt>git config --global tag.gpgsign true</dt>
+                        <dd>Dasselbe für annotierte Tags.</dd>
+                      </dl>
+                    </div>
+                    <p class="task-note">
+                      Danach denselben öffentlichen Schlüssel ein zweites Mal unter
+                      <a href="https://github.com/settings/keys">GitHub SSH and GPG keys</a>
+                      hinterlegen, diesmal als <strong>Signing Key</strong>. Ein Eintrag als
+                      Authentication Key allein reicht nicht; ohne den zweiten Eintrag bleiben die
+                      Commits auf GitHub unverifiziert.
+                    </p>
+                    <p class="task-note">
+                      Optional zusätzlich, damit auch lokal <code>git log --show-signature</code>
+                      eine gültige Signatur meldet statt nur „no signature“:
+                    </p>
+                    <div class="command">
+                      <pre><code>mkdir -p ~/.config/git
+printf '%s %s\n' "luca.dev@outlook.de" "$(cat ~/.ssh/id_ed25519.pub)" &gt; ~/.config/git/allowed_signers
+git config --global gpg.ssh.allowedSignersFile ~/.config/git/allowed_signers</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <div class="explain">
+                      <p class="explain-title">Was die Befehle tun</p>
+                      <dl class="explain-list">
+                        <dt>mkdir -p ~/.config/git</dt>
+                        <dd>Legt das Verzeichnis an, falls es noch nicht existiert.</dd>
+                        <dt>printf '%s %s\n' "…" "$(cat ~/.ssh/id_ed25519.pub)" &gt; …</dt>
+                        <dd>
+                          Schreibt eine Zeile aus deiner Adresse und dem öffentlichen Schlüssel in
+                          die Datei. <code>$(cat …)</code> setzt den Dateiinhalt an dieser Stelle
+                          ein, <code>&gt;</code> leitet das Ergebnis in die Zieldatei um.
+                        </dd>
+                        <dt>git config --global gpg.ssh.allowedSignersFile …</dt>
+                        <dd>
+                          Sagt Git, welche Schlüssel als vertrauenswürdig gelten. Ohne diese Datei
+                          kennt Git lokal niemanden, dem es die Signatur zuordnen könnte, obwohl
+                          GitHub den Commit als Verified anzeigt.
+                        </dd>
+                      </dl>
+                    </div>
+                    <div class="callout">
+                      Das Setup selbst hängt an keiner Stelle daran. GitHub nimmt unsignierte
+                      Pushes an, und der einzige Gewinn ist das Verified-Abzeichen. Der Setup
+                      Doctor prüft Signaturen deshalb bewusst nicht.
+                    </div>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="github-cli-later">
+                  <input class="task-check" type="checkbox" aria-label="GitHub CLI später angemeldet" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">GitHub CLI später anmelden, wenn nötig</h3>
+                      <span class="badge option">Optional</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>gh auth login --hostname github.com --git-protocol ssh --web
+gh auth status</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <div class="explain">
+                      <p class="explain-title">Was die Befehle tun</p>
+                      <dl class="explain-list">
+                        <dt>gh auth login --hostname github.com --git-protocol ssh --web</dt>
+                        <dd>
+                          Meldet die GitHub CLI an. <code>--git-protocol ssh</code> lässt sie den
+                          eben eingerichteten Schlüssel statt HTTPS-Tokens verwenden,
+                          <code>--web</code> erledigt die Anmeldung im Browser.
+                        </dd>
+                        <dt>gh auth status</dt>
+                        <dd>Zeigt, als wer die CLI angemeldet ist und welches Protokoll sie nutzt.</dd>
+                      </dl>
+                    </div>
+                    <p class="task-note">
+                      Nicht Teil des Bootstrap-Gates. Erst ausführen, wenn ein Workflow
+                      <code>gh</code> braucht.
+                    </p>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <section class="phase" id="phase-agent-gate" data-phase="agent-gate">
+            <button class="phase-toggle" type="button" aria-expanded="true">
+              <span class="phase-index">03</span>
+              <span class="phase-heading">
+                <span class="phase-name" role="heading" aria-level="2">Pause 2: Coding Agents anmelden</span>
+                <span>Herdr kann nur einhängen, was einmal gestartet war</span>
+              </span>
+              <span class="phase-meter">
+                <span class="phase-meter-track"><span class="phase-meter-fill"></span></span>
+                <span class="phase-count">0 / 0</span>
+                <span class="chevron" aria-hidden="true">⌄</span>
+              </span>
+            </button>
+            <div class="phase-body">
+              <p class="phase-intro">
+                Der Lauf hält ein zweites Mal an, direkt vor den Herdr-Integrationen. Herdr
+                kann einen Agent nur einhängen, wenn dieser einmal gestartet und angemeldet war.
+                Auf einem frischen Mac existieren die Agents vorher gar nicht, Homebrew hat sie
+                erst in diesem Lauf installiert. Deshalb ist die Anmeldung genau hier fällig und
+                nicht früher.
+              </p>
+              <div class="task-list">
+                <article class="task" data-task-id="agentgate-login">
                   <input class="task-check" type="checkbox" aria-label="Coding Agents angemeldet" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">An der Agent-Pause alle fünf Coding Agents anmelden</h3>
+                      <h3 class="task-title">Alle fünf Coding Agents anmelden</h3>
                       <span class="badge manual">Login</span>
                     </div>
-                    <p class="task-note">
-                      Der Lauf hält vor den Herdr-Integrationen an, weil Herdr einen Agent nur
-                      dann einhängen kann, wenn dieser einmal gestartet und angemeldet war. Auf
-                      einem frischen Mac existieren die Agents vorher noch gar nicht, Homebrew
-                      installiert sie erst in diesem Lauf. Deshalb ist die Anmeldung genau hier
-                      fällig und nicht früher.
-                    </p>
                     <p class="task-note">
                       Das Setup wartet in seinem Fenster. Die Anmeldungen in einem zweiten
                       Terminal erledigen, danach im Setup-Fenster mit Return bestätigen. Das
@@ -1432,16 +1928,24 @@ pi              # Anmeldung, dann /exit</code></pre>
                   </div>
                 </article>
 
-                <article class="task" data-task-id="bootstrap-output">
-                  <input class="task-check" type="checkbox" aria-label="Bootstrap-Ausgabe geprüft" />
+                <article class="task" data-task-id="agentgate-herdr">
+                  <input class="task-check" type="checkbox" aria-label="Herdr-Integrationen installiert" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Ausgabe auf übersprungene oder fehlgeschlagene Stufen prüfen</h3>
-                      <span class="badge manual">Kontrolle</span>
+                      <h3 class="task-title">Herdr-Integrationen nach der Pause prüfen</h3>
+                      <span class="badge auto">Prüfung</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>herdr integration status</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Mac-App-Store-Installationen können eine Anmeldung oder einen früheren
-                      App-Kauf benötigen. Ein solcher Fehler lässt sich später gezielt wiederholen.
+                      Direkt nach dem Gate installiert das Setup die Integrationen für
+                      <code>claude</code>, <code>codex</code>, <code>cursor</code>,
+                      <code>omp</code> und <code>pi</code>. Alle fünf sollen hier als
+                      <code>current</code> erscheinen. Fehlt eine, war der Agent zum Zeitpunkt der
+                      Installation noch nicht angemeldet: nachmelden und
+                      <code>mise run agents:herdr</code> erneut ausführen.
                     </p>
                   </div>
                 </article>
@@ -1451,9 +1955,9 @@ pi              # Anmeldung, dann /exit</code></pre>
 
           <section class="phase" id="phase-apple" data-phase="apple">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">02</span>
+              <span class="phase-index">04</span>
               <span class="phase-heading">
-                <span class="phase-name" role="heading" aria-level="2">Apple und App Store</span>
+                <span class="phase-name" role="heading" aria-level="2">Pause 3: Apple Account und Mac App Store</span>
                 <span>Accountgebundene Installationen freigeben</span>
               </span>
               <span class="phase-meter">
@@ -1464,8 +1968,9 @@ pi              # Anmeldung, dann /exit</code></pre>
             </button>
             <div class="phase-body">
               <p class="phase-intro">
-                MAS kann nur Apps installieren, die der verwendete Apple Account bereits
-                beansprucht hat. Passwörter und Apple-Anmeldestatus bleiben außerhalb des Repos.
+                Die letzte Pause vor dem Doctor. <code>mas</code> kann nur Apps installieren,
+                die der verwendete Apple Account bereits einmal beansprucht hat. Passwörter und
+                Apple-Anmeldestatus bleiben außerhalb des Repos.
               </p>
               <div class="task-list">
                 <article class="task" data-task-id="apple-store-login">
@@ -1505,6 +2010,69 @@ pi              # Anmeldung, dann /exit</code></pre>
                       <pre><code>mise run apps:mas</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
+                    <p class="task-note">
+                      Nur nötig, wenn die Stufe im Lauf übersprungen wurde oder fehlgeschlagen ist.
+                      Xcode ist hier der wichtigste Eintrag, weil die nächste Phase darauf aufbaut.
+                    </p>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <section class="phase" id="phase-run-complete" data-phase="run-complete">
+            <button class="phase-toggle" type="button" aria-expanded="true">
+              <span class="phase-index">05</span>
+              <span class="phase-heading">
+                <span class="phase-name" role="heading" aria-level="2">Setup-Lauf abschließen</span>
+                <span>Ausgabe und ersten Doctor-Report lesen</span>
+              </span>
+              <span class="phase-meter">
+                <span class="phase-meter-track"><span class="phase-meter-fill"></span></span>
+                <span class="phase-count">0 / 0</span>
+                <span class="chevron" aria-hidden="true">⌄</span>
+              </span>
+            </button>
+            <div class="phase-body">
+              <p class="phase-intro">
+                Nach der dritten Pause läuft das Setup ohne weitere Rückfragen bis zum Ende
+                durch und schließt mit dem Setup Doctor ab. Bevor es an die manuellen Phasen
+                geht, wird einmal gelesen, was der Lauf tatsächlich gemacht hat.
+              </p>
+              <div class="task-list">
+                <article class="task" data-task-id="run-output">
+                  <input class="task-check" type="checkbox" aria-label="Bootstrap-Ausgabe geprüft" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Ausgabe auf übersprungene oder fehlgeschlagene Stufen prüfen</h3>
+                      <span class="badge manual">Kontrolle</span>
+                    </div>
+                    <p class="task-note">
+                      Mac-App-Store-Installationen können eine Anmeldung oder einen früheren
+                      App-Kauf benötigen. Ein solcher Fehler lässt sich mit
+                      <code>mise run apps:mas</code> gezielt wiederholen, alles andere mit
+                      <code>mise run setup</code>.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="run-doctor">
+                  <input class="task-check" type="checkbox" aria-label="Erster Doctor-Report gelesen" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Den automatisch gelaufenen Setup Doctor lesen</h3>
+                      <span class="badge auto">Prüfung</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>mise run doctor</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Der Doctor läuft am Ende des Setups automatisch und bricht nie ab. An dieser
+                      Stelle sind Meldungen zu Xcode, Android SDK, Direktdownload-Apps und den
+                      App-Rechten erwartbar: genau das sind die folgenden Phasen. Der Befehl oben
+                      wiederholt den Report jederzeit, ohne den Mac zu verändern.
+                    </p>
                   </div>
                 </article>
               </div>
@@ -1513,7 +2081,7 @@ pi              # Anmeldung, dann /exit</code></pre>
 
           <section class="phase" id="phase-xcode" data-phase="xcode">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">03</span>
+              <span class="phase-index">06</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Xcode</span>
                 <span>Toolchain, Lizenz und Simulator</span>
@@ -1572,7 +2140,7 @@ pi              # Anmeldung, dann /exit</code></pre>
 
           <section class="phase" id="phase-android" data-phase="android">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">04</span>
+              <span class="phase-index">07</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Android Studio</span>
                 <span>Android Studio, JDK 17 und Shell-Umgebung</span>
@@ -1660,217 +2228,9 @@ echo "$PATH" | tr ':' '\n' | grep "$ANDROID_HOME"</code></pre>
             </div>
           </section>
 
-          <section class="phase" id="phase-git" data-phase="git">
-            <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">05</span>
-              <span class="phase-heading">
-                <span class="phase-name" role="heading" aria-level="2">Git, SSH und GitHub</span>
-                <span>Private Identität lokal halten und Auth einrichten</span>
-              </span>
-              <span class="phase-meter">
-                <span class="phase-meter-track"><span class="phase-meter-fill"></span></span>
-                <span class="phase-count">0 / 0</span>
-                <span class="chevron" aria-hidden="true">⌄</span>
-              </span>
-            </button>
-            <div class="phase-body">
-              <p class="phase-intro">
-                Git ist bewusst nicht Teil des Repos. <code>~/.gitconfig</code>,
-                <code>~/.config/git/ignore</code> und <code>~/.ssh/config</code> werden von Hand
-                gesetzt, weil eine verwaltete Git-Konfiguration schon aktiv wäre, bevor der
-                Schlüssel existiert, mit dem sie signiert. Nach dem <code>Brewfile</code> pausiert
-                <code>mise run setup</code>, bis Identität, Ed25519-Schlüssel und
-                <code>ssh -T git@github.com</code> stehen. Schlüssel erzeugen, bei GitHub
-                registrieren und die Verbindung prüfen bleiben manuell. Die GitHub CLI kann später
-                folgen. Private Schlüssel, Hosts und Logins bleiben ausschließlich lokal.
-              </p>
-              <div class="task-list">
-                <article class="task" data-task-id="git-identity">
-                  <input class="task-check" type="checkbox" aria-label="Git-Identität von Hand gesetzt" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Git-Identität von Hand setzen</h3>
-                      <span class="badge manual">Bootstrap-Gate</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>git config --global user.name "phoenix-error"
-git config --global user.email "42442490+phoenix-error@users.noreply.github.com"
-git config --global init.defaultBranch main</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Sobald Homebrew Git installiert hat, pausiert der Bootstrap und wartet auf
-                      diese Schritte. Die GitHub-Noreply-Adresse hält die private Adresse aus
-                      öffentlichen Commits heraus.
-                    </p>
-                  </div>
-                </article>
-
-                <article class="task" data-task-id="git-ssh-config">
-                  <input class="task-check" type="checkbox" aria-label="SSH-Konfiguration angelegt" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">~/.ssh/config anlegen</h3>
-                      <span class="badge manual">Manuell</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>mkdir -p ~/.ssh
-chmod 700 ~/.ssh
-cat &gt; ~/.ssh/config &lt;&lt;'EOF'
-Host *
-  AddKeysToAgent yes
-  UseKeychain yes
-  ServerAliveInterval 60
-  ServerAliveCountMax 3
-
-Host github.com
-  HostName github.com
-  User git
-  IdentityFile ~/.ssh/id_ed25519
-  IdentitiesOnly yes
-EOF
-chmod 600 ~/.ssh/config</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Ohne diese Datei lädt SSH den Schlüssel nicht aus dem Schlüsselbund und
-                      fragt die Passphrase bei jeder Verbindung erneut ab.
-                    </p>
-                  </div>
-                </article>
-
-                <article class="task" data-task-id="git-key">
-                  <input class="task-check" type="checkbox" aria-label="SSH-Schlüssel generiert und geladen" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Ed25519-Schlüssel erzeugen und laden</h3>
-                      <span class="badge manual">Manuell</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>ssh-keygen -t ed25519 -C "42442490+phoenix-error@users.noreply.github.com"
-ssh-add --apple-use-keychain ~/.ssh/id_ed25519
-pbcopy &lt; ~/.ssh/id_ed25519.pub
-ls -l ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub
-ssh-keygen -lf ~/.ssh/id_ed25519.pub</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Eine sichere Passphrase wählen. Den öffentlichen Schlüssel danach in die
-                      Zwischenablage kopieren.
-                    </p>
-                    <div class="callout danger">
-                      Nur <code>~/.ssh/id_ed25519.pub</code> darf geteilt werden.
-                      <code>~/.ssh/id_ed25519</code> ist der private Schlüssel und bleibt auf dem Mac.
-                    </div>
-                  </div>
-                </article>
-
-                <article class="task" data-task-id="github-signing-key">
-                  <input class="task-check" type="checkbox" aria-label="GitHub Authentication und Signing Key hinterlegt" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Public Key bei GitHub hinterlegen</h3>
-                      <span class="badge manual">Manuell</span>
-                    </div>
-                    <p class="task-note">
-                      Den kopierten Schlüssel unter
-                      <a href="https://github.com/settings/keys">GitHub SSH and GPG keys</a>
-                      als Authentication Key hinzufügen.
-                    </p>
-                  </div>
-                </article>
-
-                <article class="task" data-task-id="github-test">
-                  <input class="task-check" type="checkbox" aria-label="GitHub SSH getestet" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">GitHub-SSH-Verbindung prüfen</h3>
-                      <span class="badge manual">Bootstrap-Gate</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>ssh -T git@github.com</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Den angezeigten Host-Fingerprint mit
-                      <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints">GitHubs veröffentlichten Fingerprints</a>
-                      vergleichen. Erst nach
-                      <code>successfully authenticated</code> im Bootstrap-Terminal Return drücken.
-                      Der Bootstrap prüft Identität, Schlüsseldateien und diesen SSH-Test, bevor
-                      er fortsetzt.
-                    </p>
-                  </div>
-                </article>
-
-                <article class="task" data-task-id="git-defaults">
-                  <input class="task-check" type="checkbox" aria-label="Gewünschte Git-Defaults wiederhergestellt" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Gewünschte Git-Defaults und Git LFS wiederherstellen</h3>
-                      <span class="badge manual">Optional</span>
-                    </div>
-                    <p class="task-note">
-                      Mit der verwalteten <code>~/.gitconfig</code> sind auch diese Einstellungen
-                      verschwunden. Keine davon ist für einen funktionierenden Mac nötig, alle
-                      sind eine Zeile weit entfernt. Nur setzen, was wirklich gewollt ist.
-                    </p>
-                    <div class="command">
-                      <pre><code>git config --global fetch.prune true
-git config --global pull.rebase true
-git config --global push.autoSetupRemote true
-git config --global rebase.autoStash true
-git config --global rerere.enabled true
-git config --global diff.algorithm histogram
-git config --global merge.conflictStyle zdiff3
-git config --global credential.helper osxkeychain
-git config --global core.excludesFile ~/.config/git/ignore</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      <code>~/.config/git/ignore</code> enthielt <code>.DS_Store</code>,
-                      <code>.idea/</code>, <code>*.swp</code> und <code>*~</code>.
-                    </p>
-                    <div class="command">
-                      <pre><code>mkdir -p ~/.config/git
-printf '%s\n' '.DS_Store' '.idea/' '*.swp' '*~' > ~/.config/git/ignore</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Die <code>filter "lfs"</code>-Sektion schreibt das Tool selbst. Sie gehört
-                      nicht von Hand gesetzt.
-                    </p>
-                    <div class="command">
-                      <pre><code>git lfs install</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                  </div>
-                </article>
-
-                <article class="task" data-task-id="github-cli-later">
-                  <input class="task-check" type="checkbox" aria-label="GitHub CLI später angemeldet" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">GitHub CLI später anmelden, wenn nötig</h3>
-                      <span class="badge manual">Optional</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>gh auth login --hostname github.com --git-protocol ssh --web
-gh auth status</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Nicht Teil des Bootstrap-Gates. Erst ausführen, wenn ein Workflow
-                      <code>gh</code> braucht.
-                    </p>
-                  </div>
-                </article>
-              </div>
-            </div>
-          </section>
-
           <section class="phase" id="phase-apps" data-phase="apps">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">06</span>
+              <span class="phase-index">08</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Apps, Rechte und Shortcuts</span>
                 <span>Datenschutzfreigaben und persönliche Bedienung</span>
@@ -1922,10 +2282,6 @@ gh auth status</code></pre>
                       <li>
                         <a href="https://recordly.dev/" rel="noopener noreferrer" target="_blank">Recordly</a>
                         — Screen Recording, Mikrofon, Kamera und System Audio nach Bedarf erlauben.
-                      </li>
-                      <li>
-                        <a href="https://simcam.swmansion.com/" rel="noopener noreferrer" target="_blank">SimCam</a>
-                        — Trial oder Lizenz aktivieren und Kamera-Komponenten freigeben, wenn gefragt.
                       </li>
                     </ul>
                   </div>
@@ -2108,10 +2464,10 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
 
           <section class="phase" id="phase-agents" data-phase="agents">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">07</span>
+              <span class="phase-index">09</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Agents, Skills und CLI-Logins</span>
-                <span>Claude, LSP und lokale Authentifizierung</span>
+                <span>Claude, globale Skills und lokale Authentifizierung</span>
               </span>
               <span class="phase-meter">
                 <span class="phase-meter-track"><span class="phase-meter-fill"></span></span>
@@ -2122,7 +2478,9 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
             <div class="phase-body">
               <p class="phase-intro">
                 Das Repo verwaltet öffentliche Agent-Konfiguration. Logins, Chats, Caches,
-                Zugriffstokens und private Skill-Zustände werden nie übernommen.
+                Zugriffstokens und private Skill-Zustände werden nie übernommen. Die
+                Agent-Anmeldungen an der Kommandozeile sind an Pause 2 bereits erledigt, hier
+                folgen die Desktop-Apps, die projektbezogenen CLIs und die globalen Skills.
               </p>
               <div class="task-list">
                 <article class="task" data-task-id="agents-desktop">
@@ -2134,8 +2492,7 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
                     </div>
                     <p class="task-note">
                       Die ChatGPT-App enthält den Codex-Desktop-Bereich. Die eigenständige
-                      Codex CLI meldet sich getrennt an und ist an der Agent-Pause in der
-                      Bootstrap-Phase bereits erledigt.
+                      Codex CLI meldet sich getrennt an und ist an Pause 2 bereits erledigt.
                     </p>
                   </div>
                 </article>
@@ -2152,10 +2509,9 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Die Anmeldung ist an der Agent-Pause in der Bootstrap-Phase schon passiert.
-                      Hier nur noch Auto Mode, Pyright-LSP, TypeScript-LSP und Tmux-Split-Panes
-                      für Agent Teams prüfen. Herdr bleibt der primäre Multiplexer für
-                      persistente Sessions.
+                      Die Anmeldung ist an Pause 2 schon passiert. Hier nur noch Auto Mode,
+                      Pyright-LSP, TypeScript-LSP und Tmux-Split-Panes für Agent Teams prüfen.
+                      Herdr bleibt der primäre Multiplexer für persistente Sessions.
                     </p>
                   </div>
                 </article>
@@ -2183,7 +2539,7 @@ vercel login</code></pre>
                   </div>
                 </article>
 
-                <article class="task" data-task-id="agents-default-skills">
+                <article class="task" data-task-id="agents-skills">
                   <input class="task-check" type="checkbox" aria-label="Globale Agent-Skills installiert" />
                   <div class="task-content">
                     <div class="task-topline">
@@ -2191,20 +2547,41 @@ vercel login</code></pre>
                       <span class="badge manual">Manuell</span>
                     </div>
                     <p class="task-note">
-                      Das Setup installiert keine Skills. Wie du sie installierst und welche Quellen
-                      ausgeschlossen sind, steht in <code>docs/agent-skills.md</code>. Die Befehle
-                      verwenden <code>bunx skills</code>, niemals <code>npx</code>, und richten sich
-                      an Claude Code, Codex, Cursor und Pi.
+                      Das Setup installiert keine Skills. Skill-Quellen werden umbenannt, geteilt
+                      und eingestellt, und zwar deutlich schneller als der Rest des Inventars. Ein
+                      veralteter Eintrag würde den ganzen Setup-Lauf scheitern lassen, ohne dass
+                      ein frischer Mac dadurch etwas gewinnt. Deshalb bleibt dieser Schritt
+                      bewusst Handarbeit.
                     </p>
                     <p class="task-note">
-                      Skill-Quellen werden umbenannt, geteilt und eingestellt, und zwar deutlich
-                      schneller als der Rest des Inventars. Ein veralteter Eintrag würde den ganzen
-                      Setup-Lauf scheitern lassen, ohne dass ein frischer Mac dadurch etwas gewinnt.
-                      Deshalb bleibt dieser Schritt bewusst Handarbeit.
+                      Immer <code>bunx</code>, nie <code>npx</code>. Die vier Agent-Ziele sind
+                      <code>claude-code</code>, <code>codex</code>, <code>cursor</code> und
+                      <code>pi</code>. Oh My Pi erweitert Pi und liest dessen
+                      Skill-Verzeichnis mit, braucht also kein eigenes Ziel.
                     </p>
                     <div class="command">
-                      <pre><code>open docs/agent-skills.md</code></pre>
+                      <pre><code>bunx skills add mattpocock/skills \
+  --agent claude-code --agent codex --agent cursor --agent pi \
+  --global</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Der Befehl öffnet die interaktive Auswahl von
+                      <a href="https://github.com/mattpocock/skills" rel="noopener noreferrer" target="_blank">mattpocock/skills</a>.
+                      Für eine nicht-interaktive Installation eines festen Satzes stattdessen
+                      <code>--yes</code> und ein oder mehrere <code>--skill &lt;name&gt;</code>
+                      anhängen. Dieselbe Form funktioniert mit jeder anderen Quelle:
+                      <code>bunx skills add &lt;owner/repo&gt; --agent &lt;agent&gt; … --global</code>.
+                    </p>
+                    <div class="callout">
+                      Drei Namen kommen über mehr als einen Kanal, jeweils mit anderem Verhalten
+                      dahinter: <code>code-review</code> gibt es als Skill und als Plugin,
+                      Library-Dokumentation deckt die verwaltete <code>ctx7</code>-Rule und das
+                      <code>context7</code>-Plugin ab, und Browser-Steuerung deckt die
+                      <code>chrome-devtools-axi</code>-Rule, das
+                      <code>chrome-devtools-mcp</code>-Plugin und die
+                      <code>agent-browser</code>-Formula ab. Die Plugins aus
+                      <code>home/.claude/settings.json</code> bringen ihre eigenen Skills mit.
                     </div>
                   </div>
                 </article>
@@ -2217,10 +2594,11 @@ vercel login</code></pre>
                       <span class="badge manual">Login</span>
                     </div>
                     <p class="task-note">
-                      Das Setup installiert <code>nlm</code> über mise, aber nicht die Anmeldung,
-                      den MCP-Server oder den Skill. Ohne <code>nlm login</code> schlagen
-                      Notebook-Befehle und der gebündelte Skill fehl. Pi wird von
-                      <code>nlm setup</code> und <code>nlm skill install</code> nicht unterstützt.
+                      Das Setup installiert <code>nlm</code> über mise als PyPI-Paket
+                      <code>notebooklm-mcp-cli</code>, aber nicht die Anmeldung, den MCP-Server
+                      oder den Skill. Ohne <code>nlm login</code> schlagen Notebook-Befehle und
+                      der gebündelte Skill fehl. Pi wird von <code>nlm setup</code> und
+                      <code>nlm skill install</code> nicht unterstützt.
                     </p>
                     <div class="command">
                       <pre><code>nlm login
@@ -2233,16 +2611,42 @@ nlm skill install codex
 nlm doctor</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
+                    <p class="task-note">
+                      <code>nlm setup add</code> registriert den MCP-Server beim jeweiligen Agent,
+                      <code>nlm skill install</code> legt den mitgelieferten Skill dort ab, und
+                      <code>nlm doctor</code> prüft Installation, Anmeldung und
+                      Agent-Konfiguration am Stück.
+                    </p>
                   </div>
                 </article>
 
+                <article class="task" data-task-id="agents-skills-verify">
+                  <input class="task-check" type="checkbox" aria-label="Skill-Installation geprüft" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Skill-Installation prüfen</h3>
+                      <span class="badge auto">Prüfung</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>ls ~/.agents/skills
+ls ~/.claude/skills</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Die Skills CLI hält einen zentralen Speicher unter
+                      <code>~/.agents/skills</code> und verlinkt jedes Agent-Verzeichnis dorthin.
+                      Ein fehlender Eintrag im Speicher heißt: nie installiert. Ein fehlender Link
+                      im Agent-Verzeichnis heißt: installiert, aber dieser Agent sieht ihn nicht.
+                    </p>
+                  </div>
+                </article>
               </div>
             </div>
           </section>
 
           <section class="phase" id="phase-react-native" data-phase="react-native">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">08</span>
+              <span class="phase-index">10</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">React Native Smoke Test</span>
                 <span>Toolchain in einem echten Projekt beweisen</span>
@@ -2341,7 +2745,7 @@ nlm doctor</code></pre>
 
           <section class="phase" id="phase-verify" data-phase="verify">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">09</span>
+              <span class="phase-index">11</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Doctor, Idempotenz und Reboot</span>
                 <span>Den Zustand beweisen und nach Neustart bestätigen</span>
@@ -2481,8 +2885,8 @@ mise run doctor</code></pre>
     </main>
 
     <footer class="footer">
-      Offline-Dokument · Die verbindliche Anleitung für einen neuen Mac · Stand 05.08.2026 ·
-      Fortschritt wird nur unter <code>dotfiles.setup-guide.v1</code> in localStorage gespeichert.
+      Offline-Dokument · Die verbindliche Anleitung für einen neuen Mac · Stand 06.08.2026 ·
+      Fortschritt wird nur unter <code>dotfiles.setup-guide.v2</code> in localStorage gespeichert.
     </footer>
 
     <dialog id="resetDialog" aria-labelledby="reset-title">
@@ -2503,7 +2907,7 @@ mise run doctor</code></pre>
       (() => {
         "use strict";
 
-        const STORAGE_KEY = "dotfiles.setup-guide.v1";
+        const STORAGE_KEY = "dotfiles.setup-guide.v2";
         const phases = [...document.querySelectorAll(".phase")];
         const tasks = [...document.querySelectorAll(".task")];
         const checkboxes = [...document.querySelectorAll(".task-check")];

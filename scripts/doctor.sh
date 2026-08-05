@@ -274,8 +274,7 @@ done
 
 for application_name in \
   "Maestro Studio" \
-  "Recordly" \
-  "SimCam"; do
+  "Recordly"; do
   check_manual_app "$application_name"
 done
 
@@ -354,10 +353,11 @@ else
   warn "Global Git name or email is missing"
 fi
 
-# Commit signing is deliberately not part of this setup. Nothing here depends
-# on it, GitHub accepts unsigned pushes, and the only thing it buys is the
-# Verified badge. The key below is checked for authentication alone, which is
-# what the bootstrap gate and every `git push` actually need.
+# Commit signing stays optional and unchecked. Nothing here depends on it,
+# GitHub accepts unsigned pushes, and the only thing it buys is the Verified
+# badge, so the setup guide documents it as an optional step instead. The key
+# below is checked for authentication alone, which is what the bootstrap gate
+# and every `git push` actually need.
 if [[ -f "$HOME/.ssh/id_ed25519" && -f "$HOME/.ssh/id_ed25519.pub" ]] &&
   ssh-keygen -lf "$HOME/.ssh/id_ed25519.pub" >/dev/null 2>&1 &&
   [[ "$(awk 'NR == 1 { print $1 }' "$HOME/.ssh/id_ed25519.pub")" == "ssh-ed25519" ]]; then
@@ -388,7 +388,7 @@ else
 fi
 
 printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
-printf 'Open docs/setup-guide.html for the remaining manual permissions and logins.\n'
+printf 'Open setup-guide.html for the remaining manual permissions and logins.\n'
 
 if [[ "$STRICT" == true && "$failures" -gt 0 ]]; then
   exit 1

@@ -15,7 +15,7 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 - `mise.toml` owns runtimes, global npm-backed CLIs, setup tasks, dotfile mappings, and scalar macOS defaults.
 - `mise.lock` owns resolved mise tool versions. Only mise writes it, it stays local to each machine, and it must never be tracked.
 - `home/.zsh_plugins.txt` owns every Zsh plugin.
-- `docs/agent-skills.md` documents how global agent skills are installed by hand and which sources to skip.
+- `setup-guide.html` owns every manual step on a new Mac, including how the global agent skills are installed by hand and which sources arrive another way.
 - `home/.config/editors/settings.json` owns the shared VS Code and Cursor user settings.
 - `home/` owns public dotfiles that mise links into the home directory.
 - `home/.claude/rules/` owns the Claude rules that this setup supports.
@@ -78,7 +78,7 @@ This repository does not manage editor extensions.
 
 VS Code Settings Sync owns the installed VS Code extension set across machines.
 
-Cursor has no Microsoft Settings Sync. When Cursor should mirror VS Code, spawn a Claude agent with the example prompt in `docs/setup-guide.html` and install only extensions that Cursor can actually load.
+Cursor has no Microsoft Settings Sync. When Cursor should mirror VS Code, spawn a Claude agent with the example prompt in `setup-guide.html` and install only extensions that Cursor can actually load.
 
 Do not add `vscode` entries to `Brewfile`.
 
@@ -158,7 +158,7 @@ This repository does not install agent skills, and no script may start doing so.
 
 Skill sources move faster than the rest of the inventory, so the user installs them by hand.
 
-`docs/agent-skills.md` documents install commands and excluded sources. Keep it accurate when the install flow or policy changes.
+The Agents phase of `setup-guide.html` documents install commands and the sources that arrive another way. Keep it accurate when the install flow or policy changes.
 
 Do not add a skill source without an explicit decision from the user.
 
@@ -198,7 +198,7 @@ This setup uses exactly one managed file per tool.
 
 Do not create, document, or read `*.local` override files. That includes `~/.claude/settings.local.json` and `mise.local.toml`.
 
-Git and SSH are the exception to the one-managed-file rule. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are configured by hand and are deliberately not part of this repository. Do not reintroduce them as managed dotfiles.
+Git and SSH are the exception to the one-managed-file rule. `~/.gitconfig`, `~/.ssh/config`, and anything under `~/.config/git/` are configured by hand and are deliberately not part of this repository. Do not reintroduce them as managed dotfiles.
 
 Settings that would otherwise land in a local override belong in the managed file so a new Mac reproduces them.
 

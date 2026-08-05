@@ -12,7 +12,7 @@
 set -Eeuo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-readonly SETUP_GUIDE="${REPO_ROOT}/docs/setup-guide.html"
+readonly SETUP_GUIDE="${REPO_ROOT}/setup-guide.html"
 
 source "${REPO_ROOT}/scripts/lib.sh"
 
@@ -51,7 +51,7 @@ print_github_manual_setup_instructions() {
   printf '\n  Homebrew has installed Git. The setup continues as soon as this\n'
   printf '  reports successful authentication:\n'
   printf '\n    ssh -T git@github.com\n'
-  printf '\n  The walkthrough is the %sGit, SSH und GitHub%s phase of the setup guide:\n' \
+  printf '\n  The walkthrough is the %sPause 1: Git, SSH und GitHub%s phase of the setup guide:\n' \
     "$BOLD" "$RESET"
   printf '    %s\n' "$SETUP_GUIDE"
   printf '\n  In short:\n'
