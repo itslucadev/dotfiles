@@ -8,7 +8,10 @@
 # the SHA here.
 #
 # The profile is deliberately small. Matt Pocock's engineering, productivity,
-# and misc skills are the only global agent skills.
+# and misc skills are the only skills installed from this inventory.
+#
+# They are not the only skills an agent sees. The Claude plugins enabled in
+# home/.claude/settings.json ship their own, and this file does not govern them.
 #
 # The NotebookLM skill is not listed here because its own CLI ships and installs
 # it. scripts/install-agent-skills.sh runs `nlm skill install` for that.

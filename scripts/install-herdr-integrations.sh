@@ -30,12 +30,7 @@ for argument in "$@"; do
   esac
 done
 
-if ! command -v herdr >/dev/null 2>&1; then
-  if [[ "$DRY_RUN" == true ]]; then
-    printf '  + herdr integration install <agent>\n'
-    exit 0
-  fi
-
+if [[ "$DRY_RUN" != true ]] && ! command -v herdr >/dev/null 2>&1; then
   printf 'herdr was not found. Apply the Brewfile first.\n' >&2
   exit 1
 fi

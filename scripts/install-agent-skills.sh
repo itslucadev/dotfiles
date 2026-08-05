@@ -206,19 +206,15 @@ fi
 # by that CLI, so it cannot be pinned through the skills inventory above.
 printf '\nInstalling the NotebookLM skill through its own CLI\n'
 
-if ! command -v nlm >/dev/null 2>&1; then
-  if [[ "$DRY_RUN" == true ]]; then
-    printf '  + nlm skill install <agent> --level user\n'
-  else
-    printf 'nlm was not found. Install the mise-managed NotebookLM CLI first.\n' >&2
-    exit 1
-  fi
-else
-  for agent in "${TARGET_AGENTS[@]}"; do
-    if [[ "$DRY_RUN" == true ]]; then
-      print_command nlm skill install "$agent" --level user
-    else
-      nlm skill install "$agent" --level user
-    fi
-  done
+if [[ "$DRY_RUN" != true ]] && ! command -v nlm >/dev/null 2>&1; then
+  printf 'nlm was not found. Install the mise-managed NotebookLM CLI first.\n' >&2
+  exit 1
 fi
+
+for agent in "${TARGET_AGENTS[@]}"; do
+  if [[ "$DRY_RUN" == true ]]; then
+    print_command nlm skill install "$agent" --level user
+  else
+    nlm skill install "$agent" --level user
+  fi
+done
