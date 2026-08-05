@@ -469,6 +469,10 @@ Every source is pinned to a full Git commit so a new Mac receives reviewed skill
 
 The installer uses `bunx --bun skills@1.5.21`, never `npx`, and links the selected skills through the central `~/.agents/skills` store for Claude Code and Cursor.
 
+It cannot hand the pinned URL to that CLI directly. The Skills CLI clones a source with `git clone --branch <ref>`, and git accepts only a branch or tag name there, never a commit SHA. Its one commit-aware path is a blob download restricted to a short allowlist of repository owners.
+
+`scripts/install-agent-skills.sh` therefore fetches the exact commit itself with `git fetch --depth 1`, checks it out into a temporary directory, and passes that local path to the CLI. The commit pin survives, and the temporary checkouts are removed when the script exits.
+
 The profile is deliberately small. It contains Matt Pocock's engineering, productivity, and misc skills, and nothing else.
 
 His `skills/personal` folder is excluded because `obsidian-vault` points at a Windows vault path and `edit-article` encodes someone else's publishing workflow. His `deprecated` and `in-progress` folders are excluded as well.
