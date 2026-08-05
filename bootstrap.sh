@@ -20,17 +20,16 @@ readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly EXPECTED_REPO_ROOT="${HOME}/github/phoenix-error/dotfiles"
 readonly LOCAL_BIN="${HOME}/.local/bin"
 readonly MISE_BIN="${LOCAL_BIN}/mise"
+readonly MISE_INSTALLER="${REPO_ROOT}/scripts/setup-mise.sh"
 
 DRY_RUN=false
 
 source "${REPO_ROOT}/scripts/lib.sh"
 
 homebrew_installer=""
-mise_installer=""
 
 cleanup_installers() {
   [[ -n "$homebrew_installer" ]] && rm -f "$homebrew_installer"
-  [[ -n "$mise_installer" ]] && rm -f "$mise_installer"
   return 0
 }
 
@@ -112,14 +111,18 @@ fi
 # must never be able to remove the binary that drives the rest of the setup.
 # The check targets the install path rather than PATH so a Mac that still has
 # the old Homebrew mise replaces it here instead of losing it during cleanup.
+#
+# The installer is the committed copy of https://mise.run in scripts/. It
+# carries the release checksums, so a reviewed copy in the repository is safer
+# than downloading and running the script unseen on every fresh Mac. Refresh it
+# with `mise run update:mise-installer`. The pinned version it installs matters
+# only for a few seconds, because the setup runs `mise self-update` first.
 log "Checking mise"
 if [[ ! -x "$MISE_BIN" ]]; then
   if [[ "$DRY_RUN" == true ]]; then
-    printf '  + install mise from https://mise.run into %s\n' "$MISE_BIN"
+    printf '  + install mise with %s into %s\n' "$MISE_INSTALLER" "$MISE_BIN"
   else
-    mise_installer="$(mktemp)"
-    curl -fsSL https://mise.run -o "$mise_installer"
-    MISE_INSTALL_PATH="$MISE_BIN" sh "$mise_installer"
+    MISE_INSTALL_PATH="$MISE_BIN" MISE_INSTALL_HELP=0 "$MISE_INSTALLER"
   fi
 fi
 
