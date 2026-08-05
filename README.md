@@ -154,8 +154,6 @@ The bootstrap:
 - Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
 - Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
 - Creates `~/Developer` and applies the confirmed macOS defaults.
-- Reserves shortcuts for Raycast and CleanShot.
-- Installs the signed Raycast v2 Beta beside Raycast v1.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
 - Runs the setup doctor.
 
@@ -163,7 +161,7 @@ It does not install agent skills. Those are a personal, fast-moving choice and a
 
 The runtimes install before the remaining CLIs because the other backends depend on them: the pipx backend needs uv, and every npm-backed tool needs bun as its package manager.
 
-After the Git and SSH gate, the remaining unattended stages run until Raycast Beta and the Mac App Store installs, which again need a person at the keyboard.
+After the Git and SSH gate, the remaining unattended stages run until the Mac App Store installs, which again need a person at the keyboard.
 
 The Homebrew reconciliation uses regular cask uninstall behavior and never passes `--zap`, so application data and shared support files are preserved.
 
@@ -182,7 +180,6 @@ The gated interactions are:
 - Finishing the Xcode Command Line Tools installer.
 - Completing the manual Git identity and GitHub SSH checklist after `Brewfile` installs Git, including comparing GitHub's SSH host fingerprint on the first connection.
 - Signing in to the Mac App Store and claiming applications that the Apple Account has never downloaded.
-- Entering the administrator password when a signed application must be installed into `/Applications`.
 
 The final success message is printed only after all of these gates and their dependent automated stages have completed.
 
@@ -205,12 +202,10 @@ The repository keeps configuration in the native declarative format of the tool 
 
 It installs the first dependencies needed before mise is available, then runs the remaining stages in the required order, because Homebrew must install mise before mise can orchestrate the rest.
 
-It calls four helper scripts that can change the Mac or connected accounts:
+It calls two helper scripts that can change the Mac or connected accounts:
 
-- `scripts/configure-macos.sh` owns the dynamic screenshot path and nested `AppleSymbolicHotKeys` dictionary that mise macOS defaults cannot represent correctly.
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
-- `scripts/install-raycast-beta.sh` installs and verifies Raycast Beta because it has no official Homebrew cask.
 
 The read-only `scripts/doctor.sh` inspects the result without configuring the Mac.
 
@@ -218,7 +213,7 @@ This repository has no test suite. Configuration is verified with `./bootstrap.s
 
 All scalar macOS settings with static values use mise's friendly or raw defaults sections.
 
-mise 2026.7.17 does not render templates inside raw macOS default values, so the user-specific screenshot path cannot live there without becoming a literal `{{ env.HOME }}` string.
+Screenshot folder and keyboard-shortcut conflicts stay manual because CleanShot and Raycast own those settings, and nested `AppleSymbolicHotKeys` entries are not expressible as scalar mise defaults.
 
 ## Reapply Changes
 
@@ -300,11 +295,11 @@ Apple Developer, TestFlight, Notability, Magnet, Mela, Arc, Slack, Figma, the Af
 
 Only Hack Nerd Font is installed. The Fira Code, JetBrains Mono, Meslo, and Symbols Only Nerd Fonts are deliberately excluded.
 
-Raycast v2 Beta comes from Raycast's official signed disk image because no official Homebrew cask exists.
+Raycast v1 comes from Homebrew. Raycast v2 Beta is a direct download from [raycast.com/new](https://www.raycast.com/new) because no official Homebrew cask exists.
 
 The setup does not install Rosetta 2. No managed cask declares an Intel requirement, and Minecraft Java Edition has shipped a native Apple Silicon launcher since version 1.19 in June 2022.
 
-GatherOS, Maestro Studio, Recordly, and SimCam are direct-download applications covered by the manual setup checklist.
+GatherOS, Maestro Studio, Recordly, SimCam, and Raycast v2 Beta are direct-download applications covered by the manual setup checklist.
 
 Sentry Spotlight and Xcode Beta are excluded as well.
 
@@ -693,6 +688,7 @@ Android Studio owns that state and provides the SDK Manager and Device Manager u
 
 ### Direct-download Applications
 
+- [ ] Download [Raycast v2 Beta](https://www.raycast.com/new) (Apple Silicon, macOS Tahoe or newer) and move it to `/Applications`. Keep Raycast v1 beside it until migration is done.
 - [ ] Download [GatherOS](https://www.gatheros.co/) and move it to `/Applications`.
 - [ ] Download [Maestro Studio](https://docs.maestro.dev/get-started/quickstart) for macOS and move it to `/Applications`.
 - [ ] Download [Recordly](https://recordly.dev/) for macOS and move it to `/Applications`.
@@ -741,16 +737,16 @@ Never commit an alternate Git identity file, SSH private key, private SSH host i
 
 ### Raycast
 
+- [ ] Install Raycast v2 Beta from [raycast.com/new](https://www.raycast.com/new) into `/Applications` (Apple Silicon, macOS Tahoe or newer).
 - [ ] Launch Raycast v1 and complete its onboarding.
 - [ ] Launch Raycast v2 Beta.
 - [ ] Run `Migrate from Raycast v1` inside Raycast Beta.
 - [ ] Confirm that migrated shortcuts are disabled in v1 to avoid conflicts.
 - [ ] Set Raycast Beta as the login launcher.
+- [ ] In System Settings → Keyboard → Keyboard Shortcuts → Spotlight, disable Show Spotlight search (Command-Space).
 - [ ] Set Command-Space as the primary Raycast shortcut.
 - [ ] Grant Accessibility access when requested.
 - [ ] Configure Raycast Window Management shortcuts.
-
-The setup disables the native Command-Space Spotlight shortcut.
 
 Raycast settings exports are not committed because they may contain clipboard history, AI conversations, authenticated extension data, and MCP configuration.
 
@@ -765,12 +761,12 @@ Raycast settings exports are not committed because they may contain clipboard hi
 - [ ] Grant Screen Recording access.
 - [ ] Grant Microphone access for recordings.
 - [ ] Grant Accessibility access when requested.
+- [ ] In System Settings → Keyboard → Keyboard Shortcuts → Screenshots, disable the native full-screen, selection, and recording shortcuts.
 - [ ] Set Command-Shift-3 to full-screen capture.
 - [ ] Set Command-Shift-4 to area capture.
 - [ ] Set Command-Shift-5 to all-in-one capture and recording.
 - [ ] Set Command-Shift-6 to text capture.
-
-The setup disables the corresponding native screenshot shortcuts.
+- [ ] Choose CleanShot's save location inside CleanShot; leave the native macOS screenshot folder alone.
 
 ### Aqua Voice
 
@@ -846,7 +842,7 @@ Use this order:
 4. If desired, run the real bootstrap on the current user only immediately before the planned erase and only after verifying a Time Machine or equivalent backup.
 5. Perform the final acceptance test on the new Mac before erasing the old one.
 
-The bootstrap uninstalls unmanaged Homebrew formulae and casks, untaps unmanaged taps, installs managed applications, links dotfiles, applies macOS defaults, and reserves keyboard shortcuts.
+The bootstrap uninstalls unmanaged Homebrew formulae and casks, untaps unmanaged taps, installs managed applications, links dotfiles, and applies macOS defaults.
 
 It preserves recursive formula dependencies, formula dependencies required by managed casks, Mac App Store applications, editor extensions, and application data belonging to removed casks.
 
@@ -866,7 +862,7 @@ The intended ownership is:
 | Command-Shift-5 | CleanShot | All-in-one capture and recording |
 | Command-Shift-6 | CleanShot | Text capture |
 
-macOS shortcut reservations are automated.
+macOS shortcut reservations are manual in System Settings before the matching application shortcuts are assigned.
 
 Application-specific shortcut assignment remains manual because those applications own their settings and permissions.
 

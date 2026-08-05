@@ -1325,8 +1325,8 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                     <p class="task-note">
                       Installiert Homebrew-Pakete, pausiert danach für Git und SSH von Hand,
                       setzt dann Runtimes, globale CLIs, Dotfile-Symlinks, bestätigte
-                      macOS-Defaults, Raycast Beta und nach Möglichkeit die MAS-Apps fort.
-                      Editor-Extensions gehören nicht dazu.
+                      macOS-Defaults und nach Möglichkeit die MAS-Apps fort.
+                      Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
                     </p>
                   </div>
                 </article>
@@ -1826,30 +1826,59 @@ gh auth status</code></pre>
               </p>
               <div class="task-list">
                 <article class="task" data-task-id="apps-direct">
-                  <input class="task-check" type="checkbox" aria-label="Direkt-Download-Apps installiert" />
+                  <input class="task-check" type="checkbox" aria-label="Direkt-Download-Apps installiert und eingerichtet" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">GatherOS, Maestro Studio, Recordly und SimCam installieren</h3>
+                      <h3 class="task-title">Direktdownload-Apps installieren und einrichten</h3>
                       <span class="badge manual">Direktdownload</span>
                     </div>
                     <p class="task-note">
-                      Diese vier Apps haben im verwalteten Setup keinen passenden Homebrew-Cask
-                      oder Mac-App-Store-Eintrag. Nur von den offiziellen Websites laden.
+                      Diese Apps haben keinen passenden Homebrew-Cask oder Mac-App-Store-Eintrag.
+                      Nur von den offiziellen Seiten laden und nach
+                      <code>/Applications</code> legen:
                     </p>
+                    <ul class="task-note" style="margin-top: 0.75rem; padding-left: 1.25rem;">
+                      <li>
+                        <a href="https://www.raycast.com/new" rel="noopener noreferrer" target="_blank">Raycast v2 Beta</a>
+                        (Apple Silicon, macOS Tahoe oder neuer) — DMG laden, App nach
+                        <code>/Applications</code> legen. v1 bleibt vorerst neben Beta.
+                      </li>
+                      <li>
+                        <a href="https://www.gatheros.co/" rel="noopener noreferrer" target="_blank">GatherOS</a>
+                        — Capture-Rechte für die genutzten Features freigeben.
+                      </li>
+                      <li>
+                        <a href="https://docs.maestro.dev/get-started/quickstart" rel="noopener noreferrer" target="_blank">Maestro Studio</a>
+                        — Workspace wählen und prüfen, dass iOS Simulator und Android-Emulator sichtbar sind.
+                      </li>
+                      <li>
+                        <a href="https://recordly.dev/" rel="noopener noreferrer" target="_blank">Recordly</a>
+                        — Screen Recording, Mikrofon, Kamera und System Audio nach Bedarf erlauben.
+                      </li>
+                      <li>
+                        <a href="https://simcam.swmansion.com/" rel="noopener noreferrer" target="_blank">SimCam</a>
+                        — Trial oder Lizenz aktivieren und Kamera-Komponenten freigeben, wenn gefragt.
+                      </li>
+                    </ul>
                   </div>
                 </article>
 
                 <article class="task" data-task-id="apps-raycast">
-                  <input class="task-check" type="checkbox" aria-label="Raycast Beta eingerichtet" />
+                  <input class="task-check" type="checkbox" aria-label="Raycast Beta als Launcher eingerichtet" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Raycast v2 Beta migrieren und als Launcher einrichten</h3>
+                      <h3 class="task-title">Raycast v2 Beta als Launcher einrichten</h3>
                       <span class="badge manual">Manuell</span>
                     </div>
                     <p class="task-note">
-                      In Beta <strong>Migrate from Raycast v1</strong> ausführen, v1-Shortcuts
-                      deaktivieren, Beta als Login Launcher setzen, Command-Space zuweisen und
-                      Accessibility erlauben. Window Management wird von Raycast übernommen.
+                      v1 onboarding abschließen, dann Beta starten und
+                      <strong>Migrate from Raycast v1</strong> ausführen. Migrierte Shortcuts in v1
+                      deaktivieren. Beta als Login Launcher setzen und Accessibility erlauben.
+                      Window Management übernimmt Raycast. Zuerst in
+                      <strong>Systemeinstellungen → Tastatur → Tastaturkurzbefehle → Spotlight</strong>
+                      „Spotlight-Suche einblenden“ (Command-Space) deaktivieren, danach in Raycast
+                      Beta Command-Space als Primär-Shortcut setzen und Window-Management-Shortcuts
+                      konfigurieren.
                     </p>
                   </div>
                 </article>
@@ -1874,8 +1903,13 @@ gh auth status</code></pre>
                     </div>
                     <p class="task-note">
                       Screen Recording, Mikrofon und bei Nachfrage Accessibility erlauben.
-                      Command-Shift-3 für Vollbild, -4 für Bereich, -5 für All-in-one und
-                      Aufnahme sowie -6 für Texterfassung verwenden.
+                      Zuerst in
+                      <strong>Systemeinstellungen → Tastatur → Tastaturkurzbefehle → Bildschirmfotos</strong>
+                      die nativen Shortcuts für Vollbild, Auswahl und Bildschirmaufnahme
+                      deaktivieren. Danach in CleanShot Command-Shift-3 für Vollbild, -4 für
+                      Bereich, -5 für All-in-one und Aufnahme sowie -6 für Texterfassung setzen.
+                      Den Speicherort nur in CleanShot wählen; der native macOS-Screenshot-Ordner
+                      bleibt unberührt.
                     </p>
                   </div>
                 </article>
@@ -1888,8 +1922,9 @@ gh auth status</code></pre>
                       <span class="badge manual">Manuell</span>
                     </div>
                     <p class="task-note">
-                      Mikrofon und Accessibility erlauben. Der Bootstrap reserviert bestätigte
-                      macOS-Tastenkombinationen, die Belegung in Aqua Voice bleibt App-eigen.
+                      Mikrofon und Accessibility erlauben. Der Bootstrap setzt
+                      <code>AppleFnUsageType = 0</code>, damit Fn beziehungsweise Globe keine
+                      native Aktion hat; die Push-to-talk-Belegung bleibt App-eigen in Aqua Voice.
                     </p>
                   </div>
                 </article>

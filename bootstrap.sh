@@ -233,14 +233,6 @@ log "Applying macOS defaults"
 run mkdir -p "$HOME/Developer/appzudio"
 run mise bootstrap macos defaults apply --yes
 
-log "Applying dynamic and nested macOS settings"
-run_script "$REPO_ROOT/scripts/configure-macos.sh"
-
-# The remaining stages need the person at the keyboard for App Store and
-# application installs, so they run together once the unattended work finishes.
-log "Installing Raycast v2 Beta"
-run_script "$REPO_ROOT/scripts/install-raycast-beta.sh"
-
 log "Installing Mac App Store applications"
 run_script "$REPO_ROOT/scripts/install-mas-apps.sh"
 
