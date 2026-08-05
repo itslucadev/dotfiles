@@ -141,7 +141,12 @@ fi
 log "Trusting the repository mise configuration"
 run mise trust "$REPO_ROOT/mise.toml"
 
-log "Installing locked runtimes and global CLIs"
+# The runtimes install first because other backends depend on them. The pipx
+# backend needs uv, and every npm-backed tool needs bun as its package manager.
+log "Installing locked language runtimes"
+run mise install uv bun node python java ruff
+
+log "Installing locked global CLIs"
 run mise install
 
 log "Applying managed dotfiles"
@@ -149,9 +154,6 @@ run mise bootstrap dotfiles apply --yes
 
 log "Installing Herdr agent integrations"
 run_script "$REPO_ROOT/scripts/install-herdr-integrations.sh"
-
-log "Configuring GitHub SSH authentication and commit signing"
-run_script "$REPO_ROOT/scripts/setup-github-ssh.sh"
 
 log "Installing managed editor extensions"
 run_script "$REPO_ROOT/scripts/install-editor-extensions.sh"
@@ -162,6 +164,11 @@ run mise bootstrap macos defaults apply --yes
 
 log "Applying dynamic and nested macOS settings"
 run_script "$REPO_ROOT/scripts/configure-macos.sh"
+
+# Every remaining stage needs the person at the keyboard, so they run together
+# once the unattended work is finished.
+log "Configuring GitHub SSH authentication and commit signing"
+run_script "$REPO_ROOT/scripts/setup-github-ssh.sh"
 
 log "Installing Raycast v2 Beta"
 run_script "$REPO_ROOT/scripts/install-raycast-beta.sh"
