@@ -23,6 +23,22 @@ if ! command -v brew >/dev/null 2>&1; then
   exit 1
 fi
 
+# Homebrew downloads with twice the number of CPU cores by default, and renders
+# those parallel downloads as a live progress display that moves the cursor up,
+# overwrites the previous rows, and leaves the last row without a newline. That
+# display owns the bottom of the screen and assumes nothing else writes to it,
+# which `brew bundle` breaks: it installs one package while it already downloads
+# the next, so cask output and the `sudo` password prompt land in the middle of
+# the redraw. From the first collision on, the cursor arithmetic is off by a row
+# and every later line, from Homebrew and from this setup alike, is printed at
+# the wrong column.
+#
+# Downloading in serial takes the plain, line-oriented code path instead, where
+# no output can be misplaced. It costs the overlap between the download of one
+# package and the installation of the previous one, which is a fair price for a
+# readable log on a run that installs a fresh Mac exactly once.
+export HOMEBREW_DOWNLOAD_CONCURRENCY=1
+
 log "Installing Homebrew formulae and casks"
 brew bundle --file "$REPO_ROOT/Brewfile"
 
