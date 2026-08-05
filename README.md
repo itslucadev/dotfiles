@@ -250,7 +250,6 @@ Homebrew installs these applications:
 - AltTab
 - Android Studio
 - Aqua Voice
-- Caffeine
 - ChatGPT
 - Claude Desktop
 - CleanMyMac
@@ -280,6 +279,7 @@ Homebrew installs these applications:
 - TextMate
 - Tower
 - Visual Studio Code
+- Vorssaint
 - WezTerm
 - WhatsApp
 

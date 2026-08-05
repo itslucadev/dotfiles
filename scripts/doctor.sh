@@ -203,7 +203,6 @@ for application_name in \
   "AltTab" \
   "Android Studio" \
   "Aqua Voice" \
-  "Caffeine" \
   "ChatGPT" \
   "Claude" \
   "CleanMyMac_5" \
@@ -236,6 +235,7 @@ for application_name in \
   "TextMate" \
   "Tower" \
   "Visual Studio Code" \
+  "Vorssaint" \
   "WezTerm" \
   "WhatsApp" \
   "YouTube Music" \

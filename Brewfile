@@ -73,7 +73,6 @@ cask "xykong/tap/flux-markdown", trusted: true
 # Productivity and system applications
 cask "alt-tab"
 cask "aqua-voice"
-cask "caffeine"
 cask "cleanmymac"
 cask "cleanshot"
 cask "linear"
@@ -82,6 +81,7 @@ cask "protonvpn"
 cask "raycast"
 cask "readdle-spark"
 cask "tailscale-app"
+cask "vorssaint"
 
 # Gaming
 cask "curseforge"

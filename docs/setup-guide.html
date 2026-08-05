@@ -711,6 +711,22 @@
         color: var(--text);
       }
 
+      .task-steps {
+        margin: 0.55rem 0 0;
+        padding-left: 1.2rem;
+        color: var(--subtle);
+        font-size: 0.83rem;
+        overflow-wrap: anywhere;
+      }
+
+      .task-steps li + li {
+        margin-top: 0.35rem;
+      }
+
+      .task-steps a {
+        color: var(--iris);
+      }
+
       .command {
         display: grid;
         overflow: hidden;
@@ -1837,7 +1853,7 @@ gh auth status</code></pre>
                       Nur von den offiziellen Seiten laden und nach
                       <code>/Applications</code> legen:
                     </p>
-                    <ul class="task-note" style="margin-top: 0.75rem; padding-left: 1.25rem;">
+                    <ul class="task-steps">
                       <li>
                         <a href="https://www.raycast.com/new" rel="noopener noreferrer" target="_blank">Raycast v2 Beta</a>
                         (Apple Silicon, macOS Tahoe oder neuer) — DMG laden, App nach
