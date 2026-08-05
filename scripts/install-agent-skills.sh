@@ -45,8 +45,14 @@ cleanup_checkouts() {
   local directory=""
 
   for directory in "${CHECKOUT_DIRECTORIES[@]-}"; do
-    [[ -n "$directory" ]] && rm -rf "$directory"
+    if [[ -n "$directory" ]]; then
+      rm -rf "$directory"
+    fi
   done
+
+  # An EXIT trap replaces the script's status with its own last command, so it
+  # has to end successfully or every run reports failure.
+  return 0
 }
 
 trap cleanup_checkouts EXIT
@@ -71,10 +77,10 @@ fetch_pinned_tree() {
   local commit="$2"
   local destination="$3"
 
-  git init --quiet "$destination"
-  git -C "$destination" remote add origin "https://github.com/${owner_repo}.git"
-  git -C "$destination" fetch --quiet --depth 1 origin "$commit"
-  git -C "$destination" checkout --quiet FETCH_HEAD
+  git init --quiet "$destination" </dev/null
+  git -C "$destination" remote add origin "https://github.com/${owner_repo}.git" </dev/null
+  GIT_TERMINAL_PROMPT=0 git -C "$destination" fetch --quiet --depth 1 origin "$commit" </dev/null
+  git -C "$destination" checkout --quiet FETCH_HEAD </dev/null
 }
 
 install_source() {
@@ -152,10 +158,12 @@ install_source() {
     command+=(--agent "$agent")
   done
 
+  # The caller reads the inventory on stdin, so every child gets /dev/null to
+  # keep it from consuming inventory lines.
   if [[ "$DRY_RUN" == true ]]; then
     print_command "${command[@]}"
   else
-    DISABLE_TELEMETRY=1 "${command[@]}"
+    DISABLE_TELEMETRY=1 "${command[@]}" </dev/null
   fi
 }
 

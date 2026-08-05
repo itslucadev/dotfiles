@@ -176,10 +176,10 @@ run_script "$REPO_ROOT/scripts/install-raycast-beta.sh"
 log "Installing Mac App Store applications"
 run_script "$REPO_ROOT/scripts/install-mas-apps.sh"
 
-# The agent skills run last: their installer verifies each target agent by
-# looking for its configuration directory, which only exists once the managed
-# dotfiles are in place. A failure here must not hide the setup doctor, which is
-# the one stage that reports what the whole run achieved.
+# The agent skills run last because they are the one stage nothing else depends
+# on, and because they link into the agent directories that the earlier stages
+# create. A failure here must not hide the setup doctor, which is the one stage
+# that reports what the whole run achieved.
 skills_failed=false
 
 log "Installing the pinned global agent skills"

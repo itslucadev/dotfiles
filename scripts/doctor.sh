@@ -101,8 +101,12 @@ check_agent_skills() {
   local skill_count=0
   local -a skills=()
   local -a missing=()
-  local -a target_directories=(
-    "$HOME/.agents/skills"
+  local -a unlinked=()
+  # The Skills CLI keeps one central store and links each agent into it. A
+  # missing skill in the store is a real failure; a missing agent link is worth
+  # reporting but does not mean the skill was never installed.
+  local store="$HOME/.agents/skills"
+  local -a agent_directories=(
     "$HOME/.claude/skills"
     "$HOME/.cursor/skills"
   )
@@ -121,18 +125,28 @@ check_agent_skills() {
     read -r -a skills <<<"$skill_names"
     for skill in "${skills[@]}"; do
       skill_count=$((skill_count + 1))
-      for target_directory in "${target_directories[@]}"; do
-        if [[ ! -f "$target_directory/$skill/SKILL.md" ]]; then
-          missing+=("${target_directory/#$HOME/\~}/$skill")
+
+      if [[ ! -f "$store/$skill/SKILL.md" ]]; then
+        missing+=("$skill")
+        continue
+      fi
+
+      for target_directory in "${agent_directories[@]}"; do
+        if [[ ! -e "$target_directory/$skill" ]]; then
+          unlinked+=("${target_directory/#$HOME/\~}/$skill")
         fi
       done
     done
   done <"$inventory"
 
-  if [[ "${#missing[@]}" -eq 0 ]]; then
-    pass "$skill_count managed agent skills are linked for Claude Code and Cursor"
+  if [[ "${#missing[@]}" -ne 0 ]]; then
+    fail "Managed agent skills missing from ~/.agents/skills: ${missing[*]}"
   else
-    fail "Managed agent skill links missing: ${missing[*]}"
+    pass "$skill_count managed agent skills are installed"
+  fi
+
+  if [[ "${#unlinked[@]}" -ne 0 ]]; then
+    warn "Agent skill links missing: ${unlinked[*]}"
   fi
 }
 
@@ -275,11 +289,10 @@ for application_name in \
   "Caffeine" \
   "ChatGPT" \
   "Claude" \
-  "CleanMyMac" \
+  "CleanMyMac_5" \
   "CleanShot X" \
   "CurseForge" \
   "Cursor" \
-  "Developer" \
   "Dia" \
   "Expo Orbit" \
   "FluxMarkdown" \
@@ -290,10 +303,11 @@ for application_name in \
   "Hoppscotch" \
   "IINA" \
   "ImageOptim" \
+  "Linear" \
   "LocalSend" \
   "Minecraft" \
   "MultiViewer" \
-  "Notability" \
+  "Obsidian" \
   "Obsidian Web Clipper" \
   "OpenUsage" \
   "ProtonVPN" \
@@ -302,7 +316,8 @@ for application_name in \
   "RocketSim" \
   "Spark Desktop" \
   "Tailscale" \
-  "TestFlight" \
+  "TextMate" \
+  "Tower" \
   "Visual Studio Code" \
   "WezTerm" \
   "WhatsApp" \

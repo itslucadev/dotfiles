@@ -40,9 +40,24 @@ install_editor_extensions() {
     return 1
   fi
 
+  # A failing --list-extensions would otherwise yield an empty list, which reads
+  # as "nothing is installed yet" and hides the real error.
   if [[ "$DRY_RUN" != true ]]; then
-    installed_extensions="$("$editor" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+    if ! installed_extensions="$("$editor" --list-extensions)"; then
+      printf 'Could not list installed extensions for %s\n' "$editor" >&2
+      return 1
+    fi
+    installed_extensions="$(printf '%s' "$installed_extensions" | tr '[:upper:]' '[:lower:]')"
   fi
+
+  # Calling this function inside an `if !` disables set -e for the whole body,
+  # so an unreadable inventory has to be caught explicitly.
+  for extension_file in "$@"; do
+    if [[ ! -r "$extension_file" ]]; then
+      printf 'Extension inventory is missing or unreadable: %s\n' "$extension_file" >&2
+      return 1
+    fi
+  done
 
   for extension_file in "$@"; do
     while IFS= read -r extension || [[ -n "$extension" ]]; do
