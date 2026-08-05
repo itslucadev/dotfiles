@@ -109,10 +109,6 @@ run = "./scripts/install-herdr-integrations.sh"
 description = "Install the managed VS Code and Cursor extensions"
 run = "./scripts/install-editor-extensions.sh"
 
-[tasks."github:ssh"]
-description = "Configure one SSH key for GitHub authentication and commit signing"
-run = "./scripts/setup-github-ssh.sh"
-
 [tasks.doctor]
 description = "Report setup status and remaining manual actions"
 run = "./scripts/doctor.sh"

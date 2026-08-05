@@ -85,18 +85,74 @@ if [[ "$REPO_ROOT" != "$EXPECTED_REPO_ROOT" && "$DRY_RUN" != true ]]; then
   exit 1
 fi
 
-# The Git identity is no longer a managed dotfile. The GitHub SSH stage needs it
-# to label the key, and that stage runs late, so the check happens here instead
-# of after everything else has already been installed.
-if [[ "$DRY_RUN" != true ]] &&
-  { ! git config --global user.name >/dev/null 2>&1 ||
-    ! git config --global user.email >/dev/null 2>&1; }; then
-  printf 'Configure the Git identity before running the setup.\n' >&2
-  printf 'It is set up by hand and is not part of this repository:\n' >&2
-  printf '  git config --global user.name "your-github-username"\n' >&2
-  printf '  git config --global user.email "your-github-noreply-address"\n' >&2
-  exit "$MANUAL_ACTION_EXIT"
-fi
+github_ssh_auth_works() {
+  local ssh_output=""
+
+  ssh_output="$(ssh -T git@github.com 2>&1 || true)"
+  grep -Fq 'successfully authenticated' <<<"$ssh_output"
+}
+
+github_manual_setup_ready() {
+  [[ -f "$HOME/.ssh/id_ed25519" && -f "$HOME/.ssh/id_ed25519.pub" ]] &&
+    ssh-keygen -lf "$HOME/.ssh/id_ed25519.pub" >/dev/null 2>&1 &&
+    [[ "$(awk 'NR == 1 { print $1 }' "$HOME/.ssh/id_ed25519.pub")" == "ssh-ed25519" ]] &&
+    git config --global --get user.name >/dev/null 2>&1 &&
+    git config --global --get user.email >/dev/null 2>&1 &&
+    github_ssh_auth_works
+}
+
+print_github_manual_setup_instructions() {
+  printf '\nConfigure Git and GitHub SSH by hand now.\n'
+  printf 'Homebrew has installed Git. Do the full checklist in README.md:\n'
+  printf '  Setting Git and SSH Up by Hand\n'
+  printf '\nMinimum required before this setup continues:\n'
+  printf '  1. git config --global user.name / user.email\n'
+  printf '  2. ~/.ssh/config and an Ed25519 key at ~/.ssh/id_ed25519\n'
+  printf '  3. Add the public key on GitHub as Authentication and Signing keys\n'
+  printf '  4. Verify with: ssh -T git@github.com\n'
+  printf '     Compare the host fingerprint with GitHub documentation first.\n'
+}
+
+ensure_github_manual_setup() {
+  if [[ "$DRY_RUN" == true ]]; then
+    print_github_manual_setup_instructions
+    printf '  + verify global Git identity\n'
+    printf '  + verify ~/.ssh/id_ed25519{,.pub}\n'
+    printf '  + verify ssh -T git@github.com authenticates\n'
+    return
+  fi
+
+  if github_manual_setup_ready; then
+    printf 'Git identity and GitHub SSH authentication are ready.\n'
+    return
+  fi
+
+  print_github_manual_setup_instructions
+
+  until github_manual_setup_ready; do
+    wait_for_manual_action \
+      "Finish the manual Git and GitHub SSH setup, then confirm." \
+      "./bootstrap.sh"
+
+    if ! git config --global --get user.name >/dev/null 2>&1 ||
+      ! git config --global --get user.email >/dev/null 2>&1; then
+      printf 'Global Git user.name or user.email is still missing.\n' >&2
+      continue
+    fi
+
+    if [[ ! -f "$HOME/.ssh/id_ed25519" || ! -f "$HOME/.ssh/id_ed25519.pub" ]]; then
+      printf 'Expected ~/.ssh/id_ed25519 and ~/.ssh/id_ed25519.pub.\n' >&2
+      continue
+    fi
+
+    if ! github_ssh_auth_works; then
+      printf 'ssh -T git@github.com did not report successful authentication.\n' >&2
+      continue
+    fi
+  done
+
+  printf 'Git identity and GitHub SSH authentication are ready.\n'
+}
 
 log "Checking Xcode Command Line Tools"
 if ! xcode-select -p >/dev/null 2>&1; then
@@ -146,6 +202,11 @@ run brew bundle cleanup \
   --tap \
   --file "$REPO_ROOT/Brewfile"
 
+# Git comes from Brewfile. Identity, the SSH key, GitHub registration, and
+# ssh -T are done by hand here before anything else that needs them.
+log "Waiting for manual Git identity and GitHub SSH setup"
+ensure_github_manual_setup
+
 if [[ "$DRY_RUN" != true ]] && ! command -v mise >/dev/null 2>&1; then
   printf 'mise was not found after applying Brewfile.\n' >&2
   exit 1
@@ -178,11 +239,8 @@ run mise bootstrap macos defaults apply --yes
 log "Applying dynamic and nested macOS settings"
 run_script "$REPO_ROOT/scripts/configure-macos.sh"
 
-# Every remaining stage needs the person at the keyboard, so they run together
-# once the unattended work is finished.
-log "Configuring GitHub SSH authentication and commit signing"
-run_script "$REPO_ROOT/scripts/setup-github-ssh.sh"
-
+# The remaining stages need the person at the keyboard for App Store and
+# application installs, so they run together once the unattended work finishes.
 log "Installing Raycast v2 Beta"
 run_script "$REPO_ROOT/scripts/install-raycast-beta.sh"
 

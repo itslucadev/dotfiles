@@ -377,15 +377,18 @@ else
   warn "Git SSH commit signing is not enabled with a signing key"
 fi
 
-github_ssh_status="$(
-  "$HOME/github/phoenix-error/dotfiles/scripts/setup-github-ssh.sh" \
-    --status 2>&1 || true
-)"
-
-if grep -Fq 'GitHub SSH key is configured locally.' <<<"$github_ssh_status"; then
-  pass "GitHub SSH key is configured locally"
+if [[ -f "$HOME/.ssh/id_ed25519" && -f "$HOME/.ssh/id_ed25519.pub" ]] &&
+  ssh-keygen -lf "$HOME/.ssh/id_ed25519.pub" >/dev/null 2>&1 &&
+  [[ "$(awk 'NR == 1 { print $1 }' "$HOME/.ssh/id_ed25519.pub")" == "ssh-ed25519" ]]; then
+  pass "GitHub SSH key pair exists locally"
 else
-  warn "GitHub SSH key or allowed signers file is missing"
+  warn "Create an Ed25519 key at ~/.ssh/id_ed25519 for GitHub authentication and signing"
+fi
+
+if [[ -f "$HOME/.ssh/allowed_signers" ]]; then
+  pass "SSH allowed signers file exists"
+else
+  warn "Create ~/.ssh/allowed_signers before enabling commit signing"
 fi
 
 # ~/.ssh/config is configured by hand. Asking ssh for the options it would
@@ -407,14 +410,6 @@ if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
   pass "GitHub CLI is authenticated"
 else
   warn "GitHub CLI is not authenticated"
-fi
-
-if grep -Fq \
-  'GitHub SSH key is registered for authentication and signing.' \
-  <<<"$github_ssh_status"; then
-  pass "GitHub SSH key is registered for authentication and signing"
-else
-  warn "GitHub SSH authentication or signing registration is incomplete"
 fi
 
 if command -v infisical >/dev/null 2>&1 &&

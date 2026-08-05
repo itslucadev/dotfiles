@@ -100,14 +100,14 @@ The current Mac can also be used for a final rehearsal immediately before it is 
 ## Quick Start on a New Mac
 
 > [!IMPORTANT]
-> **Configure Git before running the setup.**
+> **Git identity and GitHub SSH are set up by hand during bootstrap.**
 >
-> Git is deliberately not part of this repository. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are set up by hand, so a fresh Mac has no Git identity, no commit signing, and no SSH configuration until they are created.
+> Git is deliberately not part of this repository. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand, so a fresh Mac has no Git identity, no commit signing, and no SSH configuration until they are created.
 >
 > Cloning needs none of it. The repository is public and the command below clones over HTTPS.
-> `./bootstrap.sh` does need the identity. It verifies `user.name` and `user.email` before installing anything and stops with exit code 2 if either is missing, because the GitHub SSH stage labels the key with that address.
+> After `Brewfile` installs Git, `./bootstrap.sh` pauses for the manual Git and SSH checklist, then verifies the identity, the Ed25519 key, and `ssh -T git@github.com` before continuing.
 >
-> Do it first: [Setting Git and SSH Up by Hand](#setting-git-and-ssh-up-by-hand).
+> See: [Setting Git and SSH Up by Hand](#setting-git-and-ssh-up-by-hand).
 
 Sign in to the Mac with an administrator account and complete the initial macOS onboarding.
 
@@ -144,11 +144,11 @@ The global agent skills are installed by hand from [docs/agent-skills.md](docs/a
 The bootstrap:
 
 - Verifies Apple Silicon macOS.
-- Verifies that a global Git identity exists, before installing anything, because the GitHub SSH stage needs it and runs last.
 - Ensures the Xcode Command Line Tools are available.
 - Installs Homebrew when necessary.
 - Applies `Brewfile`.
 - Removes Homebrew formulae, casks, and taps that are not required by `Brewfile`.
+- Pauses for the manual Git identity and GitHub SSH setup, then verifies them before continuing.
 - Trusts the repository `mise.toml`.
 - Installs the locked language runtimes, then the locked global CLIs.
 - Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
@@ -156,7 +156,6 @@ The bootstrap:
 - Installs the saved VS Code and Cursor extensions through their native command-line interfaces.
 - Creates `~/Developer` and applies the confirmed macOS defaults.
 - Reserves shortcuts for Raycast and CleanShot.
-- Creates or reuses one Ed25519 key for GitHub authentication and commit signing, loads it through the macOS Keychain, and maintains the local allowed signers file.
 - Installs the signed Raycast v2 Beta beside Raycast v1.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
 - Runs the setup doctor.
@@ -165,7 +164,7 @@ It does not install agent skills. Those are a personal, fast-moving choice and a
 
 The runtimes install before the remaining CLIs because the other backends depend on them: the pipx backend needs uv, and every npm-backed tool needs bun as its package manager.
 
-The four stages that wait for a person run together near the end, so everything between Homebrew and the reserved shortcuts completes unattended.
+After the Git and SSH gate, the remaining unattended stages run until Raycast Beta and the Mac App Store installs, which again need a person at the keyboard.
 
 The Homebrew reconciliation uses regular cask uninstall behavior and never passes `--zap`, so application data and shared support files are preserved.
 
@@ -182,9 +181,7 @@ In a non-interactive environment, it stops with Exit code 2 and prints the comma
 The gated interactions are:
 
 - Finishing the Xcode Command Line Tools installer.
-- Choosing the passphrase for a newly generated SSH key.
-- Completing GitHub CLI browser login and approving the key-management scopes.
-- Comparing and accepting GitHub's SSH host fingerprint on the first connection.
+- Completing the manual Git identity and GitHub SSH checklist after `Brewfile` installs Git, including comparing GitHub's SSH host fingerprint on the first connection.
 - Signing in to the Mac App Store and claiming applications that the Apple Account has never downloaded.
 - Entering the administrator password when a signed application must be installed into `/Applications`.
 
@@ -209,14 +206,13 @@ The repository keeps configuration in the native declarative format of the tool 
 
 It installs the first dependencies needed before mise is available, then runs the remaining stages in the required order, because Homebrew must install mise before mise can orchestrate the rest.
 
-It calls six helper scripts that can change the Mac or connected accounts:
+It calls five helper scripts that can change the Mac or connected accounts:
 
 - `scripts/configure-macos.sh` owns the dynamic screenshot path and nested `AppleSymbolicHotKeys` dictionary that mise macOS defaults cannot represent correctly.
 - `scripts/install-editor-extensions.sh` installs the declarative extension inventories through the native VS Code and Cursor CLIs.
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
 - `scripts/install-raycast-beta.sh` installs and verifies Raycast Beta because it has no official Homebrew cask.
-- `scripts/setup-github-ssh.sh` configures the local SSH identity and registers its public key with GitHub for authentication and signing.
 
 The read-only `scripts/doctor.sh` inspects the result without configuring the Mac.
 
@@ -574,32 +570,16 @@ They are now written by hand on each machine and this repository holds no copy o
 The reason is ordering. A managed `~/.gitconfig` that enables commit signing is applied long before the key it signs with exists, and in that window `git commit` fails with `fatal: failed to write commit object`.
 Configuration that only works once a later stage has run is configuration this repository should not own.
 
-What remains automated is the part that genuinely benefits from it: creating the key, registering it with GitHub, and verifying the connection.
+Creating the key, registering it with GitHub, and verifying the connection are also manual.
+`./bootstrap.sh` only pauses after `Brewfile` installs Git, prints the checklist, and continues once the identity, the Ed25519 key, and `ssh -T git@github.com` succeed.
 
-`scripts/setup-github-ssh.sh` follows GitHub's documented macOS flow and owns the local key setup.
-
-It reads `user.email` from the global Git configuration to label the key and the allowed signers entry, and stops with exit code 2 when no identity is configured.
-
-It creates the Ed25519 key only when neither key file exists, asks interactively for a new passphrase, and prompts to unlock an existing encrypted key when required.
-It sets restrictive permissions, loads the key into the native SSH agent and macOS Keychain, and maintains `~/.ssh/allowed_signers`.
-
-The helper pauses for GitHub CLI browser authentication when needed and requests only the scopes required to manage authentication and signing keys.
-
-It registers the same public key as both an Authentication Key and a Signing Key.
-
-It checks GitHub before each upload, so rerunning `mise run github:ssh` does not create duplicate registrations.
-
-The helper also runs `ssh -T git@github.com`.
-On the first connection it waits while the user compares GitHub's published host fingerprint and accepts it.
-The bootstrap does not continue until local setup, both GitHub registrations, and SSH authentication have been verified.
-
-This implements the official [Connecting to GitHub with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) workflow.
+This follows the official [Connecting to GitHub with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) workflow.
 
 SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authentication state are never copied into this repository.
 
 ### Setting Git and SSH Up by Hand
 
-Do this on a new Mac before running `./bootstrap.sh`.
+Do this when `./bootstrap.sh` pauses after applying `Brewfile`, or earlier on a Mac that already has Homebrew Git.
 
 Set the identity. The GitHub Noreply address keeps the personal address private:
 
@@ -612,6 +592,8 @@ git config --global init.defaultBranch main
 Create `~/.ssh/config` so the key is loaded from the macOS Keychain and the passphrase is asked once rather than on every connection:
 
 ```sh
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
 cat > ~/.ssh/config <<'EOF'
 Host *
   AddKeysToAgent yes
@@ -628,13 +610,10 @@ EOF
 chmod 600 ~/.ssh/config
 ```
 
-From here `./bootstrap.sh` creates the key, registers it with GitHub, and verifies the connection.
-
-To do the key by hand as well, follow GitHub's documented macOS flow:
+Create the Ed25519 key, load it into the macOS Keychain, and copy the public key:
 
 ```sh
 ssh-keygen -t ed25519 -C "42442490+phoenix-error@users.noreply.github.com"
-eval "$(ssh-agent -s)"
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519
 pbcopy < ~/.ssh/id_ed25519.pub
 ```
@@ -648,23 +627,36 @@ Verify the connection, comparing the offered host fingerprint against [GitHub's 
 ssh -T git@github.com
 ```
 
-Doing the key by hand does not conflict with the bootstrap.
-`scripts/setup-github-ssh.sh` creates a key only when no private key exists and checks GitHub before each upload, so the automated stage finds the work already done and skips it.
+Press Return in the bootstrap terminal once authentication succeeds.
 
-Enable commit signing once the key exists, never before:
+Enable commit signing once the key exists, never before.
+Create the allowed signers file first so Git can verify local signatures:
 
 ```sh
+printf '%s %s\n' \
+  "$(git config --global --get user.email)" \
+  "$(awk 'NR == 1 { print $1 " " $2 }' ~/.ssh/id_ed25519.pub)" \
+  > ~/.ssh/allowed_signers
+chmod 644 ~/.ssh/allowed_signers
 git config --global gpg.format ssh
 git config --global user.signingkey ~/.ssh/id_ed25519.pub
 git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
 git config --global commit.gpgsign true
 ```
 
-Confirm the complete local and remote state at any time:
+Confirm the local pieces at any time:
 
 ```sh
-./scripts/setup-github-ssh.sh --status
+git config --global --get user.name
+git config --global --get user.email
+ls -l ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub ~/.ssh/allowed_signers
+ssh-keygen -lf ~/.ssh/id_ed25519.pub
+ssh -T git@github.com
+git config --global --get gpg.format
+git config --global --get commit.gpgsign
 ```
+
+GitHub CLI login is optional and can wait until a later workflow needs `gh`.
 
 ### Settings That Are No Longer Reproduced
 
@@ -769,17 +761,16 @@ These applications have no suitable Homebrew cask or Mac App Store entry in the 
 
 ### Git and GitHub
 
-- [ ] Set `user.name` and `user.email` before running the setup, as described in [Setting Git and SSH Up by Hand](#setting-git-and-ssh-up-by-hand).
+- [ ] When bootstrap pauses after `Brewfile`, complete [Setting Git and SSH Up by Hand](#setting-git-and-ssh-up-by-hand).
+- [ ] Set `user.name` and `user.email`.
 - [ ] Create `~/.ssh/config` so the key is loaded from the macOS Keychain.
+- [ ] Create `~/.ssh/id_ed25519`, load it with `ssh-add --apple-use-keychain`, and register the public key on GitHub for authentication and signing.
+- [ ] Compare the first-connection fingerprint with GitHub's published fingerprint and confirm `ssh -T git@github.com` succeeds before pressing Return in bootstrap.
+- [ ] Create `~/.ssh/allowed_signers` and enable commit signing after the key exists, never before.
 - [ ] Restore any wanted Git defaults from [Settings That Are No Longer Reproduced](#settings-that-are-no-longer-reproduced).
 - [ ] Run `git lfs install` to restore the Git LFS filter configuration.
-- [ ] Enable commit signing after the key exists, never before.
-- [ ] Confirm that bootstrap created `~/.ssh/id_ed25519` and prompted for a secure passphrase.
-- [ ] Confirm that bootstrap paused for GitHub CLI browser login when authentication was missing.
-- [ ] Confirm that bootstrap registered `~/.ssh/id_ed25519.pub` as both an Authentication Key and a Signing Key.
-- [ ] Confirm the complete local and GitHub state with `./scripts/setup-github-ssh.sh --status`.
-- [ ] Confirm that the first connection fingerprint was compared with GitHub's published fingerprint and `ssh -T git@github.com` succeeds.
 - [ ] Push a signed commit and confirm that GitHub displays it as verified.
+- [ ] Sign in with `gh auth login` later if a workflow needs the GitHub CLI.
 
 Never commit an alternate Git identity file, SSH private key, private SSH host inventory, or GitHub CLI authentication files.
 
