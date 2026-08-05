@@ -63,9 +63,8 @@ The bootstrap:
 - Removes Homebrew formulae, casks, and taps that are not required by `Brewfile`.
 - Installs GitHub CLI and the remaining native command-line tools.
 - Installs locked mise runtimes and global CLIs.
-- Installs the commit-pinned global skills for Claude Code and Cursor through BunX.
 - Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, Git, SSH, editor, Claude, and global agent dotfiles.
-- Installs the Herdr agent integrations for Claude Code, Cursor, and Pi.
+- Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
 - Creates or reuses one Ed25519 key for GitHub authentication and commit signing, loads it through the macOS Keychain, and maintains the local allowed signers file.
 - Installs the saved VS Code and Cursor extensions through their native command-line interfaces.
 - Links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
@@ -74,7 +73,10 @@ The bootstrap:
 - Reserves shortcuts for Raycast and CleanShot.
 - Installs the signed Raycast v2 Beta beside Raycast v1.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
+- Installs the commit-pinned global skills for Claude Code and Cursor through BunX, and the NotebookLM skill through its own CLI.
 - Runs the setup doctor.
+
+The agent skills run last on purpose. Their installer verifies each target agent by looking for its configuration directory, and those directories only exist once the managed dotfiles are in place.
 
 The Homebrew reconciliation uses regular cask uninstall behavior and never passes `--zap`, so application data and shared support files are preserved.
 
@@ -215,7 +217,7 @@ Only Hack Nerd Font is installed. The Fira Code, JetBrains Mono, Meslo, and Symb
 
 Raycast v2 Beta comes from Raycast's official signed disk image because no official Homebrew cask exists.
 
-The bootstrap installs Rosetta 2 when necessary because the current Minecraft launcher is still built for Intel Macs.
+The setup does not install Rosetta 2. No managed cask declares an Intel requirement, and Minecraft Java Edition has shipped a native Apple Silicon launcher since version 1.19 in June 2022.
 
 GatherOS, Maestro Studio, Recordly, and SimCam are direct-download applications covered by the manual setup checklist.
 

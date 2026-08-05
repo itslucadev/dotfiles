@@ -122,11 +122,6 @@ fi
 
 cd "$REPO_ROOT"
 
-log "Checking Rosetta 2 for Minecraft"
-if ! pkgutil --pkg-info com.apple.pkg.RosettaUpdateAuto >/dev/null 2>&1; then
-  run softwareupdate --install-rosetta --agree-to-license
-fi
-
 log "Installing Homebrew formulae and casks"
 run brew bundle --file "$REPO_ROOT/Brewfile"
 
@@ -148,13 +143,6 @@ run mise trust "$REPO_ROOT/mise.toml"
 
 log "Installing locked runtimes and global CLIs"
 run mise install
-
-log "Installing the pinned global agent skills"
-if [[ "$DRY_RUN" == true ]]; then
-  "$REPO_ROOT/scripts/install-agent-skills.sh" --dry-run
-else
-  mise exec -- "$REPO_ROOT/scripts/install-agent-skills.sh"
-fi
 
 log "Applying managed dotfiles"
 run mise bootstrap dotfiles apply --yes
@@ -180,6 +168,16 @@ run_script "$REPO_ROOT/scripts/install-raycast-beta.sh"
 
 log "Installing Mac App Store applications"
 run_script "$REPO_ROOT/scripts/install-mas-apps.sh"
+
+# The agent skills run last: their installer verifies each target agent by
+# looking for its configuration directory, which only exists once the managed
+# dotfiles are in place.
+log "Installing the pinned global agent skills"
+if [[ "$DRY_RUN" == true ]]; then
+  "$REPO_ROOT/scripts/install-agent-skills.sh" --dry-run
+else
+  mise exec -- "$REPO_ROOT/scripts/install-agent-skills.sh"
+fi
 
 log "Setup status"
 if [[ "$DRY_RUN" == true ]]; then
