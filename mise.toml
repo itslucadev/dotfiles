@@ -44,20 +44,27 @@ _.path = [
   "{{ env.HOME }}/Library/Android/sdk/platform-tools",
 ]
 
+# An entry without a source mirrors its home-relative target under
+# `dotfiles.root`, which is absolute above. An explicit source has to be
+# absolute too: mise resolves a relative one against the directory of the
+# configuration file that declares the entry, and this file is declared through
+# the ~/.config/mise/config.toml symlink, which mise does not follow. A relative
+# source would therefore be looked up under ~/.config/mise instead of the
+# repository.
 [dotfiles]
-"~/.agents.md" = { source = "home/AGENTS.md" }
-"~/.claude/CLAUDE.md" = { source = "home/AGENTS.md" }
+"~/.agents.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
+"~/.claude/CLAUDE.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.claude/rules/context7.md" = {}
 "~/.claude/settings.json" = {}
 "~/.claude/statusline.ts" = {}
 "~/.config/ghostty" = {}
 "~/.config/herdr/config.toml" = {}
-"~/.homebrew/Brewfile" = { source = "Brewfile" }
+"~/.homebrew/Brewfile" = { source = "~/github/phoenix-error/dotfiles/Brewfile" }
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}
 "~/.config/wezterm/wezterm.lua" = {}
-"~/Library/Application Support/Code/User/settings.json" = { source = "home/.config/editors/settings.json" }
-"~/Library/Application Support/Cursor/User/settings.json" = { source = "home/.config/editors/settings.json" }
+"~/Library/Application Support/Code/User/settings.json" = { source = "~/github/phoenix-error/dotfiles/home/.config/editors/settings.json" }
+"~/Library/Application Support/Cursor/User/settings.json" = { source = "~/github/phoenix-error/dotfiles/home/.config/editors/settings.json" }
 "~/.zprofile" = {}
 "~/.zsh_plugins.txt" = {}
 "~/.zshrc" = {}
