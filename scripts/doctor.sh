@@ -336,9 +336,9 @@ if [[ "$local_override_found" == false ]]; then
 fi
 
 if xcode-select -p 2>/dev/null | grep -Fq "/Applications/Xcode.app/"; then
-  pass "Stable Xcode is the active developer directory"
+  pass "Xcode is the active developer directory"
 else
-  warn "Select stable Xcode with xcode-select after its first launch"
+  warn "Launch Xcode once so it becomes the active developer directory"
 fi
 
 if git config --global user.name >/dev/null 2>&1 &&

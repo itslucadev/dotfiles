@@ -351,7 +351,7 @@ Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI
 
 The interactive shell tools Antidote, bat, eza, fd, FZF, ripgrep, Starship, and Zoxide are covered in the shell section below.
 
-The Mac App Store installs Actions, Folder Quick Look, Helm, Obsidian Web Clipper, RocketSim, Timepage, and stable Xcode.
+The Mac App Store installs Actions, Folder Quick Look, Helm, Obsidian Web Clipper, RocketSim, Timepage, and Xcode.
 
 Apple Developer, TestFlight, Notability, Magnet, Mela, Arc, Slack, Figma, the Affinity suite, GitHub Desktop, Parsec, Proton Pass, KeepingYouAwake, Stats, and Stremio are deliberately excluded. Raycast Window Management replaces Magnet.
 
@@ -363,7 +363,7 @@ The setup does not install Rosetta 2. No managed cask declares an Intel requirem
 
 Maestro Studio, Recordly, SimCam, and Raycast v2 Beta have no suitable Homebrew cask or Mac App Store entry and are downloaded by hand in [the setup guide](docs/setup-guide.html).
 
-Sentry Spotlight and Xcode Beta are excluded as well.
+Sentry Spotlight is excluded as well.
 
 ## Managed Runtimes and Global CLIs
 
@@ -422,7 +422,7 @@ XcodeGen is intentionally not installed because React Native does not require it
 
 The repository installs the containers for the iOS and Android toolchains and nothing inside them.
 
-Homebrew installs Android Studio, the Mac App Store installs stable Xcode, and mise installs Zulu JDK 17.
+Homebrew installs Android Studio, the Mac App Store installs Xcode, and mise installs Zulu JDK 17.
 The shell configuration exposes `ANDROID_HOME`, `emulator`, and `platform-tools`, and mise exposes `JAVA_HOME` for Zulu JDK 17 wherever its shell activation is active.
 
 It does not install Android SDK packages, accept Android licenses, create an emulator, install a Simulator runtime, or accept the Xcode license.
@@ -434,8 +434,6 @@ Android Studio must use `~/Library/Android/sdk`, which is the path the shell con
 [React Native currently recommends Zulu JDK 17](https://reactnative.dev/docs/set-up-your-environment?platform=android).
 
 [mise installs that JDK and automatically points `JAVA_HOME` at the active Java installation](https://mise.jdx.dev/lang/java.html), so the separate Homebrew `zulu@17` cask is intentionally unnecessary.
-
-Xcode Beta is deliberately kept out of the active developer path.
 
 The Xcode and Android Studio phases of [the setup guide](docs/setup-guide.html) walk through the onboarding both applications need.
 
