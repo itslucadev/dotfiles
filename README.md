@@ -58,7 +58,7 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 | Dotfiles and macOS defaults | mise | `mise.toml` and `home/` |
 | Bare-metal initialization | Bash | `bootstrap.sh` |
 | Managed setup stages | mise | `mise.toml` task `setup` and `[bootstrap.hooks]` |
-| Git identity, signing, SSH | you, by hand | nothing here, [see why](#declarative-ownership) |
+| Git identity and SSH | you, by hand | nothing here, [see why](#declarative-ownership) |
 | Every manual step on a new Mac | you, by hand | [`docs/setup-guide.html`](docs/setup-guide.html) |
 
 ## Contents
@@ -253,7 +253,7 @@ The repository keeps configuration in the native declarative format of the tool 
 - `mise.lock` contains the resolved mise tool versions. Only mise writes it, it is local to each machine, and it is not tracked.
 - `home/` contains public configuration that mise symlinks into the home directory.
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
-- Git owns nothing here. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand. A managed `~/.gitconfig` that enables commit signing would be applied long before the key it signs with exists, and in that window `git commit` fails with `fatal: failed to write commit object`. Configuration that only works once a later stage has run is configuration this repository should not own. SSH private keys, `known_hosts`, `authorized_keys`, `allowed_signers`, and authentication state are never copied here either.
+- Git owns nothing here. `~/.gitconfig`, `~/.config/git/ignore`, and `~/.ssh/config` are written by hand. A managed `~/.gitconfig` carrying an identity would be applied long before the person it names has decided on one, and configuration that only works once a later stage has run is configuration this repository should not own. SSH private keys, `known_hosts`, `authorized_keys`, and authentication state are never copied here either. Commit signing is not part of this setup at all: nothing depends on it, and GitHub accepts unsigned pushes.
 
 `bootstrap.sh` runs once per Mac, or again after a macOS upgrade removed the Xcode Command Line Tools.
 

@@ -1665,7 +1665,7 @@ echo "$PATH" | tr ':' '\n' | grep "$ANDROID_HOME"</code></pre>
               <span class="phase-index">05</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Git, SSH und GitHub</span>
-                <span>Private Identität lokal halten, Auth und Signing aktivieren</span>
+                <span>Private Identität lokal halten und Auth einrichten</span>
               </span>
               <span class="phase-meter">
                 <span class="phase-meter-track"><span class="phase-meter-fill"></span></span>
@@ -1769,14 +1769,13 @@ ssh-keygen -lf ~/.ssh/id_ed25519.pub</code></pre>
                   <input class="task-check" type="checkbox" aria-label="GitHub Authentication und Signing Key hinterlegt" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Public Key bei GitHub für Auth und Signing hinterlegen</h3>
+                      <h3 class="task-title">Public Key bei GitHub hinterlegen</h3>
                       <span class="badge manual">Manuell</span>
                     </div>
                     <p class="task-note">
                       Den kopierten Schlüssel unter
                       <a href="https://github.com/settings/keys">GitHub SSH and GPG keys</a>
-                      zweimal hinzufügen: einmal als Authentication Key und einmal als Signing Key.
-                      Nur Authentication reicht nicht für verifizierte Commits.
+                      als Authentication Key hinzufügen.
                     </p>
                   </div>
                 </article>
@@ -1799,55 +1798,6 @@ ssh-keygen -lf ~/.ssh/id_ed25519.pub</code></pre>
                       <code>successfully authenticated</code> im Bootstrap-Terminal Return drücken.
                       Der Bootstrap prüft Identität, Schlüsseldateien und diesen SSH-Test, bevor
                       er fortsetzt.
-                    </p>
-                  </div>
-                </article>
-
-                <article class="task" data-task-id="git-signing-enable">
-                  <input class="task-check" type="checkbox" aria-label="Commit-Signing aktiviert" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Commit-Signing aktivieren, erst nach dem Schlüssel</h3>
-                      <span class="badge manual">Manuell</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>printf '%s %s\n' \
-  "$(git config --global --get user.email)" \
-  "$(awk 'NR == 1 { print $1 " " $2 }' ~/.ssh/id_ed25519.pub)" \
-  &gt; ~/.ssh/allowed_signers
-chmod 644 ~/.ssh/allowed_signers
-git config --global gpg.format ssh
-git config --global user.signingkey ~/.ssh/id_ed25519.pub
-git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
-git config --global commit.gpgsign true</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Nicht früher ausführen. Ist <code>commit.gpgsign</code> aktiv, bevor
-                      <code>~/.ssh/id_ed25519</code> existiert, scheitert jeder Commit mit
-                      <code>fatal: failed to write commit object</code>.
-                    </p>
-                  </div>
-                </article>
-
-                <article class="task" data-task-id="git-signing">
-                  <input class="task-check" type="checkbox" aria-label="Git Signing lokal konfiguriert" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Lokalen Signing-Status prüfen</h3>
-                      <span class="badge manual">Prüfung</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>ls -l ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub ~/.ssh/allowed_signers
-ssh-keygen -lf ~/.ssh/id_ed25519.pub
-git config --global --get gpg.format
-git config --global --get commit.gpgsign
-git log --show-signature -1</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Erwartet werden <code>ssh</code>, <code>true</code> und nach dem ersten Push
-                      ein von GitHub als <strong>Verified</strong> angezeigter Commit.
                     </p>
                   </div>
                 </article>

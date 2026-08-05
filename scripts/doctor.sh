@@ -354,25 +354,16 @@ else
   warn "Global Git name or email is missing"
 fi
 
-if [[ "$(git config --global --bool commit.gpgsign 2>/dev/null)" == "true" ]] &&
-  git config --global user.signingkey >/dev/null 2>&1; then
-  pass "Git SSH commit signing is enabled"
-else
-  warn "Git SSH commit signing is not enabled with a signing key"
-fi
-
+# Commit signing is deliberately not part of this setup. Nothing here depends
+# on it, GitHub accepts unsigned pushes, and the only thing it buys is the
+# Verified badge. The key below is checked for authentication alone, which is
+# what the bootstrap gate and every `git push` actually need.
 if [[ -f "$HOME/.ssh/id_ed25519" && -f "$HOME/.ssh/id_ed25519.pub" ]] &&
   ssh-keygen -lf "$HOME/.ssh/id_ed25519.pub" >/dev/null 2>&1 &&
   [[ "$(awk 'NR == 1 { print $1 }' "$HOME/.ssh/id_ed25519.pub")" == "ssh-ed25519" ]]; then
   pass "GitHub SSH key pair exists locally"
 else
-  warn "Create an Ed25519 key at ~/.ssh/id_ed25519 for GitHub authentication and signing"
-fi
-
-if [[ -f "$HOME/.ssh/allowed_signers" ]]; then
-  pass "SSH allowed signers file exists"
-else
-  warn "Create ~/.ssh/allowed_signers before enabling commit signing"
+  warn "Create an Ed25519 key at ~/.ssh/id_ed25519 for GitHub authentication"
 fi
 
 # ~/.ssh/config is configured by hand. Asking ssh for the options it would

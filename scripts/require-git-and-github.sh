@@ -64,7 +64,7 @@ print_github_manual_setup_instructions() {
   detail '~/.ssh/config and a key pair at ~/.ssh/id_ed25519'
 
   item 3 "Register the public key on GitHub"
-  detail 'Add it twice, as an Authentication key and as a Signing key'
+  detail 'Add it as an Authentication key'
 
   item 4 "Run the connection once yourself"
   detail 'Compare the host fingerprint with GitHub documentation, then answer'
