@@ -1,4 +1,40 @@
-# macOS Dotfiles
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/graph.svg?title=macOS%20Dotfiles&subtitle=One%20bootstrap%20command%2C%20orchestrated%20by%20mise%20and%20Homebrew&logo=apple&logoColor=c4a7e7&bg=232136&titleColor=e0def4&subtitleColor=908caa&accent=c4a7e7&align=left&font=inter" />
+    <img alt="macOS Dotfiles - one bootstrap command, orchestrated by mise and Homebrew" src="https://shieldcn.dev/header/graph.svg?title=macOS%20Dotfiles&subtitle=One%20bootstrap%20command%2C%20orchestrated%20by%20mise%20and%20Homebrew&logo=apple&logoColor=907aa9&bg=faf4ed&titleColor=575279&subtitleColor=797593&accent=907aa9&align=left&font=inter" />
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/platform-Apple%20Silicon.svg?variant=secondary&color=2a273f&logo=apple&logoColor=c4a7e7&mode=dark" />
+    <img alt="platform: Apple Silicon" src="https://shieldcn.dev/badge/platform-Apple%20Silicon.svg?variant=secondary&logo=apple&logoColor=907aa9&mode=light" />
+  </picture>
+  <a href="https://mise.jdx.dev">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/orchestrator-mise.svg?variant=secondary&color=2a273f&logo=ri:RiStackLine&logoColor=9ccfd8&mode=dark" />
+      <img alt="orchestrator: mise" src="https://shieldcn.dev/badge/orchestrator-mise.svg?variant=secondary&logo=ri:RiStackLine&logoColor=286983&mode=light" />
+    </picture>
+  </a>
+  <a href="https://brew.sh">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/packages-Homebrew.svg?variant=secondary&color=2a273f&logo=homebrew&logoColor=f6c177&mode=dark" />
+      <img alt="packages: Homebrew" src="https://shieldcn.dev/badge/packages-Homebrew.svg?variant=secondary&logo=homebrew&logoColor=b4637a&mode=light" />
+    </picture>
+  </a>
+  <a href="https://www.zsh.org">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/shell-Zsh.svg?variant=secondary&color=2a273f&logo=zsh&logoColor=ea9a97&mode=dark" />
+      <img alt="shell: Zsh" src="https://shieldcn.dev/badge/shell-Zsh.svg?variant=secondary&logo=zsh&logoColor=d7827e&mode=light" />
+    </picture>
+  </a>
+  <a href="https://github.com/phoenix-error/dotfiles/commits/main">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/last-commit/phoenix-error/dotfiles.svg?variant=secondary&color=2a273f&mode=dark" />
+      <img alt="last commit" src="https://shieldcn.dev/github/last-commit/phoenix-error/dotfiles.svg?variant=secondary&mode=light" />
+    </picture>
+  </a>
+</p>
 
 This public repository configures Luca's personal Apple Silicon Mac for terminal work, AI agents, and React Native development.
 
@@ -12,11 +48,49 @@ Fuzzy versions must be at least seven days old before mise selects them, which l
 
 Each machine keeps its own `mise.lock`, which mise writes and this repository does not track.
 
+## At a Glance
+
+| Layer | Owned by | Declared in |
+| --- | --- | --- |
+| Applications, fonts, native CLIs | Homebrew | `Brewfile` |
+| Mac App Store applications | mas | `Brewfile.mas` |
+| Runtimes and global CLIs | mise | `mise.toml` |
+| Dotfiles and macOS defaults | mise | `mise.toml` and `home/` |
+| Setup entry point | Bash | `bootstrap.sh` |
+
+## Contents
+
+**Setup**
+[Quick Start](#quick-start-on-a-new-mac) ·
+[What the Bootstrap Does](#what-the-bootstrap-does) ·
+[Manual Interaction Gates](#manual-interaction-gates) ·
+[Declarative Ownership](#declarative-ownership) ·
+[Reapply Changes](#reapply-changes)
+
+**Inventory**
+[Managed Applications](#managed-applications) ·
+[Runtimes and Global CLIs](#managed-runtimes-and-global-clis) ·
+[Shell and Terminal](#shell-and-terminal) ·
+[VS Code and Cursor](#vs-code-and-cursor) ·
+[Agent Configuration](#agent-configuration) ·
+[Global Agent Skills](#global-agent-skills)
+
+**Operations**
+[Git and SSH](#git-and-ssh) ·
+[Secrets with Infisical](#secrets-with-infisical) ·
+[Manual Setup Checklist](#manual-setup-checklist) ·
+[Safe Test Strategy](#safe-test-strategy) ·
+[Keyboard Shortcuts](#keyboard-shortcuts) ·
+[Homebrew 6 Trust](#homebrew-6-trust) ·
+[Updating Tool Versions](#updating-tool-versions) ·
+[Repository Validation](#repository-validation) ·
+[Public Repository Safety](#public-repository-safety)
+
 ## Status
 
-The repository is prepared on the current Mac without running the setup there.
-
-No real setup command has been run on the current Mac while preparing this repository.
+> [!IMPORTANT]
+> The repository is prepared on the current Mac without running the setup there.
+> No real setup command has been run on the current Mac while preparing this repository.
 
 The recommended first complete acceptance test is a disposable macOS VM or a spare Mac.
 
@@ -85,7 +159,7 @@ The Homebrew reconciliation uses regular cask uninstall behavior and never passe
 
 It does not remove manually installed applications outside Homebrew or write directly to the macOS privacy database.
 
-## Manual interaction gates
+## Manual Interaction Gates
 
 The bootstrap treats every manual prerequisite for a later automated stage as a gate.
 
@@ -804,8 +878,6 @@ Never commit:
 
 - Passwords or API tokens
 - SSH private keys
-- `~/.gitconfig.local`
-- `~/.ssh/config.local`
 - `.env` files
 - `.npmrc`
 - GitHub CLI authentication state
