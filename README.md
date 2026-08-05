@@ -119,6 +119,9 @@ cd ~/github/phoenix-error/dotfiles
 ./bootstrap.sh
 ```
 
+Run both commands as the ordinary user account and never with `sudo`.
+`bootstrap.sh` declines a privileged run and asks for the password once, at the single point that needs administrator rights.
+
 Open a new terminal, then apply the setup:
 
 ```sh
@@ -146,14 +149,23 @@ The global agent skills are installed by hand from [docs/agent-skills.md](docs/a
 
 `./bootstrap.sh` is bare-metal initialization and installs only what cannot come from managed configuration, because nothing that could install it exists yet:
 
-- Verifies Apple Silicon macOS and the expected clone path.
+- Verifies Apple Silicon macOS, the expected clone path, and that it was not started as root.
 - Ensures the Xcode Command Line Tools are available.
-- Installs Homebrew from `https://brew.sh` when necessary.
+- Installs Homebrew from `https://brew.sh` when necessary, after requesting administrator rights once.
 - Installs mise into `~/.local/bin/mise` when necessary, with the committed copy of the `https://mise.run` installer in `scripts/setup-mise.sh`.
 - Trusts the repository `mise.toml`.
 - Links `~/.zprofile`, `~/.zshrc`, and `~/.zsh_plugins.txt`, the files that put Homebrew and mise on `PATH` and that the shell configuration reads.
 
 Then it stops. It installs no declared package and applies no other configuration.
+
+Exactly one of those steps needs administrator rights, and the script escalates only there.
+Homebrew owns `/opt/homebrew`, which only root can create, so its installer escalates with `sudo` itself and refuses to be run as root at all.
+`bootstrap.sh` therefore asks for the password with `sudo -v` right before it starts the installer, and runs the installer unprivileged.
+
+Everything else stays unprivileged on purpose.
+`xcode-select --install` only asks macOS to open the installer dialog, and the privileged part runs in the system installer.
+The mise installer writes to `~/.local/bin`, and `mise trust` and the dotfile links write to the mise trust store and the home directory.
+A run under `sudo` would leave all of that owned by root and break every later `mise run setup`, so the script refuses a privileged run before it changes anything.
 
 mise.run is the method the mise documentation recommends for macOS, with Homebrew listed only as the alternative.
 The official binaries are built with the optimized release profile, are updatable with `mise self-update`, and are available immediately after a release.
@@ -212,11 +224,12 @@ The setup treats every manual prerequisite for a later automated stage as a gate
 In an interactive terminal, it pauses at the gate, explains the required action, waits for completion, verifies the result, and only then continues.
 
 In a non-interactive environment, it stops with Exit code 2 and prints the command that must be rerun after the action is complete.
-That command is `./bootstrap.sh` for the Command Line Tools gate and `mise run setup` for the later ones.
+That command is `./bootstrap.sh` for the two initialization gates and `mise run setup` for the later ones.
 
 The gated interactions are:
 
 - Finishing the Xcode Command Line Tools installer.
+- Confirming administrator rights before Homebrew creates `/opt/homebrew`, which needs `sudo -v` first in a non-interactive environment.
 - Completing the manual Git identity and GitHub SSH checklist after `Brewfile` installs Git, including comparing GitHub's SSH host fingerprint on the first connection.
 - Signing in to the Mac App Store and claiming applications that the Apple Account has never downloaded.
 

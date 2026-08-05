@@ -33,6 +33,12 @@ Only add a stage to `bootstrap.sh` when it must run before mise exists. Everythi
 
 Do not add a third setup entry point.
 
+`bootstrap.sh` runs as the ordinary user and refuses to start as root, because the Homebrew installer refuses a root run and everything after it writes into the user's home directory.
+
+Homebrew is the only stage that needs administrator rights, and it gets them from a single `sudo -v` before its installer runs.
+
+Do not add `sudo` to another stage, do not remove the root guard, and do not make `--dry-run` ask for a password.
+
 ## Package Manager Ownership
 
 Every tool has exactly one installation channel. Decide it with this rule, in order:

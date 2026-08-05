@@ -1265,7 +1265,9 @@
                     </div>
                     <p class="task-note">
                       Falls die Tools beim Bootstrap noch fehlen, öffnet er den Installer
-                      und wartet hier, bis die Installation bestätigt werden kann.
+                      und wartet hier, bis die Installation bestätigt werden kann. Der Befehl
+                      braucht kein <code>sudo</code>, das Installationsfenster von macOS holt
+                      sich die Rechte selbst.
                     </p>
                   </div>
                 </article>
@@ -1349,6 +1351,12 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                       Homebrew und mise, verlinkt <code>~/.zprofile</code> und
                       <code>~/.zshrc</code> und hört dann auf. Danach neues Terminal öffnen,
                       damit die Shell brew und mise findet.
+                    </p>
+                    <p class="task-note">
+                      Nicht mit <code>sudo</code> starten. Das Skript lehnt einen Lauf als
+                      Root ab, weil der Homebrew-Installer das ebenfalls verweigert und alles
+                      Weitere dem eigenen Benutzer gehören muss. Es fragt das Passwort genau
+                      einmal ab, direkt bevor Homebrew <code>/opt/homebrew</code> anlegt.
                     </p>
                     <div class="command">
                       <pre><code>mise run setup</code></pre>

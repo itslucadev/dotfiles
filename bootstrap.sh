@@ -39,6 +39,33 @@ usage() {
   printf 'Usage: %s [--dry-run]\n' "${0##*/}"
 }
 
+# Homebrew owns /opt/homebrew, which only root can create, so its installer
+# escalates with sudo on its own. Under NONINTERACTIVE=1 it validates that
+# access with `sudo -n` and aborts with "Need sudo access on macOS" when no
+# credentials are cached, which is why the password is requested here, once,
+# before the installer starts. The installer itself stays unprivileged, so
+# everything it creates keeps belonging to the invoking user.
+require_sudo_access() {
+  if sudo -n true 2>/dev/null; then
+    return 0
+  fi
+
+  if [[ ! -t 0 ]]; then
+    printf '\nHomebrew needs administrator rights to create /opt/homebrew.\n' >&2
+    printf 'An interactive terminal is required.\n' >&2
+    printf 'Run `sudo -v`, then run: ./bootstrap.sh\n' >&2
+    exit "$MANUAL_ACTION_EXIT"
+  fi
+
+  printf '\nHomebrew needs administrator rights to create /opt/homebrew.\n'
+  printf 'Enter the password of %s. The installer itself runs unprivileged.\n' "$(id -un)"
+
+  if ! sudo -v; then
+    printf 'Administrator rights are required to install Homebrew.\n' >&2
+    exit 1
+  fi
+}
+
 for argument in "$@"; do
   case "$argument" in
     --dry-run)
@@ -54,6 +81,19 @@ for argument in "$@"; do
       ;;
   esac
 done
+
+# Everything this script installs belongs to the invoking user. Homebrew's
+# installer refuses to run as root outright, and the mise installer, `mise
+# trust`, and the dotfile links all write into the home directory, where
+# root-owned copies would break every later `mise run setup`. So the script
+# declines a privileged run here instead of failing halfway through, and asks
+# for a password only at the one stage that genuinely needs one.
+if [[ "$EUID" -eq 0 ]]; then
+  printf 'Do not run this script as root.\n' >&2
+  printf 'Run it without sudo, as %s.\n' "${SUDO_USER:-your ordinary user account}" >&2
+  printf 'It asks for a password once, when Homebrew needs administrator rights.\n' >&2
+  exit 1
+fi
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   printf 'This setup supports macOS only.\n' >&2
@@ -72,6 +112,10 @@ fi
 
 cd "$REPO_ROOT"
 
+# `xcode-select --install` needs no elevation. It only asks macOS to open the
+# installer dialog, and the privileged part runs in the system installer, which
+# authorizes itself. Only `--switch` and `--reset` require superuser rights, and
+# this setup never calls either.
 log "Checking Xcode Command Line Tools"
 if ! xcode-select -p >/dev/null 2>&1; then
   if [[ "$DRY_RUN" == true ]]; then
@@ -89,8 +133,10 @@ fi
 log "Checking Homebrew"
 if ! command -v brew >/dev/null 2>&1 && [[ ! -x /opt/homebrew/bin/brew ]]; then
   if [[ "$DRY_RUN" == true ]]; then
+    printf '  + request administrator rights for /opt/homebrew with sudo -v\n'
     printf '  + install Homebrew from https://brew.sh\n'
   else
+    require_sudo_access
     homebrew_installer="$(mktemp)"
     curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$homebrew_installer"
     NONINTERACTIVE=1 /bin/bash "$homebrew_installer"
@@ -117,6 +163,10 @@ fi
 # than downloading and running the script unseen on every fresh Mac. Refresh it
 # with `mise run update:mise-installer`. The pinned version it installs matters
 # only for a few seconds, because the setup runs `mise self-update` first.
+#
+# This stage and the two mise stages after it need no elevation. They write to
+# ~/.local/bin, to the mise trust store, and to the linked dotfiles, all of
+# which belong to the invoking user.
 log "Checking mise"
 if [[ ! -x "$MISE_BIN" ]]; then
   if [[ "$DRY_RUN" == true ]]; then
