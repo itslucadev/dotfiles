@@ -332,7 +332,7 @@ mise manages:
 - EAS CLI
 - gh-axi
 - Lavish CLI
-- NotebookLM CLI
+- Gemini Notebook CLI
 - PostHog CLI
 - Prettier
 - Pyright
@@ -343,7 +343,9 @@ mise manages:
 - TypeScript Language Server
 - Vercel CLI
 
-The NotebookLM CLI is the one Python-backed entry. It is installed from PyPI as `notebooklm-mcp-cli` and provides the `nlm` command plus the NotebookLM skill.
+The Gemini Notebook CLI is the one Python-backed entry.
+It is installed from PyPI as `notebooklm-mcp-cli` and provides `nlm`, the `notebooklm-mcp` MCP server, and the bundled Gemini Notebook skill.
+See [jacob-bd/gemini-notebook-mcp-cli](https://github.com/jacob-bd/gemini-notebook-mcp-cli).
 
 All npm-backed CLIs, including Biome and Prettier, are installed by Bun through mise.
 
@@ -504,7 +506,7 @@ This gives the supported agents the same global working rules without maintainin
 
 `~/.claude/CLAUDE.md` is a symlink to the same repository source as the global `~/.agents.md`.
 
-The global instructions also name the command-line wrappers that agents must prefer over their built-in tools: `gh-axi` instead of `gh`, `lavish-axi` for visual review surfaces, `chrome-devtools-axi` for driving Chrome, `ctx7` for library documentation, and `nlm` for NotebookLM.
+The global instructions also name the command-line wrappers that agents must prefer over their built-in tools: `gh-axi` instead of `gh`, `lavish-axi` for visual review surfaces, `chrome-devtools-axi` for driving Chrome, `ctx7` for library documentation, and `nlm` for Gemini Notebook.
 
 Every one of those tools is installed by this setup, and `home/.claude/settings.json` starts `gh-axi`, `chrome-devtools-axi`, and `lavish-axi` as session-start hooks.
 
@@ -556,7 +558,7 @@ Skill sources are renamed, split, and retired far faster than the rest of this i
 They are installed by hand instead.
 
 [docs/agent-skills.md](docs/agent-skills.md) documents how to install global agent skills by hand.
-It covers the `bunx skills` install command, excluded sources, and how to verify the result.
+It covers the `bunx skills` install command, Gemini Notebook MCP and skill setup, excluded sources, and how to verify the result.
 
 The repository does not copy local plugin caches or private skill folders.
 
@@ -865,7 +867,7 @@ The setup configures macOS so pressing Fn or Globe has no native action, leaving
 - [ ] Authenticate EAS with `eas login`.
 - [ ] Authenticate Vercel with `vercel login`.
 - [ ] Authenticate Fallow if a project uses the optional paid runtime layer.
-- [ ] Complete any NotebookLM CLI browser login.
+- [ ] Run `nlm login`, then configure Gemini Notebook with `nlm setup add` and `nlm skill install` as documented in [docs/agent-skills.md](docs/agent-skills.md).
 - [ ] Configure other agent tools without committing their credentials or histories.
 
 ### Ghostty and Herdr

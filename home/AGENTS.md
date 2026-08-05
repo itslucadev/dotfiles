@@ -24,7 +24,7 @@ Use them without being asked, and fall back to the underlying tool only when the
 - Use `lavish-axi` whenever a response is easier to grasp as a rich page than as prose: plans, comparisons, diagrams, tables, reports, and review surfaces.
 - Use `chrome-devtools-axi` to drive or inspect a Chrome session instead of any other browser automation tool.
 - Use `ctx7` for library documentation instead of web search.
-- Use `nlm` for NotebookLM work.
+- Use `nlm` for Gemini Notebook work.
 
 ## Optional Personal Context
 
