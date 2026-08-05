@@ -17,7 +17,6 @@ ms-python.python
 ms-python.vscode-python-envs
 mvllow.rose-pine
 oderwat.indent-rainbow
-sukarth.vscode-modernized
 usernamehw.errorlens
 wix.vscode-import-cost
 yoavbls.pretty-ts-errors

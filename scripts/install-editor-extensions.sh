@@ -65,20 +65,28 @@ install_editor_extensions() {
   done
 }
 
+# Each editor runs independently. A missing editor command must not stop the
+# other editor from being configured, and it must not be silently forgiven
+# either, so it counts as a failure and the script exits non-zero at the end.
 printf 'Installing VS Code extensions\n'
-install_editor_extensions \
+if ! install_editor_extensions \
   code \
   "$REPO_ROOT/home/.config/editors/extensions.txt" \
-  "$REPO_ROOT/home/.config/editors/vscode/extensions.txt"
+  "$REPO_ROOT/home/.config/editors/vscode/extensions.txt"; then
+  extension_failures=$((extension_failures + 1))
+fi
 
 printf 'Installing Cursor extensions\n'
-install_editor_extensions \
+if ! install_editor_extensions \
   cursor \
   "$REPO_ROOT/home/.config/editors/extensions.txt" \
-  "$REPO_ROOT/home/.config/editors/cursor/extensions.txt"
+  "$REPO_ROOT/home/.config/editors/cursor/extensions.txt"; then
+  extension_failures=$((extension_failures + 1))
+fi
 
 if [[ "$extension_failures" -gt 0 ]]; then
   printf 'Warning: %d editor extension installation(s) failed.\n' \
     "$extension_failures" >&2
   printf 'Run mise run editors:extensions again, then inspect mise run doctor.\n' >&2
+  exit 1
 fi
