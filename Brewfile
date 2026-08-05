@@ -2,15 +2,15 @@
 brew "agent-browser"
 brew "antidote"
 brew "asc"
-brew "can1357/tap/omp", trusted: true
 brew "bat"
 brew "bfg"
 brew "cameroncooke/axe/axe", trusted: true
+brew "can1357/tap/omp", trusted: true
 brew "cocoapods"
 brew "eza"
 brew "fallow"
-brew "fd"
 brew "fastlane"
+brew "fd"
 brew "fzf"
 brew "getsentry/tools/sentry", trusted: true
 brew "getsentry/tools/sentry-wizard", trusted: true
@@ -74,8 +74,8 @@ cask "xykong/tap/flux-markdown", trusted: true
 cask "alt-tab"
 cask "aqua-voice"
 cask "caffeine"
-cask "cleanshot"
 cask "cleanmymac"
+cask "cleanshot"
 cask "linear"
 cask "obsidian"
 cask "protonvpn"

@@ -41,6 +41,10 @@ Never declare the same tool in both `Brewfile` and `mise.toml`.
 
 Before adding a tool, check the other inventory for an existing entry.
 
+The rule covers declarations, not dependency closures. Homebrew formulae pull their own runtimes, so `agent-browser` and `pi-coding-agent` bring `node`, and `watchman` and `yt-dlp` bring `python`. Those installs are unavoidable and are not duplicate declarations.
+
+`home/.zshrc` activates mise after Homebrew's shell environment, so the mise shims come first on `PATH` and the declared runtime versions win. Do not reorder those two lines.
+
 ## Editor Extension Policy
 
 Both editors run the same extension set.

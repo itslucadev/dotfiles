@@ -706,6 +706,7 @@ The setup configures macOS so pressing Fn or Globe has no native action, leaving
 - [ ] Verify the managed extension inventories in VS Code and Cursor.
 - [ ] Run `mise doctor`.
 - [ ] Run `mise run doctor`.
+- [ ] Run `MISE_SAFE=1 mise lock --bump`, then review and commit the regenerated `mise.lock`.
 - [ ] Build and launch one React Native project on an iOS Simulator.
 - [ ] Build and launch one React Native project on the Android emulator.
 - [ ] Reboot once and verify login items, shortcuts, VPNs, and permissions.
@@ -787,6 +788,10 @@ MISE_SAFE=1 mise lock --bump
 ```
 
 Review and commit `mise.lock` after testing.
+
+`mise.lock` is currently out of date. It still pins seven tools that `mise.toml` no longer declares, among them Claude Code and the Pi coding agent, which now come from Homebrew. It is also missing entries for `chrome-devtools-axi`, `ctx7`, `gh-axi`, `lavish-axi`, and the NotebookLM CLI, so those five resolve without a pinned version on a fresh install.
+
+Only mise can regenerate the file, so the first real bootstrap has to run `MISE_SAFE=1 mise lock --bump` and commit the result.
 
 The repository does not enable mise's strict `locked` mode yet because every managed backend must first have a complete macOS artifact URL and checksum in `mise.lock`.
 
