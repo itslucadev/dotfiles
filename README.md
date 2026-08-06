@@ -475,11 +475,18 @@ Zsh plugins are managed only by Antidote through `home/.zsh_plugins.txt`.
 
 Repository agent instructions explicitly prohibit installing individual Zsh plugins through Homebrew, Oh My Zsh, or manual clones.
 
-WezTerm starts from Kun Chen's Rose Pine Moon styling with Hack Nerd Font, transparency, blur, minimal tabs, and resize-only window decorations.
+WezTerm uses Hack Nerd Font, transparency, blur, minimal tabs, and resize-only window decorations.
+
+It spells the Rose Pine Moon palette out instead of selecting a bundled color scheme.
+Every bundled Rose Pine Moon variant assigns the ANSI colors differently than the official palette, so WezTerm and Ghostty would not render the same green and blue, and `rose-pine-moon` also sets the selection color to the background color, which makes a selection invisible.
+The explicit palette also covers the tab bar, which no bundled scheme carries at all.
 
 Ghostty uses the same Rose Pine Moon theme, Hack Nerd Font, 14-point font size, 0.8 background opacity, and blur level 50.
 
 Its configuration file is named `config` with no extension, because that is the only name Ghostty reads inside `~/.config/ghostty`.
+
+Ghostty keeps its tab bar inside the macOS titlebar, so `macos-titlebar-style` is `tabs`.
+The `hidden` style hides the titlebar together with the tab bar, which leaves new tabs open but invisible, and `window-show-tab-bar` cannot compensate because that setting is GTK-only.
 
 Ghostty starts every surface through `/usr/bin/login`, the way Terminal.app does, so a new window or tab would print a `Last login` banner.
 

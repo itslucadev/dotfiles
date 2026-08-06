@@ -14,9 +14,14 @@ window-padding-balance = true
 
 mouse-hide-while-typing = true
 macos-option-as-alt = right
-macos-titlebar-style = hidden
-window-show-tab-bar = auto
 confirm-close-surface = false
+
+# On macOS the tab bar lives in the titlebar, so `hidden` opens tabs that cannot
+# be seen. `tabs` keeps the minimal look by integrating the tab bar into a
+# titlebar that matches the terminal background, and it shows a tab bar as soon
+# as a second tab exists. `window-show-tab-bar` is not an option here: it is
+# GTK-only and does nothing on macOS.
+macos-titlebar-style = tabs
 
 # Install Ghostty terminfo on SSH hosts when possible.
 shell-integration-features = ssh-env,ssh-terminfo
