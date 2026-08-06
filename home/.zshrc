@@ -80,6 +80,14 @@ alias dev='cd "$DEV_HOME"'
 alias appzudio='cd "$DEV_HOME/appzudio"'
 alias icloud='cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs"'
 
+# `~/.claude/settings.json` already sets Auto mode as the default permission
+# mode, so the flag is redundant there and deliberate here: these aliases have
+# to keep starting Claude Code in Auto mode even in a directory whose project
+# settings choose another default. `cc` also shadows the C compiler, which only
+# affects interactive shells, because aliases never reach scripts or Makefiles.
+alias cc="claude --permission-mode auto"
+alias ccw="claude --permission-mode auto --worktree"
+
 alias ls="eza --icons=auto --group-directories-first"
 alias l="eza --icons=auto --group-directories-first --git-ignore"
 alias ll="eza --icons=auto --group-directories-first --all --header --long"

@@ -471,6 +471,12 @@ The bootstrap creates `~/Developer/appzudio` as the shared parent directory for 
 
 The `appzudio` alias opens that parent directory.
 
+The `cc` alias starts Claude Code in Auto mode, and `ccw` starts it in Auto mode inside a fresh git worktree, which accepts an optional worktree name as in `ccw feature-x`.
+
+Both pass `--permission-mode auto` even though `~/.claude/settings.json` already defaults to Auto mode, so a project that sets a different default mode does not change what the aliases do.
+
+`cc` shadows the C compiler in interactive shells only, because Zsh aliases do not apply to scripts or Makefiles.
+
 Zsh plugins are managed only by Antidote through `home/.zsh_plugins.txt`.
 
 Repository agent instructions explicitly prohibit installing individual Zsh plugins through Homebrew, Oh My Zsh, or manual clones.
