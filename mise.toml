@@ -125,6 +125,7 @@ NSGlobalDomain = { AppleInterfaceStyleSwitchesAutomatically = true, AppleShowAll
 run = [
   "~/github/phoenix-error/dotfiles/scripts/install-homebrew-packages.sh",
   "~/github/phoenix-error/dotfiles/scripts/require-git-and-github.sh",
+  "~/github/phoenix-error/dotfiles/scripts/resolve-dotfile-conflicts.sh",
 ]
 
 [bootstrap.hooks.pre-defaults]
