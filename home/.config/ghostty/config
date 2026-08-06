@@ -5,6 +5,13 @@ font-size = 14
 background-opacity = 0.8
 background-blur = 50
 
+# Luft zum Fensterrand, sonst klebt der Prompt an der Kante.
+# window-padding-y nimmt "oben,unten"; oben etwas mehr, weil die Titelleiste versteckt ist.
+window-padding-x = 12
+window-padding-y = 10,8
+# Restpixel gleichmaessig verteilen statt alles rechts/unten anzuhaengen.
+window-padding-balance = true
+
 mouse-hide-while-typing = true
 macos-option-as-alt = right
 macos-titlebar-style = hidden
