@@ -477,6 +477,18 @@ Both pass `--permission-mode auto` even though `~/.claude/settings.json` already
 
 `cc` shadows the C compiler in interactive shells only, because Zsh aliases do not apply to scripts or Makefiles.
 
+The `keykey` command switches to the next enabled macOS keyboard layout and prints the one it landed on, so repeated runs cycle through them.
+`keykey --list` shows every enabled layout and marks the active one.
+
+It is an executable in `home/.local/bin` rather than an alias, because a Zsh alias cannot hold a program and `home/.zshrc` already puts `~/.local/bin` on `PATH`.
+
+Layouts themselves stay unmanaged, because the enabled set is a per-machine choice made in System Settings under Keyboard, Text Input, Input Sources.
+
+`keykey` switches the layout through Text Input Services instead of writing `AppleSelectedInputSources` with `defaults`, which only sets the preference and leaves the running system on the previous layout until the input menu agent overwrites the key again.
+
+That API is reachable from Swift and not from the shell, so the command embeds a small Swift program and compiles it into `~/.cache/keykey` on first use.
+The cache is keyed by the hash of the command file, so editing the command rebuilds it and no build step has to run during setup.
+
 Zsh plugins are managed only by Antidote through `home/.zsh_plugins.txt`.
 
 Repository agent instructions explicitly prohibit installing individual Zsh plugins through Homebrew, Oh My Zsh, or manual clones.

@@ -16,6 +16,11 @@ mise.lock
 
 # Local shell configuration and history
 *.local
+# `*.local` is meant for override files, but it also matches the `home/.local`
+# directory, which holds managed commands. The directory is re-included here so
+# its contents stay trackable, and the pattern above still excludes an override
+# file anywhere else.
+!home/.local/
 .zsh_history
 .zsh_sessions/
 home/.claude/settings.local.json

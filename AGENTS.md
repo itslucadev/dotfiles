@@ -18,6 +18,7 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 - `setup-guide.html` owns every manual step on a new Mac, including how the global agent skills are installed by hand and which sources arrive another way.
 - `home/.config/editors/settings.json` owns the shared VS Code and Cursor user settings.
 - `home/` owns public dotfiles that mise links into the home directory.
+- `home/.local/bin/` owns personal commands that are too large to express as a Zsh alias. `home/.zshrc` already puts `~/.local/bin` on `PATH`, so an executable linked there needs no alias, works in every shell, and keeps `home/.zshrc` free of program logic.
 - `home/.claude/rules/` owns the Claude rules that this setup supports.
 - `bootstrap.sh` owns bare-metal initialization only: Xcode Command Line Tools, Homebrew, mise, `mise trust`, and linking `~/.zprofile`, `~/.zshrc`, and `~/.zsh_plugins.txt` so both tools are reachable as ordinary commands. It stops there and installs no declared package.
 - `mise bootstrap` owns the stage order of the managed setup. The `[bootstrap.hooks]` entries in `mise.toml` own the stages that are not one of its native phases, and the `setup` task is the documented entry point.

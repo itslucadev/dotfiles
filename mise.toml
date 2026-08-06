@@ -72,6 +72,9 @@ _.path = [
 # Empty on purpose. `/usr/bin/login` only checks that this file exists, and its
 # presence silences the "Last login" banner in every login shell.
 "~/.hushlogin" = {}
+# `home/.zshrc` already puts `~/.local/bin` on PATH for mise, so a command
+# linked here needs no alias and is reachable from every shell.
+"~/.local/bin/keykey" = {}
 "~/.pi/agent/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}

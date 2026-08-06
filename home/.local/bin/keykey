@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+
+# Switches the active macOS keyboard layout to the next enabled one.
+#
+# macOS only applies a layout change that goes through Text Input Services.
+# Writing `AppleSelectedInputSources` with `defaults` sets the preference
+# without switching the running system, and the input menu agent overwrites the
+# key again on its next save, so the program below calls `TISSelectInputSource`
+# instead, which is the API the input menu itself uses.
+#
+# The program is embedded rather than shipped as a second file, so this stays a
+# single managed dotfile. It is compiled into a cache keyed by the hash of this
+# file, because an interpreted `swift` run costs about a third of a second on
+# every toggle while the compiled binary costs milliseconds. Changing this file
+# changes the hash, which is what invalidates the cache.
+
+set -Eeuo pipefail
+
+readonly CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/keykey"
+
+WORK_DIR=""
+
+cleanup() {
+  if [[ -n "$WORK_DIR" ]]; then
+    rm -rf "$WORK_DIR"
+  fi
+}
+
+trap cleanup EXIT
+
+# Named `main.swift` when it reaches disk, because swiftc rejects top-level
+# statements in a file with any other name.
+emit_program() {
+  cat <<'SWIFT'
+import Carbon
+import Foundation
+
+func stringProperty(_ source: TISInputSource, _ key: CFString) -> String? {
+    guard let pointer = TISGetInputSourceProperty(source, key) else { return nil }
+    return Unmanaged<CFString>.fromOpaque(pointer).takeUnretainedValue() as String
+}
+
+func boolProperty(_ source: TISInputSource, _ key: CFString) -> Bool {
+    guard let pointer = TISGetInputSourceProperty(source, key) else { return false }
+    return CFBooleanGetValue(Unmanaged<CFBoolean>.fromOpaque(pointer).takeUnretainedValue())
+}
+
+func identifier(_ source: TISInputSource) -> String {
+    stringProperty(source, kTISPropertyInputSourceID) ?? ""
+}
+
+func displayName(_ source: TISInputSource) -> String {
+    stringProperty(source, kTISPropertyLocalizedName) ?? identifier(source)
+}
+
+func fail(_ message: String) -> Never {
+    FileHandle.standardError.write(Data("keykey: \(message)\n".utf8))
+    exit(1)
+}
+
+// Restricted to the keyboard category so palette sources such as the Character
+// Palette, which cannot act as a layout, never enter the rotation. The `false`
+// argument narrows the result to enabled sources, which is what the input menu
+// shows, and `isSelectCapable` drops the enabled ones the system still refuses
+// to activate directly.
+let filter = [
+    kTISPropertyInputSourceCategory as String: kTISCategoryKeyboardInputSource as String,
+] as CFDictionary
+
+guard let installed = TISCreateInputSourceList(filter, false)?.takeRetainedValue() as? [TISInputSource] else {
+    fail("could not read the list of input sources")
+}
+
+// Sorted by source identifier rather than by display name, so the rotation
+// order stays the same on a machine with another system language.
+let layouts = installed
+    .filter { boolProperty($0, kTISPropertyInputSourceIsSelectCapable) }
+    .sorted { identifier($0) < identifier($1) }
+
+guard !layouts.isEmpty else {
+    fail("no selectable keyboard layout is enabled")
+}
+
+let currentSource = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue()
+let currentIdentifier = currentSource.map(identifier)
+
+switch CommandLine.arguments.dropFirst().first ?? "" {
+case "":
+    break
+case "--list", "-l":
+    for layout in layouts {
+        let marker = identifier(layout) == currentIdentifier ? "*" : " "
+        print("\(marker) \(displayName(layout))")
+    }
+    exit(0)
+case "--help", "-h":
+    print("""
+    Usage: keykey [--list]
+
+    Switches to the next enabled macOS keyboard layout and prints its name.
+
+      -l, --list   List every enabled layout and mark the active one.
+      -h, --help   Show this message.
+    """)
+    exit(0)
+case let argument:
+    fail("unknown argument \(argument), run `keykey --help`")
+}
+
+guard layouts.count > 1 else {
+    print("\(displayName(layouts[0])) is the only enabled layout.")
+    exit(0)
+}
+
+// A current source outside the rotation, which is what an active palette
+// source looks like, resolves to -1 and therefore starts at the first layout.
+let currentIndex = layouts.firstIndex { identifier($0) == currentIdentifier } ?? -1
+let next = layouts[(currentIndex + 1) % layouts.count]
+
+let status = TISSelectInputSource(next)
+guard status == noErr else {
+    fail("could not select \(displayName(next)), TISSelectInputSource returned \(status)")
+}
+
+print(displayName(next))
+SWIFT
+}
+
+build() {
+  local binary="$1"
+
+  mkdir -p "$CACHE_DIR"
+
+  # Built inside the cache directory so the final rename stays on one
+  # filesystem and is therefore atomic, which a build under TMPDIR would not
+  # guarantee.
+  WORK_DIR="$(mktemp -d "${CACHE_DIR}/build.XXXXXX")"
+
+  printf 'keykey: building the layout switcher, this happens once.\n' >&2
+  emit_program >"${WORK_DIR}/main.swift"
+  swiftc -o "${WORK_DIR}/keykey" "${WORK_DIR}/main.swift"
+
+  # Every other cached build belongs to an older version of this file.
+  rm -f "${CACHE_DIR}"/keykey-*
+  mv -f "${WORK_DIR}/keykey" "$binary"
+
+  rm -rf "$WORK_DIR"
+  WORK_DIR=""
+}
+
+main() {
+  local fingerprint binary
+
+  fingerprint="$(/usr/bin/shasum -a 256 "${BASH_SOURCE[0]}" | cut -d ' ' -f 1)"
+  binary="${CACHE_DIR}/keykey-${fingerprint}"
+
+  if [[ ! -x "$binary" ]]; then
+    if ! command -v swiftc >/dev/null 2>&1; then
+      printf 'keykey: swiftc not found, install the Xcode Command Line Tools with `xcode-select --install`.\n' >&2
+      return 1
+    fi
+
+    build "$binary"
+  fi
+
+  exec "$binary" "$@"
+}
+
+main "$@"
