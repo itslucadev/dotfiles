@@ -12,7 +12,10 @@ package_manager = "bun"
 
 [tools]
 bun = "latest"
-java = "zulu-17"
+# zulu-17 stays the active development version. zulu-jre-21 is the native arm64
+# runtime for Minecraft and CurseForge, linked into
+# ~/Library/Java/JavaVirtualMachines/zulu-jre-21.jre
+java = ["zulu-17", "zulu-jre-21"]
 node = "lts"
 python = "3.12"
 ruff = "latest"
@@ -74,8 +77,8 @@ _.path = [
 
 [bootstrap.macos.dock]
 autohide = true
-orientation = "left"
-tilesize = 36
+orientation = "bottom"
+tilesize = 48
 show_recents = false
 
 [bootstrap.macos.finder]
