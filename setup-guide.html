@@ -1386,7 +1386,7 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
               <span class="phase-index">01</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Bootstrap starten</span>
-                <span>Homebrew, mise, Apps, Dotfiles und Systemeinstellungen</span>
+                <span>Xcode Command Line Tools, Homebrew, mise und die Shell-Konfiguration</span>
               </span>
               <span class="phase-meter">
                 <span class="phase-meter-track"><span class="phase-meter-fill"></span></span>
@@ -1396,11 +1396,12 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
             </button>
             <div class="phase-body">
               <p class="phase-intro">
-                Ab hier übernimmt das Repository. Der Durchlauf ist idempotent und darf nach
-                einem behobenen Fehler erneut gestartet werden. Er hält an genau drei Stellen an
-                und wartet auf dich: Git und SSH, die Anmeldung der Coding Agents und der
-                Mac App Store. Diese drei Pausen sind die nächsten drei Phasen, in genau der
-                Reihenfolge, in der sie im Terminal erscheinen.
+                Ab hier übernimmt das Repository. <code>./bootstrap.sh</code> legt nur das
+                Fundament und hört dann auf. Git-Identität, SSH-Schlüssel und die
+                GitHub-Verbindung kommen danach von Hand, in der nächsten Phase, und erst
+                dann startet das verwaltete Setup. Diese Reihenfolge ist Absicht: Das Setup
+                hat für Git und GitHub ein Gate, das ohne Pause durchläuft, wenn beides
+                vorher steht.
               </p>
               <div class="task-list">
                 <article class="task" data-task-id="bootstrap-init">
@@ -1429,42 +1430,6 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                     </p>
                   </div>
                 </article>
-
-                <article class="task" data-task-id="bootstrap-run">
-                  <input class="task-check" type="checkbox" aria-label="Verwaltetes Setup gestartet" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Das verwaltete Setup starten</h3>
-                      <span class="badge auto">Automatisch</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>mise run setup</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Der Task aktualisiert mise und übergibt dann an
-                      <code>mise bootstrap</code>. Die Stufen laufen in dieser Reihenfolge:
-                      Homebrew-Pakete, <strong>Pause für Git und SSH</strong>,
-                      Dotfile-Symlinks, bestätigte macOS-Defaults, Runtimes, globale CLIs,
-                      <strong>Pause für die Coding-Agent-Anmeldungen</strong>, die
-                      Herdr-Agent-Integrationen, <strong>Pause für den Mac App Store</strong>
-                      und zum Schluss der Setup Doctor.
-                      Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
-                    </p>
-                    <p class="task-note">
-                      Meldet <code>./bootstrap.sh</code>, dass die Shell-Konfiguration nicht
-                      verlinkt werden konnte, liegen dort schon handgeschriebene Dateien. Dann
-                      stattdessen <code>~/.local/bin/mise run setup</code> aufrufen.
-                    </p>
-                    <p class="task-note">
-                      Derselbe Befehl ist auch der Wiederholungsbefehl. Der Lauf ist idempotent
-                      und wird nach jeder behobenen Voraussetzung einfach erneut gestartet. Der
-                      Repository-Task heißt bewusst <code>setup</code>. Ein Task namens
-                      <code>bootstrap</code> würde von <code>mise bootstrap</code> selbst noch
-                      einmal aufgerufen und den ganzen Ablauf wiederholen.
-                    </p>
-                  </div>
-                </article>
               </div>
             </div>
           </section>
@@ -1473,7 +1438,7 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
             <button class="phase-toggle" type="button" aria-expanded="true">
               <span class="phase-index">02</span>
               <span class="phase-heading">
-                <span class="phase-name" role="heading" aria-level="2">Pause 1: Git, SSH und GitHub</span>
+                <span class="phase-name" role="heading" aria-level="2">Git, SSH und GitHub</span>
                 <span>Private Identität lokal halten und Auth einrichten</span>
               </span>
               <span class="phase-meter">
@@ -1484,12 +1449,14 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
             </button>
             <div class="phase-body">
               <p class="phase-intro">
-                Direkt nach dem <code>Brewfile</code> hält <code>mise run setup</code> zum
-                ersten Mal an. Git ist ab hier installiert, aber bewusst nicht Teil des Repos:
+                Diese Phase gehört zwischen <code>./bootstrap.sh</code> und
+                <code>mise run setup</code>. Git bringen bereits die Xcode Command Line Tools
+                aus dem Preflight mit, es ist aber bewusst nicht Teil des Repos:
                 <code>~/.gitconfig</code> und <code>~/.ssh/config</code> werden von Hand gesetzt,
                 weil eine verwaltete Git-Konfiguration schon aktiv wäre, bevor der Schlüssel
-                existiert, auf den sie sich bezieht. Das Gate prüft am Ende genau eine Sache:
-                dass <code>ssh -T git@github.com</code> erfolgreich authentifiziert. Private
+                existiert, auf den sie sich bezieht. Wer das hier erledigt, läuft später ohne
+                Unterbrechung durch das Gate des Setups. Es prüft genau eine Sache: dass
+                <code>ssh -T git@github.com</code> erfolgreich authentifiziert. Private
                 Schlüssel, Hosts und Logins bleiben ausschließlich lokal.
               </p>
               <div class="task-list">
@@ -1876,11 +1843,81 @@ gh auth status</code></pre>
             </div>
           </section>
 
-          <section class="phase" id="phase-agent-gate" data-phase="agent-gate">
+          <section class="phase" id="phase-setup" data-phase="setup">
             <button class="phase-toggle" type="button" aria-expanded="true">
               <span class="phase-index">03</span>
               <span class="phase-heading">
-                <span class="phase-name" role="heading" aria-level="2">Pause 2: Coding Agents anmelden</span>
+                <span class="phase-name" role="heading" aria-level="2">Das verwaltete Setup starten</span>
+                <span>Homebrew, Dotfiles, Systemeinstellungen, Runtimes und CLIs</span>
+              </span>
+              <span class="phase-meter">
+                <span class="phase-meter-track"><span class="phase-meter-fill"></span></span>
+                <span class="phase-count">0 / 0</span>
+                <span class="chevron" aria-hidden="true">⌄</span>
+              </span>
+            </button>
+            <div class="phase-body">
+              <p class="phase-intro">
+                Git und GitHub stehen jetzt, also läuft das erste Gate ohne Pause durch. Der
+                Lauf ist idempotent und darf nach einem behobenen Fehler erneut gestartet
+                werden. Er hält danach noch an zwei Stellen an und wartet auf dich: die
+                Anmeldung der Coding Agents und der Mac App Store. Diese beiden Pausen sind
+                die nächsten beiden Phasen, in genau der Reihenfolge, in der sie im Terminal
+                erscheinen.
+              </p>
+              <div class="task-list">
+                <article class="task" data-task-id="bootstrap-run">
+                  <input class="task-check" type="checkbox" aria-label="Verwaltetes Setup gestartet" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Das verwaltete Setup starten</h3>
+                      <span class="badge auto">Automatisch</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>mise run setup</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Der Task aktualisiert mise und übergibt dann an
+                      <code>mise bootstrap</code>. Die Stufen laufen in dieser Reihenfolge:
+                      Homebrew-Pakete, das Gate für Git und SSH, die Rückfrage zu bereits
+                      vorhandenen Dotfiles, Dotfile-Symlinks, bestätigte macOS-Defaults,
+                      Runtimes, globale CLIs,
+                      <strong>Pause für die Coding-Agent-Anmeldungen</strong>, die
+                      Herdr-Agent-Integrationen, <strong>Pause für den Mac App Store</strong>
+                      und zum Schluss der Setup Doctor.
+                      Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
+                    </p>
+                    <p class="task-note">
+                      Hat eine App ihre Konfiguration schon selbst geschrieben, etwa
+                      <code>~/.claude/settings.json</code> beim ersten Start von Claude Code,
+                      fragt der Lauf vor der Dotfile-Stufe nach. Ein <code>y</code> verschiebt
+                      die betroffenen Dateien mit Zeitstempel zur Seite und verlinkt danach die
+                      verwaltete Fassung, alles andere hält das Setup an. Gelöscht wird nichts.
+                    </p>
+                    <p class="task-note">
+                      Meldet <code>./bootstrap.sh</code>, dass die Shell-Konfiguration nicht
+                      verlinkt werden konnte, liegen dort schon handgeschriebene Dateien. Dann
+                      stattdessen <code>~/.local/bin/mise run setup</code> aufrufen.
+                    </p>
+                    <p class="task-note">
+                      Derselbe Befehl ist auch der Wiederholungsbefehl. Der Lauf ist idempotent
+                      und wird nach jeder behobenen Voraussetzung einfach erneut gestartet. Der
+                      Repository-Task heißt bewusst <code>setup</code>. Ein Task namens
+                      <code>bootstrap</code> würde von <code>mise bootstrap</code> selbst noch
+                      einmal aufgerufen und den ganzen Ablauf wiederholen.
+                    </p>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <section class="phase" id="phase-agent-gate" data-phase="agent-gate">
+            <button class="phase-toggle" type="button" aria-expanded="true">
+              <span class="phase-index">04</span>
+              <span class="phase-heading">
+                <span class="phase-name" role="heading" aria-level="2">Pause 1: Coding Agents anmelden</span>
                 <span>Herdr kann nur einhängen, was einmal gestartet war</span>
               </span>
               <span class="phase-meter">
@@ -1891,7 +1928,7 @@ gh auth status</code></pre>
             </button>
             <div class="phase-body">
               <p class="phase-intro">
-                Der Lauf hält ein zweites Mal an, direkt vor den Herdr-Integrationen. Herdr
+                Der Lauf hält hier zum ersten Mal an, direkt vor den Herdr-Integrationen. Herdr
                 kann einen Agent nur einhängen, wenn dieser einmal gestartet und angemeldet war.
                 Auf einem frischen Mac existieren die Agents vorher gar nicht, Homebrew hat sie
                 erst in diesem Lauf installiert. Deshalb ist die Anmeldung genau hier fällig und
@@ -1927,37 +1964,15 @@ pi              # Anmeldung, dann /exit</code></pre>
                     </p>
                   </div>
                 </article>
-
-                <article class="task" data-task-id="agentgate-herdr">
-                  <input class="task-check" type="checkbox" aria-label="Herdr-Integrationen installiert" />
-                  <div class="task-content">
-                    <div class="task-topline">
-                      <h3 class="task-title">Herdr-Integrationen nach der Pause prüfen</h3>
-                      <span class="badge auto">Prüfung</span>
-                    </div>
-                    <div class="command">
-                      <pre><code>herdr integration status</code></pre>
-                      <button class="copy-button" type="button">Kopieren</button>
-                    </div>
-                    <p class="task-note">
-                      Direkt nach dem Gate installiert das Setup die Integrationen für
-                      <code>claude</code>, <code>codex</code>, <code>cursor</code>,
-                      <code>omp</code> und <code>pi</code>. Alle fünf sollen hier als
-                      <code>current</code> erscheinen. Fehlt eine, war der Agent zum Zeitpunkt der
-                      Installation noch nicht angemeldet: nachmelden und
-                      <code>mise run agents:herdr</code> erneut ausführen.
-                    </p>
-                  </div>
-                </article>
               </div>
             </div>
           </section>
 
           <section class="phase" id="phase-apple" data-phase="apple">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">04</span>
+              <span class="phase-index">05</span>
               <span class="phase-heading">
-                <span class="phase-name" role="heading" aria-level="2">Pause 3: Apple Account und Mac App Store</span>
+                <span class="phase-name" role="heading" aria-level="2">Pause 2: Apple Account und Mac App Store</span>
                 <span>Accountgebundene Installationen freigeben</span>
               </span>
               <span class="phase-meter">
@@ -2022,7 +2037,7 @@ pi              # Anmeldung, dann /exit</code></pre>
 
           <section class="phase" id="phase-run-complete" data-phase="run-complete">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">05</span>
+              <span class="phase-index">06</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Setup-Lauf abschließen</span>
                 <span>Ausgabe und ersten Doctor-Report lesen</span>
@@ -2035,7 +2050,7 @@ pi              # Anmeldung, dann /exit</code></pre>
             </button>
             <div class="phase-body">
               <p class="phase-intro">
-                Nach der dritten Pause läuft das Setup ohne weitere Rückfragen bis zum Ende
+                Nach der zweiten Pause läuft das Setup ohne weitere Rückfragen bis zum Ende
                 durch und schließt mit dem Setup Doctor ab. Bevor es an die manuellen Phasen
                 geht, wird einmal gelesen, was der Lauf tatsächlich gemacht hat.
               </p>
@@ -2081,7 +2096,7 @@ pi              # Anmeldung, dann /exit</code></pre>
 
           <section class="phase" id="phase-xcode" data-phase="xcode">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">06</span>
+              <span class="phase-index">07</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Xcode</span>
                 <span>Toolchain, Lizenz und Simulator</span>
@@ -2140,7 +2155,7 @@ pi              # Anmeldung, dann /exit</code></pre>
 
           <section class="phase" id="phase-android" data-phase="android">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">07</span>
+              <span class="phase-index">08</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Android Studio</span>
                 <span>Android Studio, JDK 17 und Shell-Umgebung</span>
@@ -2230,7 +2245,7 @@ echo "$PATH" | tr ':' '\n' | grep "$ANDROID_HOME"</code></pre>
 
           <section class="phase" id="phase-apps" data-phase="apps">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">08</span>
+              <span class="phase-index">09</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Apps, Rechte und Shortcuts</span>
                 <span>Datenschutzfreigaben und persönliche Bedienung</span>
@@ -2464,7 +2479,7 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
 
           <section class="phase" id="phase-agents" data-phase="agents">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">09</span>
+              <span class="phase-index">10</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Agents, Skills und CLI-Logins</span>
                 <span>Claude, globale Skills und lokale Authentifizierung</span>
@@ -2479,7 +2494,7 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
               <p class="phase-intro">
                 Das Repo verwaltet öffentliche Agent-Konfiguration. Logins, Chats, Caches,
                 Zugriffstokens und private Skill-Zustände werden nie übernommen. Die
-                Agent-Anmeldungen an der Kommandozeile sind an Pause 2 bereits erledigt, hier
+                Agent-Anmeldungen an der Kommandozeile sind an Pause 1 bereits erledigt, hier
                 folgen die Desktop-Apps, die projektbezogenen CLIs und die globalen Skills.
               </p>
               <div class="task-list">
@@ -2492,7 +2507,7 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
                     </div>
                     <p class="task-note">
                       Die ChatGPT-App enthält den Codex-Desktop-Bereich. Die eigenständige
-                      Codex CLI meldet sich getrennt an und ist an Pause 2 bereits erledigt.
+                      Codex CLI meldet sich getrennt an und ist an Pause 1 bereits erledigt.
                     </p>
                   </div>
                 </article>
@@ -2509,7 +2524,7 @@ Do not change VS Code. Do not edit settings.json. Only install Cursor extensions
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
-                      Die Anmeldung ist an Pause 2 schon passiert. Hier nur noch Auto Mode,
+                      Die Anmeldung ist an Pause 1 schon passiert. Hier nur noch Auto Mode,
                       Pyright-LSP, TypeScript-LSP und Tmux-Split-Panes für Agent Teams prüfen.
                       Herdr bleibt der primäre Multiplexer für persistente Sessions.
                     </p>
@@ -2646,7 +2661,7 @@ ls ~/.claude/skills</code></pre>
 
           <section class="phase" id="phase-react-native" data-phase="react-native">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">10</span>
+              <span class="phase-index">11</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">React Native Smoke Test</span>
                 <span>Toolchain in einem echten Projekt beweisen</span>
@@ -2745,7 +2760,7 @@ ls ~/.claude/skills</code></pre>
 
           <section class="phase" id="phase-verify" data-phase="verify">
             <button class="phase-toggle" type="button" aria-expanded="true">
-              <span class="phase-index">11</span>
+              <span class="phase-index">12</span>
               <span class="phase-heading">
                 <span class="phase-name" role="heading" aria-level="2">Doctor, Idempotenz und Reboot</span>
                 <span>Den Zustand beweisen und nach Neustart bestätigen</span>

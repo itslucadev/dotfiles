@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
-# The manual Git and GitHub gate of the managed setup, run as the
-# `pre-dotfiles` bootstrap hook in mise.toml, right after Homebrew installed
-# Git and before anything that needs an authenticated GitHub.
+# The manual Git and GitHub gate of the managed setup, run as a `pre-dotfiles`
+# bootstrap hook in mise.toml, before anything that needs an authenticated
+# GitHub.
+#
+# The setup guide places this work between `./bootstrap.sh` and
+# `mise run setup`, where the Xcode Command Line Tools already provide Git, so
+# the gate is a safety net rather than a stop: it passes silently on a Mac that
+# followed the guide, and only opens the checklist when something is missing.
 #
 # Identity, the SSH key, the GitHub registration, and `ssh -T` are done by hand.
 # This script blocks until `ssh -T git@github.com` authenticates, and checks
@@ -48,10 +53,11 @@ github_ssh_auth_works() {
 print_github_manual_setup_instructions() {
   manual_step "Set up Git and GitHub SSH"
 
-  printf '\n  Homebrew has installed Git. The setup continues as soon as this\n'
-  printf '  reports successful authentication:\n'
+  printf '\n  This belongs between `./bootstrap.sh` and `mise run setup`, so the\n'
+  printf '  gate normally passes without stopping. The setup continues as soon\n'
+  printf '  as this reports successful authentication:\n'
   printf '\n    ssh -T git@github.com\n'
-  printf '\n  The walkthrough is the %sPause 1: Git, SSH und GitHub%s phase of the setup guide:\n' \
+  printf '\n  The walkthrough is the %sGit, SSH und GitHub%s phase of the setup guide:\n' \
     "$BOLD" "$RESET"
   printf '    %s\n' "$SETUP_GUIDE"
   printf '\n  In short:\n'
