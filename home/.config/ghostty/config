@@ -6,7 +6,8 @@ background-opacity = 0.8
 background-blur = 50
 
 # Luft zum Fensterrand, sonst klebt der Prompt an der Kante.
-# window-padding-y nimmt "oben,unten"; oben etwas mehr, weil die Titelleiste versteckt ist.
+# window-padding-y nimmt "oben,unten"; oben etwas mehr, damit die erste Zeile
+# nicht direkt an der Titelleiste klebt.
 window-padding-x = 12
 window-padding-y = 10,8
 # Restpixel gleichmaessig verteilen statt alles rechts/unten anzuhaengen.
