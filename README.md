@@ -533,14 +533,20 @@ Zed is not installed or configured.
 
 ## Agent Configuration
 
-One public `home/AGENTS.md` file is symlinked to:
+One public `home/AGENTS.md` file is symlinked to every path a managed agent actually reads:
 
-- `~/.agents.md`
-- `~/.claude/CLAUDE.md`
+- `~/.claude/CLAUDE.md` for Claude Code
+- `~/.codex/AGENTS.md` for Codex
+- `~/.pi/agent/AGENTS.md` for Pi
 
 This gives the supported agents the same global working rules without maintaining duplicate files.
 
-`~/.claude/CLAUDE.md` is a symlink to the same repository source as the global `~/.agents.md`.
+Oh My Pi has no entry of its own.
+Its `claude` and `codex` compatibility providers already read `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` at user level, and both stay active unless they are listed in `disabledProviders`.
+The price is that Oh My Pi loads the same instructions twice, which is accepted here rather than disabling a provider that also supplies Codex skills, commands, and MCP servers.
+
+The Cursor CLI has no home-level instruction file.
+It reads `AGENTS.md` from a project only, so nothing global is linked for it.
 
 The global instructions also name the command-line wrappers that agents must prefer over their built-in tools: `gh-axi` instead of `gh`, `lavish-axi` for visual review surfaces, `chrome-devtools-axi` for driving Chrome, `ctx7` for library documentation, and `nlm` for Gemini Notebook.
 

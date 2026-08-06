@@ -55,17 +55,24 @@ _.path = [
 # source would therefore be looked up under ~/.config/mise instead of the
 # repository.
 [dotfiles]
-"~/.agents.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
+# `home/AGENTS.md` is linked to the three paths the managed agents actually
+# read: Claude Code takes `~/.claude/CLAUDE.md`, Codex takes
+# `$CODEX_HOME/AGENTS.md`, and Pi takes `~/.pi/agent/AGENTS.md`. Oh My Pi needs
+# no entry of its own, because its `claude` and `codex` compatibility providers
+# already load both of those files at user level and are enabled by default.
+# The Cursor CLI has no home-level instruction file at all, only project ones.
 "~/.claude/CLAUDE.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.claude/rules/context7.md" = {}
 "~/.claude/settings.json" = {}
 "~/.claude/statusline.ts" = {}
+"~/.codex/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.config/ghostty" = {}
 "~/.config/herdr/config.toml" = {}
 "~/.homebrew/Brewfile" = { source = "~/github/phoenix-error/dotfiles/Brewfile" }
 # Empty on purpose. `/usr/bin/login` only checks that this file exists, and its
 # presence silences the "Last login" banner in every login shell.
 "~/.hushlogin" = {}
+"~/.pi/agent/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}
 "~/.config/wezterm/wezterm.lua" = {}
