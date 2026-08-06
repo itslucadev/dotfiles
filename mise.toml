@@ -78,10 +78,11 @@ _.path = [
 [bootstrap.macos.dock]
 autohide = true
 orientation = "bottom"
-tilesize = 48
+tilesize = 64
 show_recents = false
 
 [bootstrap.macos.finder]
+show_all_files = true
 show_pathbar = true
 show_status_bar = true
 show_extensions_warning = false
@@ -96,10 +97,14 @@ press_and_hold = false
 tap_to_click = true
 
 [bootstrap.macos.defaults]
-NSGlobalDomain = { AppleInterfaceStyle = "Dark", AppleShowAllExtensions = true, _HIHideMenuBar = true }
+# Appearance follows the light/dark schedule. `AppleInterfaceStyle` stays
+# unmanaged on purpose, because macOS itself writes and deletes that key every
+# time the schedule flips, and declaring it would fight the automatic switch.
+NSGlobalDomain = { AppleInterfaceStyleSwitchesAutomatically = true, AppleShowAllExtensions = true, _HIHideMenuBar = true }
 "com.apple.HIToolbox" = { AppleFnUsageType = 0 }
 "com.apple.desktopservices" = { DSDontWriteNetworkStores = true, DSDontWriteUSBStores = true }
-"com.apple.finder" = { AppleShowAllExtensions = true, CreateDesktop = false }
+# Finder reads `AppleShowAllExtensions` from `NSGlobalDomain`, so it is only set there.
+"com.apple.finder" = { CreateDesktop = false }
 "com.apple.screencapture" = { "disable-shadow" = true }
 
 # `mise bootstrap` owns the stage order of the managed setup. It converges its
