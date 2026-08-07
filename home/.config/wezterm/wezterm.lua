@@ -64,6 +64,15 @@ config.macos_window_background_blur = 50
 config.hide_tab_bar_if_only_one_tab = true
 config.window_decorations = "RESIZE"
 config.window_close_confirmation = "NeverPrompt"
+
+-- window_close_confirmation deckt nur das Schließen über die Fensterdekoration
+-- ab. Beim Schließen von Tabs und Panes fragt WezTerm trotzdem ("Really kill
+-- this tab and all contained panes?"), sobald der laufende Prozess als
+-- zustandsbehaftet gilt. false meldet jeden Prozess als zustandslos und
+-- entfernt damit alle Close-Rückfragen.
+wezterm.on("mux-is-process-stateful", function()
+	return false
+end)
 config.max_fps = 120
 config.animation_fps = 120
 
