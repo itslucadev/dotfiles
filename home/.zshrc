@@ -78,6 +78,7 @@ alias cls="clear"
 alias cdd="cd ../.."
 alias dev='cd "$DEV_HOME"'
 alias appzudio='cd "$DEV_HOME/appzudio"'
+alias dotfiles='cd "$HOME/github/phoenix-error/dotfiles"'
 alias icloud='cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs"'
 
 # `~/.claude/settings.json` already sets Auto mode as the default permission

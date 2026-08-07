@@ -471,6 +471,8 @@ The bootstrap creates `~/Developer/appzudio` as the shared parent directory for 
 
 The `appzudio` alias opens that parent directory.
 
+The `dotfiles` alias opens `~/github/phoenix-error/dotfiles`, the fixed clone path this repository requires.
+
 The `cc` alias starts Claude Code in Auto mode, and `ccw` starts it in Auto mode inside a fresh git worktree, which accepts an optional worktree name as in `ccw feature-x`.
 
 Both pass `--permission-mode auto` even though `~/.claude/settings.json` already defaults to Auto mode, so a project that sets a different default mode does not change what the aliases do.
