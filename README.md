@@ -382,7 +382,6 @@ mise manages:
 - gh-axi
 - Lavish CLI
 - Gemini Notebook CLI
-- PostHog CLI
 - Prettier
 - Pyright
 - QMD
@@ -612,8 +611,6 @@ The [ChatGPT desktop application](https://learn.chatgpt.com/docs/app) includes t
 Oh My Pi extends the Pi coding agent into a multi-agent orchestration setup, and Herdr installs the matching integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
 
 The Claude Codex plugin and its marketplace remain excluded.
-
-The global agent instructions tell agents to use PostHog CLI for deterministic PostHog work without storing its credentials in the repository.
 
 The setup owns no agent skills.
 Skill sources are renamed, split, and retired far faster than the rest of this inventory, and a stale entry would fail the whole run without adding anything a fresh Mac needs to work.

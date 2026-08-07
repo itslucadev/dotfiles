@@ -32,12 +32,6 @@ When a task would benefit from Lucas's personal viewpoints, read `~/OPINIONS.md`
 
 When writing or posting in Lucas's voice, read `~/VOICE.md` if it exists.
 
-## PostHog
-
-- Use `posthog-cli` for deterministic PostHog queries, schema work, tasks, and artifact uploads.
-- Before a PostHog task, run `posthog-cli api skill list` and install a relevant skill only when the task needs it.
-- Never expose or commit PostHog personal API keys, project credentials, or CLI authentication state.
-
 ## Sentry
 
 - Use the `sentry` CLI for Sentry issues, events, projects, releases, traces, logs, and authenticated API work.

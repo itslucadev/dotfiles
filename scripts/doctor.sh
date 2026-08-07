@@ -94,7 +94,6 @@ for command_name in \
   git-lfs \
   jq \
   mas \
-  posthog-cli \
   rg \
   sentry \
   yt-dlp \
