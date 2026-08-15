@@ -29,6 +29,11 @@
     "python-envs.alwaysUseUv": true,
     "ruff.configurationPreference": "filesystemFirst",
     "terminal.integrated.fontFamily": "Hack Nerd Font Mono",
+    // Todo Tree looks for the editor's bundled ripgrep under
+    // `@vscode/ripgrep/bin/rg`, which VS Code no longer ships: it now unpacks
+    // `@vscode/ripgrep-universal` into a per-architecture directory instead. The
+    // Homebrew binary from the Brewfile is pointed at directly, because it stays
+    // in place across editor updates and serves VS Code and Cursor alike.
     "todo-tree.ripgrep": "/opt/homebrew/bin/rg",
     "typescript.updateImportsOnFileMove.enabled": "always",
     "window.autoDetectColorScheme": false,
