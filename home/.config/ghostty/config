@@ -14,7 +14,16 @@ window-padding-y = 10,8
 window-padding-balance = true
 
 mouse-hide-while-typing = true
+# `right` haelt die linke Option-Taste fuer @ | \ { } [ ] ~ € frei, kostet dort
+# aber den Alt-ESC-Prefix. Ghostty hat keinen Default-Keybind fuer
+# alt+backspace, also faellt links-Option+Backspace auf ein nacktes 0x7f
+# zurueck und loescht nur ein Zeichen statt eines Wortes.
 macos-option-as-alt = right
+# Expliziter Keybind statt `macos-option-as-alt = true`: Keybinds werden gegen
+# die unuebersetzten Modifier gematcht und greifen daher auf beiden
+# Option-Tasten. \x1b\x7f ist Meta+DEL, das Wort-links-loeschen in Claude Code,
+# readline, zsh und fish.
+keybind = alt+backspace=text:\x1b\x7f
 confirm-close-surface = false
 
 # On macOS the tab bar lives in the titlebar, so `hidden` opens tabs that cannot
