@@ -88,9 +88,16 @@ alias icloud='cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs"'
 # affects interactive shells, because aliases never reach scripts or Makefiles.
 alias cc="claude --permission-mode auto"
 alias ccw="claude --permission-mode auto --worktree"
+# gh resolves a bare repository name against the authenticated account, so this
+# takes just the name for own repos and still accepts owner/repo for everything
+# else. Trailing git flags need the -- separator, as in `clone foo -- --depth=1`.
+alias clone="gh repo clone"
 
 alias ls="eza --icons=auto --group-directories-first"
 alias l="eza --icons=auto --group-directories-first --git-ignore"
 alias ll="eza --icons=auto --group-directories-first --all --header --long"
 alias llm="eza --icons=auto --group-directories-first --all --header --long --sort=modified"
 alias lt="eza --icons=auto --group-directories-first --tree"
+
+alias mbp="ssh lucabecker@mbp"
+alias nas="ssh phoenix-error@nas"
