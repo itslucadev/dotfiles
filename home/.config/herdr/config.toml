@@ -4,6 +4,10 @@ onboarding = false
 agent_panel_sort = "spaces"
 show_agent_labels_on_pane_borders = true
 
+[ui.sidebar.spaces]
+# One blank row between space entries so the two-line entries stay distinct.
+row_gap = 1
+
 [ui.toast]
 delivery = "system"
 
