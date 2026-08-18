@@ -101,5 +101,7 @@ config.keys = {
 	-- Option+Backspace: Wort löschen
 	{ key = "Backspace", mods = "OPT", action = act.SendKey({ key = "w", mods = "CTRL" }) },
 }
+-- OMP support https://omp.sh/docs/quickstart
+config.enable_kitty_keyboard = true
 
 return config
