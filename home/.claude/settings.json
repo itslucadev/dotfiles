@@ -4,12 +4,15 @@
     "CLAUDE_CODE_DISABLE_FAST_MODE": "1",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "ENABLE_LSP_TOOL": "1",
-    "EDITOR": "cursor --wait"
+    "EDITOR": "code --wait"
   },
   "permissions": {
+    "allow": [
+      "mcp__argent"
+    ],
     "defaultMode": "auto"
   },
-  "model": "opus",
+  "model": "fable",
   "hooks": {
     "SessionStart": [
       {
@@ -74,7 +77,8 @@
     "playwright@claude-plugins-official": false,
     "ralph-loop@claude-plugins-official": false,
     "rust-analyzer-lsp@claude-plugins-official": false,
-    "skill-creator@claude-plugins-official": false
+    "skill-creator@claude-plugins-official": false,
+    "understand-anything@understand-anything": true
   },
   "extraKnownMarketplaces": {
     "callstack-agent-skills": {
@@ -93,6 +97,12 @@
       "source": {
         "source": "github",
         "repo": "ChromeDevTools/chrome-devtools-mcp"
+      }
+    },
+    "understand-anything": {
+      "source": {
+        "source": "github",
+        "repo": "Egonex-AI/Understand-Anything"
       }
     }
   },

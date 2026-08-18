@@ -1,10 +1,17 @@
+# Ordering is deliberate; see the Zsh Plugin Policy in AGENTS.md.
+# 1. Completion paths land on fpath before completion initializes.
 zsh-users/zsh-completions kind:fpath path:src
+# 2. ez-compinit initializes completion.
 mattmc3/ez-compinit
+# 3. fzf-tab loads before plugins that wrap interactive widgets.
 Aloxaf/fzf-tab
 hlissner/zsh-autopair
 zsh-users/zsh-autosuggestions
 MichaelAquilina/zsh-you-should-use
 fdellwing/zsh-bat
+# 4. Syntax highlighting loads near the end, after every widget-wrapping plugin.
 zsh-users/zsh-syntax-highlighting
+# 5. History substring search must load after syntax highlighting.
 zsh-users/zsh-history-substring-search
+# zsh-ssh only adds an fzf-backed completion for `ssh`, so its position is free.
 sunlei/zsh-ssh

@@ -3,7 +3,7 @@ min_version = "2026.7.17"
 [settings]
 lockfile = true
 lockfile_platforms = ["macos-arm64"]
-minimum_release_age = "7d"
+minimum_release_age = "1d"
 dotfiles.root = "~/github/phoenix-error/dotfiles/home"
 dotfiles.default_mode = "symlink"
 
@@ -12,11 +12,16 @@ package_manager = "bun"
 
 [tools]
 bun = "latest"
+doppler = "latest"
+fnox = "latest"
 # zulu-17 stays the active development version. zulu-jre-21 is the native arm64
 # runtime for Minecraft and CurseForge, linked into
 # ~/Library/Java/JavaVirtualMachines/zulu-jre-21.jre
 java = ["zulu-17", "zulu-jre-21"]
 node = "lts"
+# The aqua backend installs the standalone pnpm binary, so pnpm sits next to the
+# npm that ships with Node.js and Bun instead of being installed through either.
+pnpm = "latest"
 python = "3.12"
 ruff = "latest"
 uv = "latest"
@@ -37,9 +42,14 @@ uv = "latest"
 "npm:typescript-language-server" = "latest"
 "npm:vercel" = "latest"
 "pipx:notebooklm-mcp-cli" = "latest"
+"pipx:pdfminer.six" = "latest"
 
 [env]
 ANDROID_HOME = "{{ env.HOME }}/Library/Android/sdk"
+# The Doppler CLI is installed and updated through mise, so its built-in
+# self-updater must stay off. It also fails on this machine, because the
+# signature verification needs a gnupg that Homebrew does not install.
+DOPPLER_ENABLE_VERSION_CHECK = "false"
 UV_PYTHON = { value = "{{ tools.python.path }}", tools = true }
 _.path = [
   "{{ env.HOME }}/Library/Android/sdk/emulator",
@@ -54,12 +64,12 @@ _.path = [
 # source would therefore be looked up under ~/.config/mise instead of the
 # repository.
 [dotfiles]
-# `home/AGENTS.md` is linked to the three paths the managed agents actually
-# read: Claude Code takes `~/.claude/CLAUDE.md`, Codex takes
-# `$CODEX_HOME/AGENTS.md`, and Pi takes `~/.pi/agent/AGENTS.md`. Oh My Pi needs
-# no entry of its own, because its `claude` and `codex` compatibility providers
-# already load both of those files at user level and are enabled by default.
+# `home/AGENTS.md` is linked to the canonical `~/.agents/AGENTS.md` path and
+# the four paths the managed agents actually read: Claude Code takes
+# `~/.claude/CLAUDE.md`, Codex takes `$CODEX_HOME/AGENTS.md`, Oh My Pi takes
+# `~/.omp/agent/AGENTS.md`, and OpenCode takes `~/.config/opencode/AGENTS.md`.
 # The Cursor CLI has no home-level instruction file at all, only project ones.
+"~/.agents/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.claude/CLAUDE.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.claude/rules/context7.md" = {}
 "~/.claude/settings.json" = {}
@@ -74,7 +84,8 @@ _.path = [
 # `home/.zshrc` already puts `~/.local/bin` on PATH for mise, so a command
 # linked here needs no alias and is reachable from every shell.
 "~/.local/bin/keykey" = {}
-"~/.pi/agent/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
+"~/.omp/agent/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
+"~/.config/opencode/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}
 "~/.config/wezterm/wezterm.lua" = {}
@@ -115,6 +126,33 @@ NSGlobalDomain = { AppleInterfaceStyleSwitchesAutomatically = true, AppleShowAll
 # Finder reads `AppleShowAllExtensions` from `NSGlobalDomain`, so it is only set there.
 "com.apple.finder" = { CreateDesktop = false }
 "com.apple.screencapture" = { "disable-shadow" = true }
+# Sparkle-based applications check for updates but ask before installing by
+# default, which is exactly the update banner this setup avoids. These two keys
+# make every managed Sparkle cask download and install its updates silently.
+# Homebrew leaves these casks alone because they are marked auto_updates, so
+# the apps' own updaters are the only channel that keeps them current.
+# ChatGPT really does ship with the com.openai.codex bundle identifier.
+"ch.protonvpn.mac" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"com.colliderli.iina" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"com.fournova.Tower3" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+# AltTab owns SUAutomaticallyUpdate through its own update-policy preference
+# and rewrites the key while running, so declaring it would fight the app the
+# same way AppleInterfaceStyle would fight the appearance schedule. Silent
+# installs for AltTab are enabled in its preferences under Policies instead.
+"com.lwouis.alt-tab-macos" = { SUEnableAutomaticChecks = true }
+"com.mitchellh.ghostty" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"com.openai.codex" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"com.robinebers.openusage" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"com.xykong.Markdown" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"company.thebrowser.dia" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"dev.expo.orbit" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"io.tailscale.ipn.macsys" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"net.pornel.ImageOptim" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+"pl.maketheweb.cleanshotx" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
+# The Mac App Store applications from Brewfile.mas update themselves only when
+# the App Store's automatic updates are on, which is a per-machine choice that
+# this key pins.
+"com.apple.commerce" = { AutoUpdate = true }
 
 # `mise bootstrap` owns the stage order of the managed setup. It converges its
 # own phases, dotfiles, macOS defaults, and tools, and these hooks add the
@@ -147,6 +185,7 @@ run = [
   "~/github/phoenix-error/dotfiles/scripts/require-coding-agents.sh",
   "~/github/phoenix-error/dotfiles/scripts/install-herdr-integrations.sh",
   "~/github/phoenix-error/dotfiles/scripts/install-mas-apps.sh",
+  "~/github/phoenix-error/dotfiles/scripts/setup-autoupdate.sh",
   "mise exec -- ~/github/phoenix-error/dotfiles/scripts/doctor.sh || true",
 ]
 
@@ -184,6 +223,16 @@ run = "./scripts/require-coding-agents.sh"
 description = "Install the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi"
 dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/install-herdr-integrations.sh"
+
+[tasks."update:tools"]
+description = "Upgrade Homebrew, Mac App Store applications, mise, and mise tools now"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/update-tools.sh"
+
+[tasks."update:schedule"]
+description = "Install the launchd agent that runs update:tools daily at 07:00"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/setup-autoupdate.sh"
 
 [tasks.doctor]
 description = "Report setup status and remaining manual actions"

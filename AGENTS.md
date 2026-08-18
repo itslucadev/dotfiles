@@ -46,8 +46,8 @@ Every tool has exactly one installation channel. Decide it with this rule, in or
 
 1. A graphical application belongs in `Brewfile` as a cask, or in `Brewfile.mas` when the Mac App Store is its only channel.
 2. A language runtime belongs in `mise.toml`. That covers Node, Bun, Python, Java, uv, and Ruff.
-3. A coding agent belongs in `Brewfile` whenever Homebrew ships it. Agent binaries update themselves at runtime, so a mise lockfile cannot hold their version and the seven-day minimum release age buys nothing.
-4. Anything else that is installed through a language runtime belongs in `mise.toml` with its backend prefix, so `npm:` or `pipx:`. mise resolves it into the local `mise.lock` and enforces the seven-day minimum release age, which Homebrew cannot do.
+3. A coding agent belongs in `Brewfile` whenever Homebrew ships it. Agents release too often for a lockfile and a minimum release age to usefully follow, and the daily tool updater keeps them current.
+4. Anything else that is installed through a language runtime belongs in `mise.toml` with its backend prefix, so `npm:` or `pipx:`. mise resolves it into the local `mise.lock` and enforces the minimum release age configured in `mise.toml`, which Homebrew cannot do.
 5. Everything else is a native binary and belongs in `Brewfile` as a formula.
 
 A tool that ships both a native binary and a runtime package follows rule 4 unless its vendor deprecated the runtime package, in which case it follows rule 5.
@@ -65,7 +65,7 @@ Never pass `--force` to `mise bootstrap dotfiles apply`. Refusing a conflict is 
 
 Before adding a tool, check the other inventory for an existing entry.
 
-The rule covers declarations, not dependency closures. Homebrew formulae pull their own runtimes, so `agent-browser` and `pi-coding-agent` bring `node`, and `watchman` and `yt-dlp` bring `python`. Those installs are unavoidable and are not duplicate declarations.
+The rule covers declarations, not dependency closures. Homebrew formulae pull their own runtimes, so `agent-browser` and `opencode` bring `node`, and `watchman` and `yt-dlp` bring `python`. Those installs are unavoidable and are not duplicate declarations.
 
 `home/.zshrc` puts `~/.local/bin` on `PATH` after Homebrew's shell environment and activates mise after that, so mise is findable at its install path and its shims still come first on `PATH`, which makes the declared runtime versions win. Do not reorder those three blocks.
 
@@ -137,7 +137,8 @@ If a plugin needs a native CLI dependency, the CLI may belong in `Brewfile`, but
 
 ## Editor Policy
 
-Cursor is the primary editor and owns `EDITOR` and `VISUAL`.
+VS Code is the primary editor and owns `EDITOR` and `VISUAL`.
+Cursor stays installed as a secondary editor and keeps mirroring the shared settings.
 
 Neovim is intentionally not part of this setup.
 
@@ -165,7 +166,7 @@ Do not add a skill source without an explicit decision from the user.
 
 Document BunX, not `npx`, manually copied skill directories, or plugin-cache contents.
 
-The four agent targets are Claude Code, Codex, Cursor, and Pi. Oh My Pi extends Pi and reads Pi's skill directory, so it needs no separate target.
+The four agent targets are Claude Code, Codex, Cursor, and OpenCode. Every install also lands as the canonical copy in `~/.agents/skills`, which Oh My Pi reads natively, so it needs no separate target. Symlinks into that store are the CLI's default install mode; do not pass `--copy`.
 
 Do not add Codex, OpenCode, Ponytail, Understand Anything, or Karpathy skill sources.
 

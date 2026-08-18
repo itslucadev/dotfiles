@@ -1939,13 +1939,13 @@ gh auth status</code></pre>
                   <input class="task-check" type="checkbox" aria-label="Coding Agents angemeldet" />
                   <div class="task-content">
                     <div class="task-topline">
-                      <h3 class="task-title">Alle fünf Coding Agents anmelden</h3>
+                      <h3 class="task-title">Alle sechs Coding Agents anmelden</h3>
                       <span class="badge manual">Login</span>
                     </div>
                     <p class="task-note">
                       Das Setup wartet in seinem Fenster. Die Anmeldungen in einem zweiten
                       Terminal erledigen, danach im Setup-Fenster mit Return bestätigen. Das
-                      Gate prüft das Ergebnis und fragt so lange erneut, bis alle fünf bereit
+                      Gate prüft das Ergebnis und fragt so lange erneut, bis alle sechs bereit
                       sind.
                     </p>
                     <div class="command">
@@ -1953,7 +1953,8 @@ gh auth status</code></pre>
 codex login
 cursor-agent login
 omp             # Onboarding und Anmeldung, dann /exit
-pi              # Anmeldung, dann /exit</code></pre>
+opencode auth login
+grok login</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
@@ -1964,6 +1965,7 @@ pi              # Anmeldung, dann /exit</code></pre>
                     </p>
                   </div>
                 </article>
+
               </div>
             </div>
           </section>
@@ -2570,22 +2572,27 @@ vercel login</code></pre>
                     <p class="task-note">
                       Immer <code>bunx</code>, nie <code>npx</code>. Die vier Agent-Ziele sind
                       <code>claude-code</code>, <code>codex</code>, <code>cursor</code> und
-                      <code>pi</code>. Oh My Pi erweitert Pi und liest dessen
-                      Skill-Verzeichnis mit, braucht also kein eigenes Ziel.
+                      <code>opencode</code>. Jede Installation legt die kanonische Kopie in
+                      <code>~/.agents/skills</code> ab und verlinkt die Agent-Verzeichnisse
+                      per Symlink darauf. Oh My Pi liest das kanonische Verzeichnis direkt
+                      und braucht deshalb kein eigenes Ziel.
                     </p>
                     <div class="command">
                       <pre><code>bunx skills add mattpocock/skills \
-  --agent claude-code --agent codex --agent cursor --agent pi \
+  --agent claude-code --agent codex --agent cursor --agent opencode \
   --global</code></pre>
                       <button class="copy-button" type="button">Kopieren</button>
                     </div>
                     <p class="task-note">
                       Der Befehl öffnet die interaktive Auswahl von
                       <a href="https://github.com/mattpocock/skills" rel="noopener noreferrer" target="_blank">mattpocock/skills</a>.
-                      Für eine nicht-interaktive Installation eines festen Satzes stattdessen
+                      Ohne <code>--agent</code>-Flags öffnet die Agent-Auswahl mit der zuletzt
+                      benutzten Auswahl vorbelegt und fragt danach nach Projekt oder global;
+                      Symlinks sind der Standard-Installationsmodus. Für eine nicht-interaktive
+                      Installation eines festen Satzes stattdessen
                       <code>--yes</code> und ein oder mehrere <code>--skill &lt;name&gt;</code>
                       anhängen. Dieselbe Form funktioniert mit jeder anderen Quelle:
-                      <code>bunx skills add &lt;owner/repo&gt; --agent &lt;agent&gt; … --global</code>.
+                      <code>bunx skills add &lt;owner/repo&gt;</code>.
                     </p>
                     <div class="callout">
                       Drei Namen kommen über mehr als einen Kanal, jeweils mit anderem Verhalten
@@ -2611,8 +2618,7 @@ vercel login</code></pre>
                       Das Setup installiert <code>nlm</code> über mise als PyPI-Paket
                       <code>notebooklm-mcp-cli</code>, aber nicht die Anmeldung, den MCP-Server
                       oder den Skill. Ohne <code>nlm login</code> schlagen Notebook-Befehle und
-                      der gebündelte Skill fehl. Pi wird von <code>nlm setup</code> und
-                      <code>nlm skill install</code> nicht unterstützt.
+                      der gebündelte Skill fehl.
                     </p>
                     <div class="command">
                       <pre><code>nlm login

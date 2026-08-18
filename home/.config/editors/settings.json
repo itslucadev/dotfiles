@@ -34,7 +34,7 @@
     // `@vscode/ripgrep-universal` into a per-architecture directory instead. The
     // Homebrew binary from the Brewfile is pointed at directly, because it stays
     // in place across editor updates and serves VS Code and Cursor alike.
-    "todo-tree.ripgrep": "/opt/homebrew/bin/rg",
+    "todo-tree.ripgrep.ripgrep": "/opt/homebrew/bin/rg",
     "typescript.updateImportsOnFileMove.enabled": "always",
     "window.autoDetectColorScheme": false,
     "workbench.preferredDarkColorTheme": "Rosé Pine Moon",

@@ -1,3 +1,4 @@
+# === History ===
 # Without these three lines there is effectively no shell history. zsh defaults
 # to HISTSIZE=30, SAVEHIST=0, and an unset HISTFILE, so nothing survives a
 # session. The two sizes are kept equal on purpose: HISTSIZE is the in-memory
@@ -14,6 +15,7 @@ setopt hist_ignore_all_dups
 setopt hist_ignore_space
 setopt share_history
 
+# === Homebrew, PATH, and tool activation ===
 # Homebrew must be available before the remaining shell tools initialize.
 if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -31,10 +33,23 @@ if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
 fi
 
-export EDITOR="cursor --wait"
+# === Secrets ===
+# fnox resolves secrets through Doppler, whose auth token lives in the login
+# keychain. SSH sessions start with a locked keychain, so activating fnox there
+# only produces resolver warnings. Secrets stay reachable over SSH on demand
+# with `fnox get` or `fnox exec` after `security unlock-keychain`.
+if [[ -z "$SSH_CONNECTION" ]] && command -v fnox >/dev/null 2>&1; then
+  eval "$(fnox activate zsh)"
+fi
+
+# === Environment ===
+# --wait keeps the CLI open until the file closes; without it, callers like
+# `git commit` see the editor exit immediately and read an empty message.
+export EDITOR="code --wait"
 export VISUAL="$EDITOR"
 export DEV_HOME="$HOME/Developer"
 
+# === Plugins and key bindings ===
 # Every guard below matters. bootstrap.sh links this file before the Brewfile
 # is applied, so the first terminal after it has neither antidote nor these
 # tools yet.
@@ -59,6 +74,7 @@ if (( $+widgets[history-substring-search-up] )); then
   bindkey "^[[B" history-substring-search-down
 fi
 
+# === Completion styling ===
 # The first three are case-insensitive completion and the grouped headers and
 # menu style that fzf-tab expects. The last one previews directories with eza.
 zstyle ":completion:*" matcher-list "m:{a-zA-Z}={A-Za-z}"
@@ -66,6 +82,7 @@ zstyle ":completion:*" menu no
 zstyle ":completion:*:descriptions" format "[%d]"
 zstyle ":fzf-tab:complete:cd:*" fzf-preview 'eza -1 --color=always $realpath'
 
+# === Prompt and navigation ===
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"
 fi
@@ -74,6 +91,7 @@ if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
 
+# === Aliases ===
 alias cls="clear"
 alias cdd="cd ../.."
 alias dev='cd "$DEV_HOME"'
@@ -93,11 +111,16 @@ alias ccw="claude --permission-mode auto --worktree"
 # else. Trailing git flags need the -- separator, as in `clone foo -- --depth=1`.
 alias clone="gh repo clone"
 
-alias ls="eza --icons=auto --group-directories-first"
-alias l="eza --icons=auto --group-directories-first --git-ignore"
-alias ll="eza --icons=auto --group-directories-first --all --header --long"
-alias llm="eza --icons=auto --group-directories-first --all --header --long --sort=modified"
-alias lt="eza --icons=auto --group-directories-first --tree"
+# eza replaces ls, so these stay guarded: an unguarded alias would break plain
+# `ls` in the first terminal after bootstrap. The other aliases wrap commands
+# that fail identically with or without the alias, so they need no guard.
+if command -v eza >/dev/null 2>&1; then
+  alias ls="eza --icons=auto --group-directories-first"
+  alias l="eza --icons=auto --group-directories-first --git-ignore"
+  alias ll="eza --icons=auto --group-directories-first --all --header --long"
+  alias llm="eza --icons=auto --group-directories-first --all --header --long --sort=modified"
+  alias lt="eza --icons=auto --group-directories-first --tree"
+fi
 
 alias mbp="ssh lucabecker@mbp"
 alias nas="ssh phoenix-error@nas"

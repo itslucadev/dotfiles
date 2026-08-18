@@ -10,9 +10,11 @@
 # blocks until every managed agent is set up, and verifies the result.
 #
 # Claude Code, Codex, and the Cursor CLI expose a non-interactive login check,
-# so those are verified against real authentication. Oh My Pi and Pi keep their
-# credentials in a vault with no stable probe, so those are verified against the
-# directory Herdr needs, and the printed instruction covers the sign-in.
+# so those are verified against real authentication. OpenCode and the Grok CLI
+# record their credentials in plain auth files, which are checked directly.
+# Oh My Pi keeps its credentials in a vault with no stable probe, so it is
+# verified against the directory Herdr needs, and the printed instruction
+# covers the sign-in.
 
 set -Eeuo pipefail
 
@@ -26,7 +28,8 @@ readonly AGENTS=(
   "codex|Codex|codex|run \`codex login\`"
   "cursor|Cursor CLI|cursor-agent|run \`cursor-agent login\`"
   "omp|Oh My Pi|omp|run \`omp\`, finish the onboarding and sign in, then leave with /exit"
-  "pi|Pi|pi|run \`pi\`, sign in, then leave with /exit"
+  "opencode|OpenCode|opencode|run \`opencode auth login\`"
+  "grok|Grok CLI|grok|run \`grok login\`"
 )
 
 agent_field() {
@@ -50,8 +53,11 @@ agent_ready() {
     omp)
       [[ -d "$HOME/.omp/agent" ]]
       ;;
-    pi)
-      jq -e 'length > 0' "$HOME/.pi/agent/auth.json"
+    opencode)
+      jq -e 'length > 0' "$HOME/.local/share/opencode/auth.json"
+      ;;
+    grok)
+      jq -e 'length > 0' "$HOME/.grok/auth.json"
       ;;
     *)
       return 1

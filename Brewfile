@@ -11,6 +11,7 @@ brew "eza"
 brew "fallow"
 brew "fastlane"
 brew "fd"
+brew "ffmpeg"
 brew "fzf"
 brew "getsentry/tools/sentry", trusted: true
 brew "getsentry/tools/sentry-wizard", trusted: true
@@ -24,7 +25,7 @@ brew "lazygit"
 brew "mas"
 brew "mobile-dev-inc/tap/maestro", trusted: true
 brew "mole"
-brew "pi-coding-agent"
+brew "opencode"
 brew "resend/cli/resend", trusted: true
 brew "ripgrep"
 brew "schpet/tap/linear", trusted: true
@@ -47,6 +48,7 @@ cask "visual-studio-code"
 cask "claude-code"
 cask "codex"
 cask "cursor-cli"
+cask "grok-build"
 
 # Agents Desktop Apps
 cask "chatgpt"
@@ -58,6 +60,7 @@ cask "thebrowsercompany-dia"
 cask "whatsapp"
 
 # Developer tools
+cask "basictex"
 cask "hoppscotch"
 cask "localsend"
 cask "openusage"

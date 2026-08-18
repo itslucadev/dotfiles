@@ -42,7 +42,7 @@ mise is the central orchestrator.
 
 Homebrew installs formulae, desktop applications, and fonts.
 
-mise installs Node.js, Bun, Python, Java, native developer tools, and global npm-backed CLIs, with Bun acting as the npm package manager.
+mise installs Node.js, Bun, pnpm, Python, Java, native developer tools, and global npm-backed CLIs, with Bun acting as the npm package manager.
 
 Fuzzy versions must be at least seven days old before mise selects them, which limits exposure to brand-new supply-chain releases.
 
@@ -196,7 +196,7 @@ The `setup` task in `mise.toml` updates mise itself and then runs `mise bootstra
 - Creates `~/Developer` and applies the confirmed macOS defaults.
 - Installs the locked language runtimes, then the locked global CLIs.
 - Pauses for the coding agent sign-ins, then verifies them before continuing.
-- Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
+- Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, OpenCode, and the Grok CLI.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
 - Runs the setup doctor.
 
@@ -234,7 +234,7 @@ The gated interactions are:
 - Finishing the Xcode Command Line Tools installer.
 - Confirming administrator rights before Homebrew creates `/opt/homebrew`, which needs `sudo -v` first in a non-interactive environment.
 - Completing the manual Git identity and GitHub SSH checklist after `Brewfile` installs Git, including comparing GitHub's SSH host fingerprint on the first connection.
-- Signing in to Claude Code, Codex, the Cursor CLI, Oh My Pi, and Pi, so Herdr can install its integration for each of them.
+- Signing in to Claude Code, Codex, the Cursor CLI, Oh My Pi, OpenCode, and the Grok CLI, so Herdr can install its integration for each of them.
 - Signing in to the Mac App Store and claiming applications that the Apple Account has never downloaded.
 
 The final success message is printed only after all of these gates and their dependent automated stages have completed.
@@ -345,7 +345,7 @@ Homebrew installs these applications:
 
 Homebrew also installs Claude Code, the Codex CLI, and the Cursor CLI as casks.
 
-Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, CocoaPods, Fallow, Fastlane, fd, Git LFS, Gitleaks, jq, LazyGit, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, the Pi coding agent, the Resend CLI, ripgrep, the Sentry CLI, the Sentry Wizard, Tmux, Watchman, and YouTube-DLP.
+Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, CocoaPods, Fallow, Fastlane, fd, Git LFS, Gitleaks, jq, LazyGit, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, OpenCode, the Resend CLI, ripgrep, the Sentry CLI, the Sentry Wizard, Tmux, Watchman, and YouTube-DLP.
 
 The interactive shell tools Antidote, bat, eza, fd, FZF, ripgrep, Starship, and Zoxide are covered in the shell section below.
 
@@ -369,6 +369,7 @@ mise manages:
 
 - Node.js LTS
 - Bun
+- pnpm
 - Python 3.12
 - uv
 - Ruff
@@ -397,7 +398,10 @@ See [jacob-bd/gemini-notebook-mcp-cli](https://github.com/jacob-bd/gemini-notebo
 
 All npm-backed CLIs, including Biome and Prettier, are installed by Bun through mise.
 
-mise's seven-day minimum release age also applies to supported npm package resolution, including transitive npm dependencies.
+pnpm is available globally for projects that expect it, alongside Bun and the `npm` that ships with Node.js LTS.
+mise installs it from the aqua backend as a standalone binary, so it is versioned in `mise.lock` and does not depend on Bun or npm.
+
+The minimum release age configured in `mise.toml` also applies to supported npm package resolution, including transitive npm dependencies.
 
 Python, uv, and Ruff are installed directly by mise.
 
@@ -552,17 +556,15 @@ Zed is not installed or configured.
 
 ## Agent Configuration
 
-One public `home/AGENTS.md` file is symlinked to every path a managed agent actually reads:
+One public `home/AGENTS.md` file is symlinked to the canonical shared location and every native path a managed agent actually reads:
 
+- `~/.agents/AGENTS.md` as the canonical vendor-neutral location
 - `~/.claude/CLAUDE.md` for Claude Code
 - `~/.codex/AGENTS.md` for Codex
-- `~/.pi/agent/AGENTS.md` for Pi
+- `~/.omp/agent/AGENTS.md` for Oh My Pi
+- `~/.config/opencode/AGENTS.md` for OpenCode
 
 This gives the supported agents the same global working rules without maintaining duplicate files.
-
-Oh My Pi has no entry of its own.
-Its `claude` and `codex` compatibility providers already read `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` at user level, and both stay active unless they are listed in `disabledProviders`.
-The price is that Oh My Pi loads the same instructions twice, which is accepted here rather than disabling a provider that also supplies Codex skills, commands, and MCP servers.
 
 The Cursor CLI has no home-level instruction file.
 It reads `AGENTS.md` from a project only, so nothing global is linked for it.
@@ -579,16 +581,16 @@ OpenCode is not part of the setup.
 
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
 
-Homebrew installs every coding agent: Claude Code, Codex, and the Cursor CLI as casks, the Pi coding agent and Oh My Pi as formulae.
+Homebrew installs every coding agent: Claude Code, Codex, the Cursor CLI, and Grok Build as casks, and Oh My Pi and OpenCode as formulae.
 
 The `cursor-cli` cask provides the `cursor-agent` binary, which is the command-line agent and a separate artifact from the `cursor` editor cask.
 Herdr hooks that CLI, not the editor, so both casks are declared.
 
-Agent binaries update themselves at runtime, so a mise lockfile could not hold their versions and the seven-day minimum release age would buy nothing. Anthropic also deprecated the Claude Code npm package in January 2026 with version 2.1.15 in favour of the native binary.
+Agent releases ship several times a day, faster than a mise lockfile and a minimum release age can usefully follow, so Homebrew and the daily tool updater keep them current. Anthropic also deprecated the Claude Code npm package in January 2026 with version 2.1.15 in favour of the native binary.
 
 Every Homebrew cask and formula pins the exact release artifact with a SHA-256 checksum, which a vendor install script piped into a shell cannot offer.
 
-Claude Code updates itself into `~/.local/share/claude`. That directory belongs to its own updater and is not managed by this repository.
+The agents' built-in updaters are not relied on: the Homebrew-installed binaries stay at the version Homebrew installed until the next upgrade, and each CLI's `update` subcommand only works for its native install layout.
 
 Oh My Pi comes from `can1357/tap` as the `omp` formula, a native binary at version 17. Its npm package stalled at 0.2.0 and is not the same distribution.
 
@@ -608,7 +610,10 @@ Claude authentication, caches, conversation history, local settings, and generat
 
 The [ChatGPT desktop application](https://learn.chatgpt.com/docs/app) includes the Codex desktop experience, and Homebrew installs the standalone Codex CLI beside it.
 
-Oh My Pi extends the Pi coding agent into a multi-agent orchestration setup, and Herdr installs the matching integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi.
+Oh My Pi extends the Pi coding agent into a multi-agent orchestration setup, and Herdr installs the matching integrations for Claude Code, Codex, Cursor, Oh My Pi, OpenCode, and the Grok CLI.
+
+The Pi coding agent is not installed.
+Oh My Pi ships self-contained and discovers the canonical `~/.agents/skills` store directly, so skill installs need no Pi target.
 
 The Claude Codex plugin and its marketplace remain excluded.
 
@@ -638,6 +643,11 @@ The existing Mac's trust file is not copied because it contains stale entries fo
 
 ## Updating Tool Versions
 
+A launchd agent, installed by `scripts/setup-autoupdate.sh` as a final bootstrap stage, runs `scripts/update-tools.sh` every morning at 07:00 and logs to `~/Library/Logs/dotfiles-update.log`.
+It upgrades Homebrew formulae, the casks that cannot update themselves, Mac App Store applications, mise, and the mise-managed tools, and never installs or removes anything the inventories declare or dropped.
+Casks marked `auto_updates` are left to the applications' own updaters, which the managed macOS defaults switch to silent automatic installs for every Sparkle-based app.
+A cask whose installer needs sudo, today only BasicTeX, is skipped unattended and upgraded by an interactive `mise run update:tools`.
+
 Review available updates:
 
 ```sh
@@ -660,7 +670,7 @@ Refresh the local resolved mise versions without installing them:
 MISE_SAFE=1 mise lock --bump
 ```
 
-`mise.lock` is not tracked. Only mise can write it, every entry in `mise.toml` is a fuzzy version, and a committed copy went stale within months without ever having been the source of truth. `mise.toml` is that source, and the seven-day minimum release age is what actually limits exposure.
+`mise.lock` is not tracked. Only mise can write it, every entry in `mise.toml` is a fuzzy version, and a committed copy went stale within months without ever having been the source of truth. `mise.toml` is that source, and the minimum release age is what actually limits exposure.
 
 Each machine therefore resolves and keeps its own lockfile.
 

@@ -80,6 +80,7 @@ for command_name in \
   mise \
   node \
   bun \
+  pnpm \
   python \
   uv \
   ruff \
@@ -116,7 +117,8 @@ for command_name in \
   codex \
   cursor-agent \
   omp \
-  pi \
+  opencode \
+  grok \
   code \
   cursor \
   tsc; do
@@ -143,6 +145,15 @@ if command -v brew >/dev/null 2>&1 && brew list --formula mise >/dev/null 2>&1; 
   fail "mise is installed through Homebrew and must be removed with brew uninstall mise"
 else
   pass "mise is not installed through Homebrew"
+fi
+
+# The daily tool updater is a launchd agent, installed by the final bootstrap
+# hook. `launchctl print` only succeeds for an agent that is actually loaded,
+# which a plist on disk alone does not guarantee.
+if launchctl print "gui/$(id -u)/com.phoenix-error.dotfiles.update-tools" >/dev/null 2>&1; then
+  pass "Daily tool update agent is loaded"
+else
+  fail "Daily tool update agent is not loaded. Run mise run update:schedule"
 fi
 
 if command -v brew >/dev/null 2>&1 &&
@@ -316,7 +327,7 @@ fi
 if command -v herdr >/dev/null 2>&1; then
   herdr_status="$(herdr integration status 2>/dev/null || true)"
 
-  for herdr_integration in claude codex cursor omp pi; do
+  for herdr_integration in claude codex cursor omp opencode grok; do
     if grep -Eq "^${herdr_integration}: (current|outdated)" <<<"$herdr_status"; then
       pass "Herdr integration installed: $herdr_integration"
     else
