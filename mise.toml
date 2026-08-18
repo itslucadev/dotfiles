@@ -120,7 +120,11 @@ tap_to_click = true
 # Appearance follows the light/dark schedule. `AppleInterfaceStyle` stays
 # unmanaged on purpose, because macOS itself writes and deletes that key every
 # time the schedule flips, and declaring it would fight the automatic switch.
-NSGlobalDomain = { AppleInterfaceStyleSwitchesAutomatically = true, AppleShowAllExtensions = true, _HIHideMenuBar = true }
+# `AppleSpacesSwitchOnActivate` is the Mission Control behavior that follows an
+# activated application to a Space where it already has open windows. The Dock
+# implements it but reads the key from `NSGlobalDomain`, so it belongs here and
+# not in the `[bootstrap.macos.dock]` section.
+NSGlobalDomain = { AppleInterfaceStyleSwitchesAutomatically = true, AppleShowAllExtensions = true, AppleSpacesSwitchOnActivate = true, _HIHideMenuBar = true }
 "com.apple.HIToolbox" = { AppleFnUsageType = 0 }
 "com.apple.desktopservices" = { DSDontWriteNetworkStores = true, DSDontWriteUSBStores = true }
 # Finder reads `AppleShowAllExtensions` from `NSGlobalDomain`, so it is only set there.
@@ -170,6 +174,15 @@ run = [
 
 [bootstrap.hooks.pre-defaults]
 run = "mkdir -p ~/Developer/appzudio"
+
+# mise writes the defaults but never relaunches the applications that read them,
+# so the Dock keeps serving its previous state until it restarts. This covers
+# every Dock-owned setting in this file, including `AppleSpacesSwitchOnActivate`
+# and the `[bootstrap.macos.dock]` section. A failing hook halts the bootstrap
+# and `killall` exits non-zero when the Dock is not running, so its status is
+# discarded.
+[bootstrap.hooks.post-defaults]
+run = "killall Dock || true"
 
 # The runtimes install before the tools phase because other backends depend on
 # them. The pipx backend needs uv, and every npm-backed tool needs bun as its
