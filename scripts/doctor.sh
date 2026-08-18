@@ -190,6 +190,25 @@ else
   fail "Managed macOS defaults are missing or differ"
 fi
 
+# The Dock is the one managed thing no bootstrap phase converges, because a
+# rearranged Dock is work that a converging phase would silently undo. This
+# report is what replaces that automation: it says which of the two directions
+# is out of date, and the person decides which one is right. Drift is the normal
+# state of a Mac whose Dock was rearranged an hour ago, so it warns.
+dock_manifest="$HOME/github/phoenix-error/dotfiles/dock.txt"
+dock_script="$HOME/github/phoenix-error/dotfiles/scripts/sync-dock.sh"
+
+if [[ -r "$dock_manifest" && -x "$dock_script" ]]; then
+  if dock_capture="$("$dock_script" export --print 2>/dev/null)" &&
+    [[ "$dock_capture" == "$(cat "$dock_manifest")" ]]; then
+    pass "Dock matches dock.txt"
+  else
+    warn "Dock differs from dock.txt. Run mise run dock:export to keep the Dock, or mise run dock:apply to restore the file"
+  fi
+else
+  fail "Dock manifest or sync script is missing"
+fi
+
 if command -v python >/dev/null 2>&1 &&
   [[ "$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)" == "3.12" ]]; then
   pass "Managed Python version is 3.12"

@@ -12,6 +12,7 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 
 - `Brewfile` owns the exact desired top-level Homebrew formulae, casks, taps, and fonts.
 - `Brewfile.mas` owns Mac App Store applications.
+- `dock.txt` owns the Dock layout, one line per tile in Dock order. `scripts/sync-dock.sh` is its only reader and its only writer, through `mise run dock:apply` and `mise run dock:export`.
 - `mise.toml` owns runtimes, global npm-backed CLIs, setup tasks, dotfile mappings, and scalar macOS defaults.
 - `mise.lock` owns resolved mise tool versions. Only mise writes it, it stays local to each machine, and it must never be tracked.
 - `home/.zsh_plugins.txt` owns every Zsh plugin.
@@ -72,6 +73,30 @@ The rule covers declarations, not dependency closures. Homebrew formulae pull th
 `~/.local/bin` is the only `PATH` entry `home/.zshrc` sets. Everything else, including `ANDROID_HOME` and the Android SDK directories, belongs in `[env]` in `mise.toml`. Do not duplicate a managed environment variable into the shell configuration.
 
 Every tool lookup in `home/.zshrc` stays guarded. `bootstrap.sh` links that file before the `Brewfile` is applied, so the first terminal after initialization has none of the declared tools yet, and an unguarded call would error there.
+
+## Dock Policy
+
+The Dock is the one managed thing that no `mise bootstrap` phase and no hook applies.
+
+A Dock is rearranged by hand between two setups, and a converging phase would replace that arrangement with the last captured manifest on every `mise run setup`.
+
+Keep both directions as explicit tasks.
+
+Do not add `dock:apply` to `[bootstrap.hooks]`, to the `setup` task, or to a scheduled job.
+
+`mise run dock:apply` leaves out an application that is not installed and reports it, so a Mac in the middle of its setup gets a correct partial Dock and the next run fills in the rest.
+
+Do not make a missing application fail the task.
+
+`scripts/doctor.sh` reports drift between the running Dock and `dock.txt`, and that report is what replaces an automatic capture.
+
+Keep it a warning, because a Dock that was rearranged an hour ago is not a broken setup.
+
+`mise run dock:export` refuses to write a manifest from a Dock that reports no applications, which is the one way the task could destroy the captured layout.
+
+The manifest holds paths, and for a stack the three settings from its context menu.
+
+Do not add the bookmark blob, the cached label, or the GUID that macOS keeps per tile. None of them is portable to a second Mac, and the Dock rebuilds all three from the path.
 
 ## Editor Extension Policy
 

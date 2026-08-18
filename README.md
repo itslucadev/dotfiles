@@ -56,6 +56,7 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 | Mac App Store applications | mas | `Brewfile.mas` |
 | Runtimes and global CLIs | mise | `mise.toml` |
 | Dotfiles and macOS defaults | mise | `mise.toml` and `home/` |
+| Dock layout | you, by task | `dock.txt`, [see why](#the-dock) |
 | Bare-metal initialization | Bash | `bootstrap.sh` |
 | Managed setup stages | mise | `mise.toml` task `setup` and `[bootstrap.hooks]` |
 | Git identity and SSH | you, by hand | nothing here, [see why](#declarative-ownership) |
@@ -75,6 +76,7 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 
 **Inventory**
 [Managed Applications](#managed-applications) ·
+[The Dock](#the-dock) ·
 [Runtimes and Global CLIs](#managed-runtimes-and-global-clis) ·
 [Mobile Toolchains](#mobile-toolchains) ·
 [Shell and Terminal](#shell-and-terminal) ·
@@ -303,6 +305,37 @@ The setup doctor reports the state of everything else and never changes the Mac 
 ```sh
 mise run doctor
 ```
+
+## The Dock
+
+`dock.txt` owns the Dock: one line per tile, in Dock order from left to right, applications by path and stacks by folder.
+A stack line carries the three settings from its Dock context menu, so `display=stack view=fan sort=date-added` reproduces the Downloads stack exactly.
+
+Two tasks move the layout in either direction:
+
+```sh
+mise run dock:apply
+mise run dock:export
+```
+
+`dock:apply` rebuilds the Dock from the file, and `dock:export` captures the running Dock back into it.
+Preview an apply without touching the Dock with `mise run dock:apply --dry-run`, which prints the resulting layout tile by tile.
+That is the same `--dry-run` convention `./bootstrap.sh` uses.
+
+The Dock is deliberately not a `mise bootstrap` phase, and no hook applies it.
+Every other stage converges forward on every run, which is right for a package list and wrong for a Dock, because an icon dragged into place last week is work that a converging phase would silently undo.
+Applying the manifest is a decision, so it is a command.
+
+`mise run dock:apply` leaves out an application that is not installed yet and prints what it left out.
+A new Mac therefore gets every application it already has, in the right order, rather than a Dock full of question marks.
+Running the task again once the remaining casks and Mac App Store applications have arrived puts each one back in its own place, because the position comes from the file and not from the order things were installed.
+
+`mise run doctor` reports when the Dock and `dock.txt` differ.
+That report is the reminder to capture a change, and it warns rather than fails, because a Dock that was rearranged an hour ago is not a broken setup.
+
+macOS stores much more per tile than a path: a bookmark that follows an application when it moves, a cached label, and a GUID that means nothing on a second Mac.
+None of that is portable, so the manifest keeps the path alone and lets the Dock rebuild the rest on its next restart.
+`~` stands for the home directory, so the file carries no account name.
 
 ## Managed Applications
 

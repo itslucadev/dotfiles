@@ -1,0 +1,37 @@
+# The managed Dock, in Dock order from left to right.
+#
+#   mise run dock:apply    rebuild the Dock from this file
+#   mise run dock:export   capture the running Dock into this file
+#
+# `mise run dock:apply --dry-run` prints the Dock it would build, tile by tile,
+# and changes nothing.
+#
+# An `app` line is an application bundle. `mise run dock:apply` skips one that
+# is not installed and reports it, so a Mac that is still missing an app gets
+# the rest of the Dock in the right order. Running the task again after the
+# application arrives puts it back in its place.
+#
+# A `folder` line is a stack, and its options are the ones in the Dock context
+# menu: display=stack|folder, view=auto|fan|grid|list, and
+# sort=name|date-added|date-modified|date-created|kind.
+#
+# `~` is the home directory, so this file carries no account name.
+
+app	/System/Applications/Apps.app
+app	/Applications/Spark Desktop.app
+app	/Applications/Timepage.app
+app	/Applications/Actions.app
+app	/Applications/Ghostty.app
+app	/Applications/WezTerm.app
+app	/Applications/T3 Code (Alpha).app
+app	/Applications/Obsidian.app
+app	/Applications/Recordly.app
+app	/Applications/LocalSend.app
+app	/Applications/TextMate.app
+app	/Applications/Xcode.app
+app	/Applications/Visual Studio Code.app
+app	/Applications/Hoppscotch.app
+app	/Applications/Dia.app
+app	/Applications/Linear.app
+app	/Applications/YouTube Music.app
+app	/System/Applications/System Settings.app

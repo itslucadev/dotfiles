@@ -227,6 +227,21 @@ description = "Install the managed Mac App Store applications"
 dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/install-mas-apps.sh"
 
+# The Dock is the one managed thing that is not a `mise bootstrap` phase and is
+# reached by neither `mise run setup` nor a hook. Its layout is rearranged by
+# hand between two setups, so a phase would overwrite that work with the last
+# captured manifest on every run. These two tasks are the whole interface, and
+# each one is deliberate.
+[tasks."dock:apply"]
+description = "Rebuild the Dock from dock.txt, skipping missing applications. --dry-run previews it"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/sync-dock.sh apply"
+
+[tasks."dock:export"]
+description = "Capture the current Dock into dock.txt"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/sync-dock.sh export"
+
 [tasks."agents:login"]
 description = "Wait until Claude Code, Codex, Cursor CLI, Oh My Pi, and Pi are signed in"
 dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"

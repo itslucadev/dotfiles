@@ -2304,6 +2304,34 @@ echo "$PATH" | tr ':' '\n' | grep "$ANDROID_HOME"</code></pre>
                   </div>
                 </article>
 
+                <article class="task" data-task-id="apps-dock">
+                  <input class="task-check" type="checkbox" aria-label="Dock aus dock.txt aufgebaut" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Dock aus dock.txt aufbauen</h3>
+                      <span class="badge auto">Verwaltet</span>
+                    </div>
+                    <div class="command">
+                      <pre><code>mise run dock:apply</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Das Dock ist bewusst keine <code>mise bootstrap</code>-Phase und läuft in
+                      keinem Hook mit, weil ein von Hand sortiertes Dock sonst bei jedem
+                      <code>mise run setup</code> überschrieben würde. Apps, die noch fehlen, lässt
+                      der Task aus und nennt sie am Ende. Nach jeder nachinstallierten App den Task
+                      erneut ausführen: Jede Kachel kommt an ihre Position aus
+                      <code>dock.txt</code> zurück, unabhängig von der Installationsreihenfolge.
+                    </p>
+                    <p class="task-note">
+                      Umgekehrt schreibt <code>mise run dock:export</code> das aktuelle Dock zurück
+                      in <code>dock.txt</code>. Das ist der Weg, ein umsortiertes Dock zu sichern,
+                      und die Änderung wird danach ganz normal committet.
+                      <code>mise run doctor</code> meldet, wenn Dock und Datei auseinanderlaufen.
+                    </p>
+                  </div>
+                </article>
+
                 <article class="task" data-task-id="apps-raycast">
                   <input class="task-check" type="checkbox" aria-label="Raycast Beta als Launcher eingerichtet" />
                   <div class="task-content">
