@@ -69,6 +69,7 @@ cask "tower"
 # Media and file utilities
 cask "iina"
 cask "imageoptim"
+cask "quicklook-video"
 cask "pear-devs/pear/pear-desktop", trusted: true
 cask "xykong/tap/flux-markdown", trusted: true
 
