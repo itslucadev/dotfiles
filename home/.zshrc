@@ -123,4 +123,5 @@ if command -v eza >/dev/null 2>&1; then
 fi
 
 alias mbp="ssh lucabecker@mbp"
+alias mini="ssh lucabecker@mini"
 alias nas="ssh phoenix-error@nas"
