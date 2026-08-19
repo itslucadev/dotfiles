@@ -56,6 +56,7 @@ cask "claude"
 
 # Browsers and communication
 cask "google-chrome"
+cask "telegram"
 cask "thebrowsercompany-dia"
 cask "whatsapp"
 
@@ -82,6 +83,7 @@ cask "obsidian"
 cask "protonvpn"
 cask "raycast"
 cask "readdle-spark"
+cask "rustdesk"
 cask "tailscale-app"
 cask "vorssaint"
 
