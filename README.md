@@ -78,6 +78,7 @@ Each machine keeps its own `mise.lock`, which mise writes and this repository do
 [Managed Applications](#managed-applications) ·
 [The Dock](#the-dock) ·
 [Runtimes and Global CLIs](#managed-runtimes-and-global-clis) ·
+[Local Development URLs](#local-development-urls) ·
 [Mobile Toolchains](#mobile-toolchains) ·
 [Shell and Terminal](#shell-and-terminal) ·
 [VS Code and Cursor](#vs-code-and-cursor) ·
@@ -416,6 +417,7 @@ mise manages:
 - gh-axi
 - Lavish CLI
 - Gemini Notebook CLI
+- Portless
 - Prettier
 - Pyright
 - QMD
@@ -440,7 +442,9 @@ Python, uv, and Ruff are installed directly by mise.
 
 The global `UV_PYTHON` setting points uv at the Python interpreter selected by the active mise configuration, so a project-level mise version can still override the global Python 3.12 default.
 
-AgentMail CLI, OpenSrc, the Native SDK CLI, the Playwright CLI, Portless, Higgsfield CLI, SnapAI, and Firecrawl CLI are intentionally excluded.
+AgentMail CLI, OpenSrc, the Native SDK CLI, the Playwright CLI, Higgsfield CLI, SnapAI, and Firecrawl CLI are intentionally excluded.
+
+Portless is the one entry here that also needs machine state outside mise, and [Local Development URLs](#local-development-urls) documents it.
 
 YouTube-DLP and the new Sentry CLI are installed through Homebrew because they are native command-line tools rather than project runtimes.
 
@@ -451,6 +455,41 @@ Global `npm` and `undici` are not installed as separate tools.
 Fastlane is installed through Homebrew for iOS and Android release automation.
 
 XcodeGen is intentionally not installed because React Native does not require it and no managed project currently uses an XcodeGen `project.yml` specification.
+
+## Local Development URLs
+
+[Portless](https://github.com/vercel-labs/portless) replaces development port numbers with stable named URLs.
+A dev server started through it is reachable at `https://<app>.dev` instead of `http://localhost:3000`, which removes port collisions, keeps cookies and local storage separate per app, and gives agents a URL they cannot guess wrong.
+
+`mise.toml` owns the two settings that make this global:
+
+| Variable | Value | Effect |
+| --- | --- | --- |
+| `PORTLESS_TLD` | `dev` | Serves every app under `.dev` instead of the `.localhost` default. |
+| `PORTLESS_TAILSCALE` | `1` | Publishes every app to the tailnet through `tailscale serve`. |
+
+`PORTLESS_FUNNEL` stays unset on purpose.
+Funnel would expose the same dev server to the public internet, and tailnet sharing is the intended reach.
+
+`/Applications/Tailscale.app/Contents/MacOS` is on `PATH` because the Tailscale cask keeps its CLI inside the app bundle and portless spawns `tailscale` as a child process, where a Zsh alias would not be visible.
+
+Portless upstream recommends `.test` over `.dev`, because `.dev` is a real Google-owned gTLD.
+Two consequences follow from that choice.
+The HSTS preload on `.dev` forces HTTPS, which costs nothing here because portless already serves HTTPS through its own trusted local certificate authority.
+The `/etc/hosts` entries portless writes shadow the matching public domain on this machine, so an app must not be named after a real `.dev` site.
+
+Three steps stay manual, because they need administrator rights or the Tailscale admin console, and [`setup-guide.html`](setup-guide.html) carries them:
+
+```bash
+portless trust                       # local certificate authority into the system trust store
+portless service install --tld dev   # root launchd service, so port 443 is bound after a reboot
+portless service status              # installed port, HTTPS mode, TLDs, and state directory
+```
+
+The launchd service stores the TLD in its own configuration, so the proxy comes back on `.dev` after a reboot without a shell that has the mise environment.
+
+Portless is deliberately not a dotfile.
+Its state lives in `~/.portless`, which holds a generated certificate authority and its private key, and neither may ever reach this repository.
 
 ## Mobile Toolchains
 
@@ -556,9 +595,9 @@ The repository manages only Herdr's onboarding, agent-panel, notification, and t
 
 ## VS Code and Cursor
 
-Cursor is the primary editor.
+VS Code is the primary editor.
 
-`EDITOR` and `VISUAL` point at `cursor --wait`, so Git and other command-line tools open Cursor and wait for the file to close.
+`EDITOR` and `VISUAL` point at `code --wait`, so Git and other command-line tools open VS Code and wait for the file to close.
 
 Neovim is intentionally not part of this setup.
 
@@ -752,7 +791,3 @@ A setting that would otherwise land in a local override belongs in the managed f
 Git is the deliberate exception. `~/.gitconfig`, `~/.ssh/config`, and anything under `~/.config/git/` are not managed at all, so they need no override layer. See [Declarative Ownership](#declarative-ownership).
 
 The matching `.gitignore` entries stay as a safety net against accidental commits, not as an invitation to create such files.
-
-The repository does not yet prescribe a secrets backend.
-
-The macOS Keychain, a dedicated CLI keychain, and Doppler will be evaluated before secret loading is automated.

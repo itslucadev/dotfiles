@@ -2412,6 +2412,67 @@ echo "$PATH" | tr ':' '\n' | grep "$ANDROID_HOME"</code></pre>
                   </div>
                 </article>
 
+                <article class="task" data-task-id="apps-tailscale-https">
+                  <input class="task-check" type="checkbox" aria-label="Tailscale HTTPS-Zertifikate aktiviert" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">HTTPS-Zertifikate im Tailscale-Adminbereich aktivieren</h3>
+                      <span class="badge manual">Manuell</span>
+                    </div>
+                    <p class="task-note">
+                      <code>mise.toml</code> setzt <code>PORTLESS_TAILSCALE=1</code>, also veröffentlicht
+                      Portless jeden Dev-Server über <code>tailscale serve</code> im Tailnet. Ohne
+                      HTTPS-Zertifikate bricht Portless ab, bevor der Dev-Server überhaupt startet.
+                      Unter
+                      <a href="https://login.tailscale.com/admin/dns" rel="noopener noreferrer" target="_blank">DNS im Adminbereich</a>
+                      MagicDNS und HTTPS Certificates aktivieren.
+                    </p>
+                    <p class="task-note">
+                      Funnel bleibt bewusst aus. Funnel würde denselben Dev-Server ins öffentliche
+                      Internet stellen, gewollt ist nur das Tailnet.
+                    </p>
+                    <div class="command">
+                      <pre><code>tailscale status --json | grep CertDomains</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="task" data-task-id="apps-portless">
+                  <input class="task-check" type="checkbox" aria-label="Portless getrustet und als Startdienst installiert" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">Portless freigeben und als Systemstartdienst installieren</h3>
+                      <span class="badge manual">Administrator</span>
+                    </div>
+                    <p class="task-note">
+                      Beide Befehle fragen nach dem Administratorkennwort. Der erste legt die lokale
+                      Zertifizierungsstelle an und trägt sie in den Systemschlüsselbund ein, der zweite
+                      installiert einen launchd-Dienst als root, damit Port 443 auch nach einem Neustart
+                      belegt wird. <code>--tld dev</code> wird in die Dienstkonfiguration geschrieben und
+                      überlebt den Neustart unabhängig von der Shell.
+                    </p>
+                    <div class="command">
+                      <pre><code>portless trust
+portless service install --tld dev</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Danach den Zustand prüfen. <code>portless doctor</code> meldet Proxy, Routen,
+                      Namensauflösung und den Trust-Status.
+                    </p>
+                    <div class="command">
+                      <pre><code>portless service status &amp;&amp; portless doctor</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Namen mit Bedacht wählen. Portless schreibt <code>&lt;app&gt;.dev</code> nach
+                      <code>/etc/hosts</code>, und ein Name wie <code>web</code> würde damit die echte
+                      Domain <code>web.dev</code> auf diesem Mac verdecken.
+                    </p>
+                  </div>
+                </article>
+
                 <article class="task" data-task-id="apps-licensed">
                   <input class="task-check" type="checkbox" aria-label="Lizenzierte Apps aktiviert" />
                   <div class="task-content">

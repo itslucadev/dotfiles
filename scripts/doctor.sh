@@ -89,7 +89,9 @@ for command_name in \
   bat \
   eza \
   fd \
+  portless \
   prettier \
+  tailscale \
   gh \
   git \
   git-lfs \
@@ -324,6 +326,56 @@ if [[ -d "$HOME/Library/Android/sdk" ]]; then
   pass "Android SDK was installed manually through Android Studio"
 else
   warn "Complete Android Studio onboarding to install the Android SDK"
+fi
+
+# mise.toml owns the two portless variables, but the trust store entry, the
+# launchd service, and the Tailscale certificate setting are machine state that
+# only the manual steps in setup-guide.html can create. They are warnings, not
+# failures, because a fresh Mac reaches this point before those steps have run.
+if [[ "${PORTLESS_TLD:-}" == "dev" ]]; then
+  pass "Portless serves local development URLs under .dev"
+else
+  fail "PORTLESS_TLD is not set to dev"
+fi
+
+if [[ "${PORTLESS_TAILSCALE:-}" == "1" ]]; then
+  pass "Portless publishes apps to the tailnet"
+else
+  fail "PORTLESS_TAILSCALE is not set to 1"
+fi
+
+# Funnel is the public-internet variant of the same sharing. It is left unset on
+# purpose, so an inherited value from a shell or .env file is worth reporting.
+if [[ -n "${PORTLESS_FUNNEL:-}" ]]; then
+  warn "PORTLESS_FUNNEL is set, which would expose dev servers to the public internet"
+else
+  pass "Tailscale Funnel stays disabled for portless"
+fi
+
+if command -v portless >/dev/null 2>&1; then
+  portless_service_status="$(portless service status 2>/dev/null || true)"
+
+  if grep -q '^  Installed: yes' <<<"$portless_service_status"; then
+    pass "Portless startup service is installed"
+  else
+    warn "Portless startup service is missing. Run portless service install --tld dev"
+  fi
+
+  if grep -q '^  TLDs:.*\.dev' <<<"$portless_service_status"; then
+    pass "Portless startup service serves .dev"
+  else
+    warn "Portless startup service does not serve .dev. Reinstall it with --tld dev"
+  fi
+fi
+
+# CertDomains is only populated once HTTPS certificates are enabled for the
+# tailnet, and portless aborts before starting a dev server without them.
+if command -v tailscale >/dev/null 2>&1; then
+  if tailscale status --json 2>/dev/null | grep -q '"CertDomains": \['; then
+    pass "Tailscale HTTPS certificates are enabled"
+  else
+    warn "Tailscale HTTPS certificates are disabled, so portless cannot share apps. Enable them at https://login.tailscale.com/admin/dns"
+  fi
 fi
 
 for agent_wrapper in gh-axi lavish-axi chrome-devtools-axi ctx7 nlm; do

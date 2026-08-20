@@ -34,6 +34,7 @@ uv = "latest"
 "npm:eas-cli" = "latest"
 "npm:gh-axi" = "latest"
 "npm:lavish-axi" = "latest"
+"npm:portless" = "latest"
 "npm:prettier" = "latest"
 "npm:pyright" = "latest"
 "npm:react-doctor" = "latest"
@@ -51,9 +52,27 @@ ANDROID_HOME = "{{ env.HOME }}/Library/Android/sdk"
 # signature verification needs a gnupg that Homebrew does not install.
 DOPPLER_ENABLE_VERSION_CHECK = "false"
 UV_PYTHON = { value = "{{ tools.python.path }}", tools = true }
+# Portless serves every dev server under `.dev` instead of its `.localhost`
+# default. The proxy syncs `/etc/hosts` for the names it registers, so an app
+# name that collides with a real `.dev` domain shadows that domain on this
+# machine. `.dev` is HSTS-preloaded and therefore HTTPS-only, which costs
+# nothing here because portless already serves HTTPS through its own trusted CA.
+# The launchd service installed by `portless service install --tld dev` carries
+# the same TLD, so a reboot brings the proxy back on `.dev` without this shell.
+PORTLESS_TLD = "dev"
+# Every app portless runs is also published to the tailnet over `tailscale
+# serve`. PORTLESS_FUNNEL stays unset on purpose, because Funnel would expose
+# the same dev server to the public internet. Tailscale HTTPS certificates have
+# to be enabled for the tailnet, otherwise portless aborts before it starts the
+# child process.
+PORTLESS_TAILSCALE = "1"
 _.path = [
   "{{ env.HOME }}/Library/Android/sdk/emulator",
   "{{ env.HOME }}/Library/Android/sdk/platform-tools",
+  # The Tailscale cask ships its CLI inside the app bundle and never links it
+  # into a PATH directory. Portless spawns `tailscale` as a child process, so an
+  # alias would not be enough and the bundle directory has to be on PATH itself.
+  "/Applications/Tailscale.app/Contents/MacOS",
 ]
 
 # An entry without a source mirrors its home-relative target under
