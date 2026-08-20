@@ -117,7 +117,7 @@ _.path = [
 [bootstrap.macos.dock]
 autohide = true
 orientation = "bottom"
-tilesize = 64
+tilesize = 70
 show_recents = false
 
 [bootstrap.macos.finder]
