@@ -12,8 +12,6 @@ package_manager = "bun"
 
 [tools]
 bun = "latest"
-doppler = "latest"
-fnox = "latest"
 # zulu-17 stays the active development version. zulu-jre-21 is the native arm64
 # runtime for Minecraft and CurseForge, linked into
 # ~/Library/Java/JavaVirtualMachines/zulu-jre-21.jre
@@ -47,10 +45,6 @@ uv = "latest"
 
 [env]
 ANDROID_HOME = "{{ env.HOME }}/Library/Android/sdk"
-# The Doppler CLI is installed and updated through mise, so its built-in
-# self-updater must stay off. It also fails on this machine, because the
-# signature verification needs a gnupg that Homebrew does not install.
-DOPPLER_ENABLE_VERSION_CHECK = "false"
 UV_PYTHON = { value = "{{ tools.python.path }}", tools = true }
 # Portless serves every dev server under `.dev` instead of its `.localhost`
 # default. The proxy syncs `/etc/hosts` for the names it registers, so an app

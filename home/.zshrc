@@ -33,15 +33,6 @@ if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
 fi
 
-# === Secrets ===
-# fnox resolves secrets through Doppler, whose auth token lives in the login
-# keychain. SSH sessions start with a locked keychain, so activating fnox there
-# only produces resolver warnings. Secrets stay reachable over SSH on demand
-# with `fnox get` or `fnox exec` after `security unlock-keychain`.
-if [[ -z "$SSH_CONNECTION" ]] && command -v fnox >/dev/null 2>&1; then
-  eval "$(fnox activate zsh)"
-fi
-
 # === Environment ===
 # --wait keeps the CLI open until the file closes; without it, callers like
 # `git commit` see the editor exit immediately and read an empty message.
