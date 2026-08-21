@@ -279,7 +279,6 @@ for application_name in \
   "MultiViewer" \
   "Obsidian" \
   "Obsidian Web Clipper" \
-  "OpenUsage" \
   "ProtonVPN" \
   "Raycast" \
   "Raycast Beta" \

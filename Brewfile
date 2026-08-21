@@ -64,7 +64,6 @@ cask "whatsapp"
 cask "basictex"
 cask "hoppscotch"
 cask "localsend"
-cask "openusage"
 cask "tower"
 
 # Media and file utilities

@@ -364,7 +364,6 @@ Homebrew installs these applications:
 - Minecraft
 - MultiViewer
 - Obsidian
-- OpenUsage
 - Pear Desktop for YouTube Music
 - Proton VPN
 - Raycast v1

@@ -159,7 +159,6 @@ NSGlobalDomain = { AppleInterfaceStyleSwitchesAutomatically = true, AppleShowAll
 "com.lwouis.alt-tab-macos" = { SUEnableAutomaticChecks = true }
 "com.mitchellh.ghostty" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
 "com.openai.codex" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
-"com.robinebers.openusage" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
 "com.xykong.Markdown" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
 "company.thebrowser.dia" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
 "dev.expo.orbit" = { SUEnableAutomaticChecks = true, SUAutomaticallyUpdate = true }
