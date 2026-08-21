@@ -44,16 +44,6 @@
             "timeout": 10
           }
         ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '/Users/lucabecker/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10
-          }
-        ]
       }
     ]
   },
@@ -73,6 +63,7 @@
     "security-guidance@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "codex@openai-codex": true,
+    "composio@composio": true,
     "gopls-lsp@claude-plugins-official": false,
     "playwright@claude-plugins-official": false,
     "ralph-loop@claude-plugins-official": false,
@@ -97,6 +88,12 @@
       "source": {
         "source": "github",
         "repo": "openai/codex-plugin-cc"
+      }
+    },
+    "composio": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/ComposioHQ/composio-plugin-cc.git"
       }
     },
     "understand-anything": {

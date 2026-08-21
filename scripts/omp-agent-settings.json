@@ -1,0 +1,93 @@
+{
+  "modelRoles": {
+    "default": "xai-oauth/grok-4.6:high",
+    "slow": "anthropic/claude-fable-5:high",
+    "plan": "anthropic/claude-fable-5:high",
+    "designer": "anthropic/claude-fable-5:high",
+    "task": "xai-oauth/grok-4.6:high",
+    "smol": "xai-oauth/grok-4.6:medium"
+  },
+  "retry.fallbackChains": {
+    "default": [
+      "anthropic/claude-sonnet-5:high"
+    ],
+    "slow": [
+      "openai-codex/gpt-5.6-sol",
+      "xai-oauth/grok-4.6:xhigh"
+    ],
+    "plan": [
+      "openai-codex/gpt-5.6-sol",
+      "xai-oauth/grok-4.6:xhigh"
+    ],
+    "designer": [
+      "openai-codex/gpt-5.6-sol",
+      "xai-oauth/grok-4.6:xhigh"
+    ],
+    "smol": [
+      "anthropic/claude-sonnet-4-6:medium"
+    ]
+  },
+  "retry.maxRetries": 3,
+  "defaultThinkingLevel": "auto",
+  "hideThinkingBlock": true,
+  "personality": "pragmatic",
+  "theme.dark": "dark-rose-pine",
+  "theme.light": "dark-rose-pine",
+  "symbolPreset": "nerd",
+  "statusLine.preset": "full",
+  "statusLine.separator": "powerline",
+  "statusLine.transparent": false,
+  "statusLine.compactThinkingLevel": true,
+  "statusLine.showHookStatus": true,
+  "terminal.showProgress": true,
+  "tui.textSizing": true,
+  "tui.codexResetFireworks": true,
+  "tui.hyperlinks": "always",
+  "tui.tight": false,
+  "tui.scrollbackRebuild": false,
+  "display.shimmer": "classic",
+  "display.hideToolActivity": false,
+  "display.showTokenUsage": true,
+  "tools.approvalMode": "yolo",
+  "loop.mode": "prompt",
+  "error.notify": "on",
+  "startup.quiet": true,
+  "startup.changelogMode": "summary",
+  "marketplace.autoUpdate": "auto",
+  "power.sleepPrevention": "off",
+  "features.unexpectedStopDetection": true,
+  "compaction.strategy": "handoff",
+  "compaction.thresholdPercent": 50,
+  "compaction.remoteEnabled": true,
+  "task.showResolvedModelBadge": true,
+  "task.eager": "preferred",
+  "task.enableEffort": true,
+  "task.enableLsp": true,
+  "task.maxConcurrency": 16,
+  "task.maxEffort": "max",
+  "github.enabled": true,
+  "computer.enabled": false,
+  "generate_image.enabled": true,
+  "providers.imageOrder": [
+    "openai",
+    "xai"
+  ],
+  "speech.enabled": false,
+  "speech.enhanced": true,
+  "memory.backend": "mnemopi",
+  "mnemopi.embeddingVariant": "multilingual",
+  "autolearn.enabled": false,
+  "vault.enabled": true,
+  "secrets.enabled": true,
+  "astGrep.enabled": true,
+  "security.enabled": true,
+  "edit.mode": "hashline",
+  "readLineNumbers": true,
+  "read.renderMarkdown": true,
+  "read.toolResultPreview": true,
+  "lsp.formatOnWrite": true,
+  "inspect_image.mode": "on",
+  "browser.cmux": false,
+  "browser.screenshotDir": "~/Downloads",
+  "dev.autoqaConsent": "granted"
+}

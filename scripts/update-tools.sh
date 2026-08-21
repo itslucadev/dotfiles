@@ -77,6 +77,12 @@ upgrade_casks() {
 }
 
 stage "Upgrading Homebrew casks" upgrade_casks
+# Sparkle-updated casks never go through `brew upgrade --cask`, but their
+# own updater still leaves a fresh quarantine flag. Run this every morning
+# even when Homebrew had nothing to upgrade.
+stage "Clearing Gatekeeper quarantine from cask apps" \
+  "${REPO_ROOT}/scripts/clear-cask-quarantine.sh"
+
 stage "Pruning the Homebrew cache" brew cleanup --prune=7
 
 if command -v mas >/dev/null 2>&1; then
@@ -85,6 +91,10 @@ fi
 
 stage "Updating mise" mise self-update --yes
 stage "Upgrading mise tools" mise upgrade
+
+if command -v composio >/dev/null 2>&1; then
+  stage "Upgrading Composio CLI" composio upgrade
+fi
 
 if [[ "$failed_stages" -gt 0 ]]; then
   printf '\n%d stage(s) failed.\n' "$failed_stages" >&2

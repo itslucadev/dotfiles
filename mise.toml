@@ -77,11 +77,12 @@ _.path = [
 # source would therefore be looked up under ~/.config/mise instead of the
 # repository.
 [dotfiles]
-# `home/AGENTS.md` is linked to the canonical `~/.agents/AGENTS.md` path and
-# the four paths the managed agents actually read: Claude Code takes
-# `~/.claude/CLAUDE.md`, Codex takes `$CODEX_HOME/AGENTS.md`, Oh My Pi takes
-# `~/.omp/agent/AGENTS.md`, and OpenCode takes `~/.config/opencode/AGENTS.md`.
-# The Cursor CLI has no home-level instruction file at all, only project ones.
+# The Shared Core `home/AGENTS.md` is linked to the canonical
+# `~/.agents/AGENTS.md` path and the four paths the managed agents actually
+# read: Claude Code takes `~/.claude/CLAUDE.md`, Codex takes
+# `$CODEX_HOME/AGENTS.md`, Oh My Pi takes `~/.omp/agent/AGENTS.md`, and
+# OpenCode takes `~/.config/opencode/AGENTS.md`. The Cursor CLI has no
+# home-level instruction file at all, only project ones.
 "~/.agents/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.claude/CLAUDE.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.claude/rules/context7.md" = {}
@@ -98,6 +99,9 @@ _.path = [
 # linked here needs no alias and is reachable from every shell.
 "~/.local/bin/keykey" = {}
 "~/.omp/agent/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
+# Oh My Pi's Tool Layer: a sticky rules file that omp re-pins near the
+# current turn every conversation round.
+"~/.omp/agent/RULES.md" = {}
 "~/.config/opencode/AGENTS.md" = { source = "~/github/phoenix-error/dotfiles/home/AGENTS.md" }
 "~/.config/mise/config.toml" = "~/github/phoenix-error/dotfiles/mise.toml"
 "~/.config/starship.toml" = {}
@@ -208,9 +212,19 @@ run = "mise install uv bun node python java ruff"
 [bootstrap.hooks.final]
 run = [
   "~/github/phoenix-error/dotfiles/scripts/require-coding-agents.sh",
+  # Desired omp settings converge through omp's own CLI because
+  # config.yml is machine state. The evening capture job is installed
+  # next to the morning tool updater.
+  "~/github/phoenix-error/dotfiles/scripts/setup-omp-agent.sh",
+  # The Composio CLI is not in Brewfile or mise.toml. The official installer
+  # is the supported channel, and this hook keeps it off the managed ~/.zshrc.
+  "~/github/phoenix-error/dotfiles/scripts/setup-composio.sh",
   "~/github/phoenix-error/dotfiles/scripts/install-herdr-integrations.sh",
   "~/github/phoenix-error/dotfiles/scripts/install-mas-apps.sh",
   "~/github/phoenix-error/dotfiles/scripts/setup-autoupdate.sh",
+  # Stable ssh-agent socket so coding agents can SSH without the private key.
+  "~/github/phoenix-error/dotfiles/scripts/setup-ssh-agent.sh",
+  "~/github/phoenix-error/dotfiles/scripts/setup-omp-sync.sh",
   "mise exec -- ~/github/phoenix-error/dotfiles/scripts/doctor.sh || true",
 ]
 
@@ -234,10 +248,23 @@ run = [
   "chmod +x scripts/setup-mise.sh",
 ]
 
+[tasks."update:composio-installer"]
+description = "Refresh the committed Composio installer from https://composio.dev/install"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = [
+  "curl -fsSL https://composio.dev/install -o scripts/install-composio.sh",
+  "chmod +x scripts/install-composio.sh",
+]
+
 [tasks."apps:mas"]
 description = "Install the managed Mac App Store applications"
 dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/install-mas-apps.sh"
+
+[tasks."apps:clear-quarantine"]
+description = "Remove Gatekeeper quarantine from Homebrew-installed cask apps"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/clear-cask-quarantine.sh"
 
 # The Dock is the one managed thing that is not a `mise bootstrap` phase and is
 # reached by neither `mise run setup` nor a hook. Its layout is rearranged by
@@ -255,17 +282,22 @@ dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/sync-dock.sh export"
 
 [tasks."agents:login"]
-description = "Wait until Claude Code, Codex, Cursor CLI, Oh My Pi, and Pi are signed in"
+description = "Wait until Claude Code, Codex, Cursor CLI, Oh My Pi, OpenCode, and Grok are signed in"
 dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/require-coding-agents.sh"
 
 [tasks."agents:herdr"]
-description = "Install the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, and Pi"
+description = "Install the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, OpenCode, and Grok"
 dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/install-herdr-integrations.sh"
 
+[tasks."agents:composio"]
+description = "Install the Composio CLI and configure Claude Code and Codex plugins"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/setup-composio.sh"
+
 [tasks."update:tools"]
-description = "Upgrade Homebrew, Mac App Store applications, mise, and mise tools now"
+description = "Upgrade Homebrew, Mac App Store applications, mise, mise tools, and Composio now"
 dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/update-tools.sh"
 
@@ -273,6 +305,21 @@ run = "./scripts/update-tools.sh"
 description = "Install the launchd agent that runs update:tools daily at 07:00"
 dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
 run = "./scripts/setup-autoupdate.sh"
+
+[tasks."omp:sync"]
+description = "Capture live Oh My Pi settings into scripts/omp-agent-settings.json"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/sync-omp-agent-settings.sh"
+
+[tasks."omp:schedule"]
+description = "Install the launchd agent that captures omp settings daily at 20:00"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/setup-omp-sync.sh"
+
+[tasks."ssh:agent"]
+description = "Install the delegated ssh-agent socket for coding agents"
+dir = "{{ env.HOME }}/github/phoenix-error/dotfiles"
+run = "./scripts/setup-ssh-agent.sh"
 
 [tasks.doctor]
 description = "Report setup status and remaining manual actions"

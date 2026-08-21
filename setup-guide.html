@@ -1418,9 +1418,9 @@ cd ~/github/phoenix-error/dotfiles</code></pre>
                     </div>
                     <p class="task-note">
                       <code>./bootstrap.sh</code> installiert nur Xcode Command Line Tools,
-                      Homebrew und mise, verlinkt <code>~/.zprofile</code> und
-                      <code>~/.zshrc</code> und hört dann auf. Danach neues Terminal öffnen,
-                      damit die Shell brew und mise findet.
+                      Homebrew und mise, verlinkt <code>~/.zprofile</code>,
+                      <code>~/.zshrc</code> und <code>~/.zsh_plugins.txt</code> und hört dann auf.
+                      Danach neues Terminal öffnen, damit die Shell brew und mise findet.
                     </p>
                     <p class="task-note">
                       Nicht mit <code>sudo</code> starten. Das Skript lehnt einen Lauf als
@@ -1883,9 +1883,11 @@ gh auth status</code></pre>
                       Homebrew-Pakete, das Gate für Git und SSH, die Rückfrage zu bereits
                       vorhandenen Dotfiles, Dotfile-Symlinks, bestätigte macOS-Defaults,
                       Runtimes, globale CLIs,
-                      <strong>Pause für die Coding-Agent-Anmeldungen</strong>, die
-                      Herdr-Agent-Integrationen, <strong>Pause für den Mac App Store</strong>
-                      und zum Schluss der Setup Doctor.
+                      <strong>Pause für die Coding-Agent-Anmeldungen</strong>,
+                      Oh-My-Pi-Settings, Composio-CLI, die
+                      Herdr-Agent-Integrationen, <strong>Pause für den Mac App Store</strong>,
+                      den täglichen Tool-Updater, den delegierten ssh-agent, den abendlichen
+                      omp-Sync und zum Schluss der Setup Doctor.
                       Editor-Extensions und Direktdownload-Apps gehören nicht dazu.
                     </p>
                     <p class="task-note">
@@ -2473,6 +2475,49 @@ portless service install --tld dev</code></pre>
                   </div>
                 </article>
 
+                <article class="task" data-task-id="apps-full-disk">
+                  <input
+                    class="task-check"
+                    type="checkbox"
+                    aria-label="Festplattenvollzugriff für Terminals und Agenten gesetzt"
+                  />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">
+                        Festplattenvollzugriff für Terminals und Agenten setzen
+                      </h3>
+                      <span class="badge manual">Manuell</span>
+                    </div>
+                    <p class="task-note">
+                      Der Dialog „would like to access data from other apps“ ist TCC.
+                      Allow im Dialog hält nach einem App-Update nicht.
+                      Festplattenvollzugriff schon.
+                      Systemeinstellungen → Datenschutz &amp; Sicherheit →
+                      Festplattenvollzugriff, dann diese Apps hinzufügen und einschalten:
+                    </p>
+                    <ul class="task-steps">
+                      <li>Ghostty</li>
+                      <li>WezTerm</li>
+                      <li>ChatGPT, darin steckt Codex Computer Use</li>
+                      <li>Claude</li>
+                      <li>Cursor</li>
+                      <li>Visual Studio Code</li>
+                      <li>Herdr, falls es nachfragt</li>
+                    </ul>
+                    <p class="task-note">
+                      Der Dialog „Are you sure you want to open it?“ ist Gatekeeper-Quarantäne
+                      nach einem Homebrew- oder Sparkle-Update, nicht TCC.
+                      Das Setup und der tägliche Updater entfernen das Attribut von
+                      Homebrew-Cask-Apps.
+                      Sofort nach einem Update:
+                    </p>
+                    <div class="command">
+                      <pre><code>mise run apps:clear-quarantine</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                  </div>
+                </article>
+
                 <article class="task" data-task-id="apps-licensed">
                   <input class="task-check" type="checkbox" aria-label="Lizenzierte Apps aktiviert" />
                   <div class="task-content">
@@ -2506,8 +2551,9 @@ portless service install --tld dev</code></pre>
                         genutztes Feature verlangt.
                       </li>
                       <li>
-                        Ghostty braucht Accessibility nur, wenn später globale
-                        Terminal-Shortcuts dazukommen.
+                        Ghostty braucht Festplattenvollzugriff, sonst fragt macOS bei
+                        jedem Agent-Lauf erneut nach Daten anderer Apps.
+                        Accessibility nur, wenn später globale Terminal-Shortcuts dazukommen.
                       </li>
                       <li>
                         Bei Herdr die Rose-Pine-Darstellung und die Zustellung der
@@ -2688,8 +2734,7 @@ vercel login</code></pre>
                       dahinter: <code>code-review</code> gibt es als Skill und als Plugin,
                       Library-Dokumentation deckt die verwaltete <code>ctx7</code>-Rule und das
                       <code>context7</code>-Plugin ab, und Browser-Steuerung deckt die
-                      <code>chrome-devtools-axi</code>-Rule, das
-                      <code>chrome-devtools-mcp</code>-Plugin und die
+                      Shared-Core-CLI <code>chrome-devtools-axi</code> und die
                       <code>agent-browser</code>-Formula ab. Die Plugins aus
                       <code>home/.claude/settings.json</code> bringen ihre eigenen Skills mit.
                     </div>

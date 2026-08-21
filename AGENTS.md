@@ -20,11 +20,26 @@ Do not apply the real setup to the current Mac unless the user explicitly change
 - `home/.config/editors/settings.json` owns the shared VS Code and Cursor user settings.
 - `home/` owns public dotfiles that mise links into the home directory.
 - `home/.local/bin/` owns personal commands that are too large to express as a Zsh alias. `home/.zshrc` already puts `~/.local/bin` on `PATH`, so an executable linked there needs no alias, works in every shell, and keeps `home/.zshrc` free of program logic.
-- `home/.claude/rules/` owns the Claude rules that this setup supports.
+- `home/AGENTS.md` is the Shared Core: the one agent-agnostic instruction file every installed agent reads.
+- `home/.claude/rules/` is the Claude Code Tool Layer and owns the Claude rules that this setup supports.
+- `home/.omp/agent/RULES.md` is the Oh My Pi Tool Layer.
+- `scripts/setup-omp-agent.sh` converges the desired Oh My Pi settings from `scripts/omp-agent-settings.json` into Machine State. Never symlink or hand-edit `~/.omp/agent/config.yml` from this repository.
+- `scripts/sync-omp-agent-settings.sh` captures live Oh My Pi settings back into that snapshot. `scripts/setup-omp-sync.sh` installs the 20:00 launchd agent. Neither script commits.
+- `scripts/setup-composio.sh` installs the Composio CLI into `~/.local/bin` and converges the Claude Code and Codex plugins.
+  Never let the official installer edit `~/.zshrc`.
+- `scripts/install-composio.sh` is the committed copy of the `https://composio.dev/install` installer.
+  Never edit it by hand.
+  Refresh it with `mise run update:composio-installer` and review the diff.
+- `scripts/setup-ssh-agent.sh` keeps ssh-agent on `~/.ssh/agent.sock` and points the hand-maintained `~/.ssh/config` at that socket.
+  Coding agents inherit a signing capability and never read the private key.
 - `bootstrap.sh` owns bare-metal initialization only: Xcode Command Line Tools, Homebrew, mise, `mise trust`, and linking `~/.zprofile`, `~/.zshrc`, and `~/.zsh_plugins.txt` so both tools are reachable as ordinary commands. It stops there and installs no declared package.
 - `mise bootstrap` owns the stage order of the managed setup. The `[bootstrap.hooks]` entries in `mise.toml` own the stages that are not one of its native phases, and the `setup` task is the documented entry point.
 - `scripts/setup-mise.sh` is the committed copy of the `https://mise.run` installer. Never edit it by hand. Refresh it with `mise run update:mise-installer` and review the diff, which is a checksum and version bump.
 - `scripts/lib.sh` owns the shared logging, dry-run, and manual-gate helpers. Source it, do not execute it.
+- `scripts/clear-cask-quarantine.sh` removes the Gatekeeper quarantine attribute from Homebrew-installed cask apps.
+  Homebrew 6 dropped `--no-quarantine`, so this is the remaining supported way to stop the first-launch "Are you sure you want to open it?" dialog after a cask install or a Sparkle update.
+  It does not write to the macOS privacy database.
+
 - `scripts/` owns idempotent setup behavior that cannot be expressed safely as scalar mise configuration.
 
 New setup behavior belongs in a `mise bootstrap` phase when mise can express it, and otherwise in a `scripts/` helper that a `[bootstrap.hooks]` entry calls.
@@ -55,10 +70,16 @@ A tool that ships both a native binary and a runtime package follows rule 4 unle
 
 Never declare the same tool in both `Brewfile` and `mise.toml`.
 
-mise itself is the one exception to the rule and belongs in neither inventory.
-`bootstrap.sh` installs it into `~/.local/bin/mise` with the committed `https://mise.run` installer in `scripts/setup-mise.sh`, which is the method the mise documentation recommends for macOS.
+mise and the Composio CLI are the exceptions to the rule and belong in neither inventory.
+`bootstrap.sh` installs mise into `~/.local/bin/mise` with the committed `https://mise.run` installer in `scripts/setup-mise.sh`, which is the method the mise documentation recommends for macOS.
 It has to exist before `Brewfile` is applied, and `brew bundle cleanup` would otherwise uninstall the binary that is running the setup.
 Do not add `brew "mise"` back.
+
+The Composio CLI has no Homebrew formula and no runtime package this setup will use.
+`scripts/setup-composio.sh` installs it into `~/.local/bin/composio` with the committed installer in `scripts/install-composio.sh`.
+The official installer would write a PATH block into `~/.zshrc`, which is a managed symlink here, so the wrapper always sets `COMPOSIO_INSTALL_SHELL=none`.
+`home/.zshrc` already puts `~/.local/bin` on `PATH`.
+Do not add `brew "composio"`.
 
 Do not switch to the `https://mise.run/zsh` installer variant. It appends the activation line to `~/.zshrc`, which is a managed symlink here, and `mise bootstrap dotfiles apply` refuses that conflict rather than replacing the file.
 
@@ -199,13 +220,60 @@ Do not add Codex, OpenCode, Ponytail, Understand Anything, or Karpathy skill sou
 
 `home/AGENTS.md` declares the wrappers that agents must prefer over their default tools.
 
-Every wrapper named there must be installed by `Brewfile` or `mise.toml`, and every Claude hook in `home/.claude/settings.json` must call a tool that the setup installs.
+Every wrapper named there must be installed by `Brewfile`, `mise.toml`, or a bootstrap hook this setup owns, and every Claude hook in `home/.claude/settings.json` must call a tool that the setup installs.
 
 Do not reference a tool in agent instructions or hooks that a new Mac would not have.
 
+## Agent Instruction Architecture
+
+`home/AGENTS.md` is the Shared Core: the one agent-agnostic instruction file every installed agent reads.
+
+Tool-specific mechanics are prohibited there and belong in Tool Layers.
+
+Tool Layers are `home/.claude/rules/*.md` for Claude Code and `home/.omp/agent/RULES.md` for Oh My Pi.
+
+One small topical file per concern.
+
+Create a new Tool Layer file only when a tool needs behavior beyond the Shared Core.
+
+A file becomes a managed dotfile only when it is pure human-authored declaration and the tool never rewrites it at runtime.
+
+The following paths are Machine State and stay outside this repository:
+
+- `~/.omp/agent/config.yml` because omp rewrites it, and the desired keys converge through `scripts/setup-omp-agent.sh`
+- `~/.omp/agent/agents/*.md` because omp provisions those files itself
+- `~/.claude.json` because Claude Code rewrites it on every session.
+  Workspace trust, project state, and login live there.
+  mise never links or converges this file.
+
+- `~/.codex/config.toml` because Codex rewrites trust hashes and plugin state there
+- `~/.grok` because the Grok TUI writes that config, and instructions arrive through the Compat Path from `~/.claude/CLAUDE.md`
+- `~/.cursor` because Cursor has no global instruction surface, and the Cursor CLI reads project `AGENTS.md` files only
+- OpenCode `opencode.json` because this repository does not create one, and the Shared Core symlink is enough
+- All auth and credential state
+
+omp settings converge through `scripts/setup-omp-agent.sh` and `scripts/omp-agent-settings.json`, called by a `[bootstrap.hooks.final]` entry.
+The evening capture job writes drift back into the snapshot and never commits.
+
+Never symlink or hand-edit `~/.omp/agent/config.yml` from this repository.
+
+Grok Build is covered through the Compat Path: it reads `~/.claude/CLAUDE.md` and `~/.claude/rules/*.md`.
+
+Do not add a `~/.grok` link, because Grok would then load the Shared Core twice.
+
+If xAI removes that compat reading, Grok loses the Shared Core.
+
+The Cursor CLI has no global instruction surface and is deliberately out of scope.
+
+It reads project `AGENTS.md` files only.
+
+The Claude Code `codex` and `composio` plugins arrive through the managed `home/.claude/settings.json`.
+
+Their runtime plugin state stays untracked.
+
 ## Claude Rule Policy
 
-`home/.claude/rules/` holds only rules that this setup actually supports.
+`home/.claude/rules/` is the Claude Code Tool Layer and holds only rules that this setup actually supports.
 
 Currently that is `context7.md`, and its `ctx7` CLI is installed by `mise.toml`.
 

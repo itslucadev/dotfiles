@@ -15,6 +15,14 @@ These instructions apply to Lucas's agents across projects.
 - Preserve unrelated user changes and do not hide existing failures.
 - Never commit credentials, tokens, private keys, authentication state, or machine-specific secrets.
 
+## Instruction Layering
+
+- This file is the shared core that every installed agent reads, and it stays agent-agnostic.
+- Project-level instruction files override this file on conflict.
+- This file holds only machine-invariant preferences; anything repo-specific belongs in the project's own instruction files.
+- Tool-specific mechanics live in each tool's own layer, such as `~/.claude/rules/` for Claude Code and `~/.omp/agent/RULES.md` for Oh My Pi.
+  Never add tool-specific mechanics to this file.
+
 ## Preferred Command-Line Tools
 
 These wrappers replace the tools an agent would otherwise reach for by default.
@@ -25,6 +33,7 @@ Use them without being asked, and fall back to the underlying tool only when the
 - Use `chrome-devtools-axi` to drive or inspect a Chrome session instead of any other browser automation tool.
 - Use `ctx7` for library documentation instead of web search.
 - Use `nlm` for Gemini Notebook work.
+- Use `composio` to search, connect, and run actions in connected third-party apps that have no dedicated wrapper here.
 
 ## Optional Personal Context
 
@@ -34,78 +43,52 @@ When writing or posting in Lucas's voice, read `~/VOICE.md` if it exists.
 
 ## Picking the right models for workflows and subagents
 
-Rankings, higher = better. Cost reflects what I actually pay (OpenAI has really generous limits), not list price. Intelligence is how hard a problem you can hand the model unsupervised. Taste covers UI/UX, code quality, API design, and copy.
+Price is what I actually pay under my current subscriptions, and it is the one column where higher = more expensive.
+Speed, intelligence, and taste rank higher = better.
+Intelligence is how hard a problem you can hand the model unsupervised.
+Taste covers UI/UX, code quality, API design, and copy.
 
-| model    | cost | speed | intelligence | taste |
-| -------- | ---- | ----- | ------------ | ----- |
-| gpt-5.6  | 7    | 5     | 9            | 6     |
-| sonnet-5 | 3    | 8     | 5            | 6     |
-| opus-5   | 6    | 6     | 7            | 8     |
-| fable-5  | 9    | 3     | 9            | 10    |
-| grok-4.6 | 2    | 9     | 7            | 6     |
-| glm-5.3  | 1    | 6     | 6            | 4     |
+| model    | price | speed | intelligence | taste |
+| -------- | ----- | ----- | ------------ | ----- |
+| gpt-5.6  | 5     | 5     | 9            | 6     |
+| sonnet-5 | 6     | 8     | 5            | 6     |
+| opus-5   | 7     | 6     | 7            | 8     |
+| fable-5  | 9     | 3     | 9            | 10    |
+| grok-4.6 | 2     | 9     | 7            | 6     |
+| glm-5.3  | 1     | 6     | 6            | 4     |
+
+claude-sonnet-4-6 is not ranked; it exists in this setup only for tiny background tasks and as their fallback.
 
 How to apply:
 
-- These are defaults, not limits. You have standing permission to override them: if a cheaper
-  model's output doesn't meet the bar, rerun or redo the work with a smarter model without
-  asking. Judge the output, not the price tag. Escalating costs less than shipping mediocre work.
-- Cost and speed are tie-breakers only; when axes conflict for anything that ships,
-  intelligence > taste > speed > cost.
-- Speed only outranks intelligence when I'm waiting on the result interactively. For background,
-  batched, or subagent work, ignore speed entirely and pick on intelligence.
-- Bulk/mechanical work (clear-spec implementation, data analysis, migrations): gpt-5.6 — it's
-  effectively free on the Codex subscription. When throughput matters more than depth, grok-4.6
-  is the fast/cheap pick; glm-5.3 for long-horizon agentic coding, flat-rate on the GLM Coding Plan.
-- Orchestrator discipline: a session whose main model is fable-5 or opus-5 spends that model on
-  judgement — talking to me, decomposing the task, dispatching subagents, and reviewing what they
-  return. Grunt work (mechanical edits, renames, doc updates, searches, data collection, running
-  commands) goes to `task` subagents on the cheap models above. The expensive model edits files
-  directly only when the change itself is judgement-bound: API design, tricky refactors,
-  user-facing copy.
-- Anything user-facing (UI, copy, API design) needs taste ≥ 7 — that is opus-5 or fable-5 only.
-  gpt-5.6, grok-4.6, and glm-5.3 do not qualify, regardless of how mechanical the task looks.
-- Reviews of plans/implementations: fable-5 or opus-5, optionally gpt-5.6 as an extra independent
-  perspective. Never review with glm-5.3 — lowest intelligence and taste in the table.
+- These are defaults, not limits.
+  You have standing permission to override them: if a cheaper model's output does not meet the bar, redo the work with a smarter model without asking.
+  Judge the output, not the price tag.
+- When axes conflict for anything that ships: intelligence > taste > speed > price.
+- Speed only outranks intelligence when I am waiting on the result interactively.
+  For background, batched, or subagent work, ignore speed entirely.
+- Bulk and mechanical work (clear-spec implementation, migrations, searches, data collection): grok-4.6 first, sonnet-5 as the alternative, occasionally opus-5.
+- Use gpt-5.6 sparingly, because my ChatGPT subscription is small.
+  Its niche is an independent second opinion on plans and reviews, and a cross-provider fallback.
+- glm-5.3 is the cheapest and the weakest model; it is bound to no role.
+  Never review with glm-5.3.
+- Anything user-facing (UI, copy, API design) needs taste >= 7 - that is opus-5 or fable-5 only, regardless of how mechanical the task looks.
+- Thinking levels: cheap models (grok-4.6, sonnet-5, glm-5.3) never run below medium, and implementation work on grok-4.6 or sonnet-5 runs on high.
+- Reviews of plans and implementations: fable-5 or opus-5, optionally gpt-5.6 as an extra independent perspective.
 - Never use Haiku.
+- Orchestrator discipline: an expensive main model (fable-5, opus-5) spends its tokens on judgement - talking to me, decomposing, dispatching, and reviewing.
+  Grunt work goes to subagents on the cheap models.
+  The expensive model edits files directly only when the change itself is judgement-bound: API design, tricky refactors, user-facing copy.
 
-Mechanics — omp (default agent):
+## Which agent for what
 
-- omp is provider-agnostic: one binary talks to Anthropic, OpenAI, xAI, Z.ai, or any
-  OpenAI-compatible endpoint. Every model in the table is reachable directly, so no wrapper tricks
-  and no Codex CLI detour. Prefer omp over Claude Code whenever the work wants a non-Claude model.
-- Bind the table to model roles rather than switching models by hand. Roles: `default` (main work),
-  `plan`, `slow` (hardest problems), `task` (subagents), `smol`/`tiny` (titles, commit messages),
-  `vision`, `designer` (UI work), `advisor` (watches every turn, can interrupt). Each role also
-  takes a thinking level: minimal, low, medium, high, xhigh, max.
-- Suggested binding from the table: default → gpt-5.6, slow → fable-5:high, plan → opus-5,
-  designer → opus-5 (taste ≥ 7 rule), task → grok-4.6, smol/tiny → glm-5.3 or sonnet-5:minimal,
-  advisor → opus-5.
-- Set fallback chains (`retry.fallbackChains`) so a rate-limited primary drops to the next model
-  instead of killing the session — grok-4.6 and glm-5.3 are the sane fallbacks for anything that
-  isn't user-facing.
-- Research/investigation: spawn the `explore` subagent — it runs in an isolated process with its own
-  git worktree and reports back without polluting the main session context. Reach for `quick_task`
-  when the work is mechanical; it runs on the cheap model with minimal reasoning. Bundled
-  subagents: explore, plan, designer, reviewer, task, quick_task. Custom ones drop under
-  `~/.omp/agent/agents/` or `.omp/agents/`.
-- omp can shell out to `omp` for a self-contained research pass. Use it when I want a different
-  model's read on something without changing the current session's roles.
-- Config lives under `~/.omp/agent/`; sessions persist as JSONL and can be resumed, forked, and
-  branched. The project ships multiple releases per day, so pin a version if reproducibility matters.
+- Oh My Pi is the primary agent.
+  It reaches every model in the table directly, so work that wants a non-Claude model or mixed-model orchestration belongs there.
+- Claude Code is the fallback for Claude-only work.
+  Inside Claude Code, gpt-5.6 is reachable through the Codex CLI via the `codex` plugin: the `codex-cli-runtime` and `codex-result-handling` skills and the `/review` and `/adversarial-review` commands.
+- Codex, OpenCode, and Grok Build are secondary agents; they read this file and need no extra mechanics.
+  The Cursor CLI reads instructions per project only.
 
-Mechanics — Claude Code (fallback):
-
-- Only here does the model parameter restrict me to Claude (sonnet-5, opus-5, fable-5), reached via
-  the Agent/Workflow model parameter.
-- gpt-5.6 in Claude Code is only reachable through the Codex CLI — `codex exec` / `codex review`
-  (my ~/.codex/config.toml defaults to gpt-5.6). Use the codex-implementation, codex-review, and
-  codex-computer-use skills; for work they don't cover, run `codex exec -s read-only` directly with
-  a self-contained prompt.
-- To use a non-Claude model inside a workflow or subagent, spawn a thin Claude wrapper agent with
-  `model: 'sonnet', effort: 'low'` whose prompt instructs it to write a self-contained prompt, run
-  the foreign CLI via Bash, and return the raw output. If I'm reaching for this wrapper more than
-  once in a session, that's the signal to move the task to omp instead.
 ## Sentry
 
 - Use the `sentry` CLI for Sentry issues, events, projects, releases, traces, logs, and authenticated API work.

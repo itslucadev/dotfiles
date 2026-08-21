@@ -93,6 +93,17 @@ for command_name in \
   prettier \
   tailscale \
   gh \
+  agent-browser \
+  asc \
+  axe \
+  bfg \
+  fallow \
+  ffmpeg \
+  gitleaks \
+  linear \
+  mole \
+  resend \
+  sentry-wizard \
   git \
   git-lfs \
   jq \
@@ -140,7 +151,7 @@ fi
 if [[ -x "$HOME/.local/bin/mise" ]]; then
   pass "mise is self-managed at ~/.local/bin/mise"
 else
-  fail "mise is missing at ~/.local/bin/mise"
+  fail "mise is not installed at ~/.local/bin/mise"
 fi
 
 if command -v brew >/dev/null 2>&1 && brew list --formula mise >/dev/null 2>&1; then
@@ -156,6 +167,18 @@ if launchctl print "gui/$(id -u)/com.phoenix-error.dotfiles.update-tools" >/dev/
   pass "Daily tool update agent is loaded"
 else
   fail "Daily tool update agent is not loaded. Run mise run update:schedule"
+fi
+
+if launchctl print "gui/$(id -u)/com.phoenix-error.dotfiles.sync-omp-agent" >/dev/null 2>&1; then
+  pass "Evening omp settings agent is loaded"
+else
+  fail "Evening omp settings agent is not loaded. Run mise run omp:schedule"
+fi
+
+if launchctl print "gui/$(id -u)/com.phoenix-error.dotfiles.ssh-agent" >/dev/null 2>&1; then
+  pass "Delegated ssh-agent launchd unit is loaded"
+else
+  fail "Delegated ssh-agent launchd unit is not loaded. Run mise run ssh:agent"
 fi
 
 if command -v brew >/dev/null 2>&1 &&
@@ -176,6 +199,28 @@ if command -v brew >/dev/null 2>&1 &&
   pass "No unmanaged Homebrew formulae, casks, or taps are installed"
 else
   fail "Unmanaged Homebrew formulae, casks, or taps are installed"
+fi
+
+# Homebrew 6 re-quarantines every cask download, and Sparkle updates do
+# the same. The daily updater and `mise run apps:clear-quarantine` drop
+# that flag. A leftover is a warning because an update can put it back
+# between runs.
+if command -v brew >/dev/null 2>&1 &&
+  command -v jq >/dev/null 2>&1 &&
+  [[ -x "$HOME/github/phoenix-error/dotfiles/scripts/clear-cask-quarantine.sh" ]]; then
+  quarantined_casks=""
+  while IFS= read -r cask_app; do
+    [[ -n "$cask_app" && -e "$cask_app" ]] || continue
+    if xattr -p com.apple.quarantine "$cask_app" >/dev/null 2>&1; then
+      quarantined_casks+="${quarantined_casks:+, }$(basename "$cask_app")"
+    fi
+  done < <("$HOME/github/phoenix-error/dotfiles/scripts/clear-cask-quarantine.sh" --list)
+
+  if [[ -z "$quarantined_casks" ]]; then
+    pass "Homebrew cask apps are not Gatekeeper-quarantined"
+  else
+    warn "Quarantined Homebrew cask apps: ${quarantined_casks}. Run mise run apps:clear-quarantine"
+  fi
 fi
 
 if command -v mise >/dev/null 2>&1 &&
@@ -201,14 +246,11 @@ dock_manifest="$HOME/github/phoenix-error/dotfiles/dock.txt"
 dock_script="$HOME/github/phoenix-error/dotfiles/scripts/sync-dock.sh"
 
 if [[ -r "$dock_manifest" && -x "$dock_script" ]]; then
-  if dock_capture="$("$dock_script" export --print 2>/dev/null)" &&
-    [[ "$dock_capture" == "$(cat "$dock_manifest")" ]]; then
-    pass "Dock matches dock.txt"
+  if "$dock_script" export --print 2>/dev/null | diff -q "$dock_manifest" - >/dev/null 2>&1; then
+    pass "The Dock matches dock.txt"
   else
-    warn "Dock differs from dock.txt. Run mise run dock:export to keep the Dock, or mise run dock:apply to restore the file"
+    warn "The Dock differs from dock.txt. Run mise run dock:apply or mise run dock:export"
   fi
-else
-  fail "Dock manifest or sync script is missing"
 fi
 
 if command -v python >/dev/null 2>&1 &&
@@ -254,6 +296,26 @@ else
   fail "Claude Auto mode, Tmux teams, or LSP plugins differ"
 fi
 
+if command -v jq >/dev/null 2>&1 &&
+  jq -e '
+    .enabledPlugins["composio@composio"] == true and
+    .extraKnownMarketplaces.composio.source.url == "https://github.com/ComposioHQ/composio-plugin-cc.git"
+  ' "$HOME/.claude/settings.json" >/dev/null 2>&1; then
+  pass "Claude Composio plugin is enabled"
+else
+  fail "Claude Composio plugin is missing"
+fi
+
+if command -v jq >/dev/null 2>&1 &&
+  jq -e '
+    .enabledPlugins["codex@openai-codex"] == true and
+    .extraKnownMarketplaces["openai-codex"].source.repo == "openai/codex-plugin-cc"
+  ' "$HOME/.claude/settings.json" >/dev/null 2>&1; then
+  pass "Claude Codex plugin is enabled"
+else
+  fail "Claude Codex plugin is missing"
+fi
+
 for application_name in \
   "AltTab" \
   "Android Studio" \
@@ -281,11 +343,11 @@ for application_name in \
   "Obsidian Web Clipper" \
   "ProtonVPN" \
   "Raycast" \
-  "Raycast Beta" \
   "RocketSim" \
   "Spark Desktop" \
   "Tailscale" \
   "TextMate" \
+  "T3 Code (Alpha)" \
   "Tower" \
   "Visual Studio Code" \
   "Vorssaint" \
@@ -304,6 +366,7 @@ done
 
 for application_name in \
   "Maestro Studio" \
+  "Raycast Beta" \
   "Recordly"; do
   check_manual_app "$application_name"
 done
@@ -377,7 +440,7 @@ if command -v tailscale >/dev/null 2>&1; then
   fi
 fi
 
-for agent_wrapper in gh-axi lavish-axi chrome-devtools-axi ctx7 nlm; do
+for agent_wrapper in gh-axi lavish-axi chrome-devtools-axi ctx7 nlm composio; do
   if command -v "$agent_wrapper" >/dev/null 2>&1; then
     pass "Preferred agent CLI available: $agent_wrapper"
   else
@@ -459,6 +522,27 @@ if [[ -n "$ssh_add_keys_to_agent" && "$ssh_add_keys_to_agent" != "false" ]]; the
   pass "SSH loads the GitHub key into the agent"
 else
   warn "Set AddKeysToAgent and UseKeychain in ~/.ssh/config so the passphrase is asked once"
+fi
+
+# Coding agents must authenticate through ssh-agent. The socket is a signing
+# capability. If it is missing they fall back to reading the private key,
+# which is exactly the secret we do not want in an agent session.
+if [[ -S "$HOME/.ssh/agent.sock" ]] &&
+  SSH_AUTH_SOCK="$HOME/.ssh/agent.sock" ssh-add -l >/dev/null 2>&1; then
+  pass "Delegated ssh-agent socket can sign without the private key"
+else
+  warn "Run mise run ssh:agent and ssh-add --apple-use-keychain ~/.ssh/id_ed25519"
+fi
+
+ssh_identity_agent="$(
+  ssh -G github.com 2>/dev/null |
+    awk '$1 == "identityagent" { print $2; exit }'
+)"
+
+if [[ "$ssh_identity_agent" == *agent.sock ]]; then
+  pass "SSH IdentityAgent points at the delegated socket"
+else
+  warn "Point IdentityAgent at ~/.ssh/agent.sock so agents do not need SSH_AUTH_SOCK"
 fi
 
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then

@@ -189,6 +189,13 @@ mise is deliberately absent from `Brewfile`.
 It has to exist before the `Brewfile` is applied, and `brew bundle cleanup` must never be able to remove the binary that is driving the setup.
 The check targets the install path rather than `PATH`, so a Mac that still carries an older Homebrew mise gets the self-managed copy before cleanup removes the Homebrew one.
 
+The Composio CLI is also absent from `Brewfile` and `mise.toml`.
+It has no Homebrew formula, and the official installer is the supported channel.
+`scripts/setup-composio.sh` runs the committed installer in `scripts/install-composio.sh` with `COMPOSIO_INSTALL_SHELL=none` so it cannot edit the managed `~/.zshrc`, then configures the Claude Code and Codex plugins.
+`~/.local/bin` is already on `PATH`.
+Refresh the committed installer with `mise run update:composio-installer` and review the diff.
+Login stays in the Agents phase of the setup guide.
+
 The `setup` task in `mise.toml` updates mise itself and then runs `mise bootstrap --yes`, which owns the stage order:
 
 - Updates mise itself, because `Brewfile` no longer keeps it current.
@@ -199,6 +206,7 @@ The `setup` task in `mise.toml` updates mise itself and then runs `mise bootstra
 - Creates `~/Developer` and applies the confirmed macOS defaults.
 - Installs the locked language runtimes, then the locked global CLIs.
 - Pauses for the coding agent sign-ins, then verifies them before continuing.
+- Installs the Composio CLI and configures its Claude Code and Codex plugins.
 - Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, OpenCode, and the Grok CLI.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
 - Runs the setup doctor.
@@ -222,6 +230,8 @@ The agents themselves arrive with `Brewfile` in the same run, so the sign-ins ca
 The Homebrew reconciliation uses regular cask uninstall behavior and never passes `--zap`, so application data and shared support files are preserved.
 
 It does not remove manually installed applications outside Homebrew or write directly to the macOS privacy database.
+It does clear the Gatekeeper quarantine attribute from Homebrew-installed cask applications after `Brewfile` is applied, because Homebrew 6 no longer offers `--no-quarantine` and every cask download would otherwise ask "Are you sure you want to open it?" again.
+
 
 ## Manual Interaction Gates
 
@@ -261,13 +271,16 @@ The repository keeps configuration in the native declarative format of the tool 
 
 `mise run setup` is the entry point for everything else, including every rerun.
 
-The `[bootstrap.hooks]` entries in `mise.toml` call five helper scripts that can change the Mac or connected accounts:
-
-- `scripts/install-homebrew-packages.sh` applies `Brewfile` and removes what it no longer declares.
+- `scripts/install-homebrew-packages.sh` applies `Brewfile`, removes what it no longer declares, and clears Gatekeeper quarantine from the installed cask apps.
 - `scripts/require-git-and-github.sh` gates the manual Git identity and GitHub SSH setup.
 - `scripts/require-coding-agents.sh` gates the coding agent sign-ins that Herdr depends on.
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
+- `scripts/setup-omp-agent.sh` converges the desired Oh My Pi settings from `scripts/omp-agent-settings.json`.
+- `scripts/sync-omp-agent-settings.sh` captures live Oh My Pi settings into that snapshot.
+- `scripts/setup-omp-sync.sh` installs the 20:00 launchd agent for that capture.
+- `scripts/setup-composio.sh` installs the Composio CLI and converges the Claude Code and Codex plugins.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
+- `scripts/setup-ssh-agent.sh` keeps ssh-agent on `~/.ssh/agent.sock` and points `~/.ssh/config` at that socket so coding agents can SSH without the private key.
 
 The read-only `scripts/doctor.sh` inspects the result without configuring the Mac.
 
@@ -627,7 +640,9 @@ Zed is not installed or configured.
 
 ## Agent Configuration
 
-One public `home/AGENTS.md` file is symlinked to the canonical shared location and every native path a managed agent actually reads:
+One public `home/AGENTS.md` file is the Shared Core: the one agent-agnostic instruction file every installed agent reads.
+
+mise symlinks it to the canonical shared location and every native path a managed agent actually reads:
 
 - `~/.agents/AGENTS.md` as the canonical vendor-neutral location
 - `~/.claude/CLAUDE.md` for Claude Code
@@ -637,8 +652,71 @@ One public `home/AGENTS.md` file is symlinked to the canonical shared location a
 
 This gives the supported agents the same global working rules without maintaining duplicate files.
 
-The Cursor CLI has no home-level instruction file.
+Tool-specific mechanics stay out of the Shared Core and live in a Tool Layer.
+
+Claude Code reads `home/.claude/rules/*.md`.
+
+Oh My Pi reads the sticky `~/.omp/agent/RULES.md` dotfile, which this repository owns as `home/.omp/agent/RULES.md`.
+
+One small topical file per concern.
+
+Create a new Tool Layer file only when a tool needs behavior beyond the Shared Core.
+
+A file becomes a managed dotfile only when it is pure human-authored declaration and the tool never rewrites it at runtime.
+
+The following paths are Machine State and stay outside this repository:
+
+- `~/.omp/agent/config.yml` because omp rewrites it, and the desired keys converge through `scripts/setup-omp-agent.sh`
+- `~/.omp/agent/agents/*.md` because omp provisions those files itself
+- `~/.claude.json` because Claude Code rewrites it on every session.
+  Workspace trust, project state, and login live there.
+  mise never links or converges this file.
+
+- `~/.codex/config.toml` because Codex rewrites trust hashes and plugin state there
+- `~/.grok` because the Grok TUI writes that config, and instructions arrive through the Compat Path from `~/.claude/CLAUDE.md`
+- `~/.cursor` because Cursor has no global instruction surface, and the Cursor CLI reads project `AGENTS.md` files only
+- OpenCode `opencode.json` because this repository does not create one, and the Shared Core symlink is enough
+- All auth and credential state
+
+OpenCode is installed as a Homebrew formula and reads the Shared Core through the `~/.config/opencode/AGENTS.md` symlink.
+
+It gets no configuration beyond those shared instructions.
+
+The Cursor CLI has no global instruction surface and is deliberately out of scope.
+
 It reads `AGENTS.md` from a project only, so nothing global is linked for it.
+
+Grok Build is covered through the Compat Path: it reads `~/.claude/CLAUDE.md` and `~/.claude/rules/*.md`.
+
+Do not add a `~/.grok` link, because Grok would then load the Shared Core twice.
+
+If xAI removes that compat reading, Grok loses the Shared Core.
+
+The Claude Code `codex` and `composio` plugins arrive through the managed `home/.claude/settings.json`.
+
+Their runtime plugin state stays untracked.
+
+omp settings converge through `scripts/setup-omp-agent.sh` and `scripts/omp-agent-settings.json`, which a `[bootstrap.hooks.final]` entry calls.
+
+Never symlink or hand-edit `~/.omp/agent/config.yml` from this repository.
+
+There is no advisor role.
+
+| Role | Model |
+| --- | --- |
+| default | `xai-oauth/grok-4.6:high` |
+| slow | `anthropic/claude-fable-5:high` |
+| plan | `anthropic/claude-fable-5:high` |
+| designer | `anthropic/claude-fable-5:high` |
+| task | `xai-oauth/grok-4.6:high` |
+| smol | `xai-oauth/grok-4.6:medium` |
+
+Fallback chains:
+
+- `default` falls back to `anthropic/claude-sonnet-5:high`
+- `slow`, `plan`, and `designer` fall back to `openai-codex/gpt-5.6-sol`, then `xai-oauth/grok-4.6:xhigh`
+- `smol` falls back to `anthropic/claude-sonnet-4-6:medium`
+- `task` has no chain entry and inherits the default chain
 
 The global instructions also name the command-line wrappers that agents must prefer over their built-in tools: `gh-axi` instead of `gh`, `lavish-axi` for visual review surfaces, `chrome-devtools-axi` for driving Chrome, `ctx7` for library documentation, and `nlm` for Gemini Notebook.
 
@@ -648,9 +726,11 @@ Every one of those tools is installed by this setup, and `home/.claude/settings.
 
 Herdr installs its own agent hooks through `mise run agents:herdr`. This repository never copies a generated hook file, and `~/.claude/hooks` is not a managed dotfile path.
 
-OpenCode is not part of the setup.
-
 Claude Code also receives the public `settings.json` and Bun-powered status line from this repository.
+
+The `codex` plugin and its `openai-codex` marketplace are enabled through the managed `home/.claude/settings.json`.
+
+Its runtime plugin state stays untracked.
 
 Homebrew installs every coding agent: Claude Code, Codex, the Cursor CLI, and Grok Build as casks, and Oh My Pi and OpenCode as formulae.
 
@@ -686,8 +766,6 @@ Oh My Pi extends the Pi coding agent into a multi-agent orchestration setup, and
 The Pi coding agent is not installed.
 Oh My Pi ships self-contained and discovers the canonical `~/.agents/skills` store directly, so skill installs need no Pi target.
 
-The Claude Codex plugin and its marketplace remain excluded.
-
 The setup owns no agent skills.
 Skill sources are renamed, split, and retired far faster than the rest of this inventory, and a stale entry would fail the whole run without adding anything a fresh Mac needs to work.
 They are installed by hand from the Agents phase of [setup-guide.html](setup-guide.html) instead.
@@ -716,8 +794,18 @@ The existing Mac's trust file is not copied because it contains stale entries fo
 
 A launchd agent, installed by `scripts/setup-autoupdate.sh` as a final bootstrap stage, runs `scripts/update-tools.sh` every morning at 07:00 and logs to `~/Library/Logs/dotfiles-update.log`.
 It upgrades Homebrew formulae, the casks that cannot update themselves, Mac App Store applications, mise, and the mise-managed tools, and never installs or removes anything the inventories declare or dropped.
+It also clears Gatekeeper quarantine from every installed cask app, including the ones Sparkle updated since the previous run, so nested helpers such as Codex Computer Use.app stop asking "Are you sure you want to open it?" after each update.
 Casks marked `auto_updates` are left to the applications' own updaters, which the managed macOS defaults switch to silent automatic installs for every Sparkle-based app.
+
+A second launchd agent, installed by `scripts/setup-omp-sync.sh`, runs `scripts/sync-omp-agent-settings.sh` every evening at 20:00 and logs to `~/Library/Logs/dotfiles-omp-sync.log`.
+It copies drifted tracked Oh My Pi settings from this Mac into `scripts/omp-agent-settings.json` and never commits.
+Review that diff and commit it when the next machine should inherit the change.
+`mise run omp:sync` runs the capture now, and `mise run omp:schedule` reinstalls the agent.
+
 A cask whose installer needs sudo, today only BasicTeX, is skipped unattended and upgraded by an interactive `mise run update:tools`.
+After a Sparkle update the first-launch dialog can return until the next morning run.
+`mise run apps:clear-quarantine` clears it immediately.
+
 
 Review available updates:
 

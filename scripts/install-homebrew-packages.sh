@@ -49,3 +49,7 @@ brew bundle cleanup \
   --cask \
   --tap \
   --file "$REPO_ROOT/Brewfile"
+
+# Homebrew 6 always quarantines cask downloads. Clear that flag from the
+# apps just installed so Gatekeeper does not ask to open them again.
+"${REPO_ROOT}/scripts/clear-cask-quarantine.sh"

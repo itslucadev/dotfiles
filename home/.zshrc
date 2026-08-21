@@ -21,9 +21,10 @@ if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
-# bootstrap.sh installs mise here, so this directory has to be on PATH before
-# mise can be found and activated below. Every other managed PATH entry and
-# environment variable, including the Android SDK, comes from mise.toml.
+# bootstrap.sh installs mise here, and scripts/setup-composio.sh installs
+# composio here, so this directory has to be on PATH before those binaries
+# can be found. Every other managed PATH entry and environment variable,
+# including the Android SDK, comes from mise.toml.
 path=(
   "$HOME/.local/bin"
   $path
