@@ -44,7 +44,7 @@ Homebrew installs formulae, desktop applications, and fonts.
 
 mise installs Node.js, Bun, pnpm, Python, Java, native developer tools, and global npm-backed CLIs, with Bun acting as the npm package manager.
 
-Fuzzy versions must be at least seven days old before mise selects them, which limits exposure to brand-new supply-chain releases.
+Fuzzy versions must be at least one day old before mise selects them, which limits exposure to brand-new supply-chain releases.
 
 Each machine keeps its own `mise.lock`, which mise writes and this repository does not track.
 
@@ -105,7 +105,7 @@ The current Mac can also be used for a final rehearsal immediately before it is 
 > [!IMPORTANT]
 > **[setup-guide.html](setup-guide.html) is the instruction manual, not this file.**
 >
-> It is an offline, checkable guide covering every step in twelve phases, from macOS onboarding through the final reboot, and it remembers which boxes are already ticked.
+> It is an offline, checkable guide covering every step in thirteen phases, from macOS onboarding through the final reboot, and it remembers which boxes are already ticked.
 > Open it first and work through it to the end.
 >
 > This README documents what the repository owns and why it is built the way it is.
@@ -136,7 +136,7 @@ Everything else is manual on purpose and is walked through in the setup guide: X
 The `setup` task pauses at every step that needs a person, explains what to do, verifies the result, and continues.
 Both commands are idempotent and can be rerun after resolving a manual prerequisite.
 
-The new terminal is needed because `bootstrap.sh` links `~/.zprofile` and `~/.zshrc` as its last step, which is what puts Homebrew and mise on `PATH`.
+The new terminal is needed because `bootstrap.sh` links `~/.zprofile`, `~/.zshrc`, and `~/.zsh_plugins.txt` as its last step, which is what puts Homebrew and mise on `PATH`.
 If that step reported that it could not link them, the Mac already has hand-written files there.
 Nothing is lost, and the setup runs as `~/.local/bin/mise run setup` instead.
 
@@ -178,7 +178,7 @@ The mise documentation recommends the same for exactly that reason.
 The version it pins is irrelevant here, because the setup runs `mise self-update` before anything else.
 Refresh the copy with `mise run update:mise-installer` and review the diff.
 
-Linking the two shell files is the last initialization step rather than a setup stage because neither Homebrew nor mise is on a fresh Mac's default `PATH`, and those two files are what put them there.
+Linking those three shell files is the last initialization step rather than a setup stage because neither Homebrew nor mise is on a fresh Mac's default `PATH`, and those three files are what put them there.
 It runs without `--force`, so mise refuses to replace a hand-written `~/.zshrc` instead of overwriting it.
 In that case `bootstrap.sh` says so, and the setup runs once as `~/.local/bin/mise run setup`.
 
@@ -202,13 +202,17 @@ The `setup` task in `mise.toml` updates mise itself and then runs `mise bootstra
 - Applies `Brewfile`.
 - Removes Homebrew formulae, casks, and taps that are not required by `Brewfile`.
 - Pauses for the manual Git identity and GitHub SSH setup, then verifies them before continuing.
-- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, editor, Claude, and global agent dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
-- Creates `~/Developer` and applies the confirmed macOS defaults.
+- Resolves existing dotfile conflicts before linking.
+- Applies the managed Zsh, Starship, WezTerm, Ghostty, Herdr, editor, Claude, and Shared Core dotfiles, and links the repository `Brewfile` to Homebrew's global `~/.homebrew/Brewfile`.
+- Creates `~/Developer/appzudio` and applies the confirmed macOS defaults.
 - Installs the locked language runtimes, then the locked global CLIs.
 - Pauses for the coding agent sign-ins, then verifies them before continuing.
+- Converges Oh My Pi settings from the snapshot.
 - Installs the Composio CLI and configures its Claude Code and Codex plugins.
 - Installs the Herdr agent integrations for Claude Code, Codex, Cursor, Oh My Pi, OpenCode, and the Grok CLI.
 - Installs the managed Mac App Store applications after any required App Store interaction is complete.
+- Installs the daily tool updater and the evening Oh My Pi settings capture.
+- Installs the delegated ssh-agent socket.
 - Runs the setup doctor.
 
 Dotfiles, macOS defaults, and tools are native `mise bootstrap` phases, and mise converges them itself.
@@ -265,6 +269,7 @@ The repository keeps configuration in the native declarative format of the tool 
 - `mise.lock` contains the resolved mise tool versions. Only mise writes it, it is local to each machine, and it is not tracked.
 - `home/` contains public configuration that mise symlinks into the home directory.
 - `home/.zsh_plugins.txt` is the only source of Zsh plugins.
+- `dock.txt` owns the managed Dock.
 - Git owns nothing here. `~/.gitconfig`, `~/.ssh/config`, and anything under `~/.config/git/` are written by hand. A managed `~/.gitconfig` carrying an identity would be applied long before the person it names has decided on one, and configuration that only works once a later stage has run is configuration this repository should not own. SSH private keys, `known_hosts`, `authorized_keys`, and authentication state are never copied here either. Commit signing is not managed here either: nothing depends on it, and GitHub accepts unsigned pushes. The setup guide documents SSH commit signing with the same key as an optional step.
 
 `bootstrap.sh` runs once per Mac, or again after a macOS upgrade removed the Xcode Command Line Tools.
@@ -273,6 +278,7 @@ The repository keeps configuration in the native declarative format of the tool 
 
 - `scripts/install-homebrew-packages.sh` applies `Brewfile`, removes what it no longer declares, and clears Gatekeeper quarantine from the installed cask apps.
 - `scripts/require-git-and-github.sh` gates the manual Git identity and GitHub SSH setup.
+- `scripts/resolve-dotfile-conflicts.sh` gates existing files before the dotfiles phase.
 - `scripts/require-coding-agents.sh` gates the coding agent sign-ins that Herdr depends on.
 - `scripts/install-herdr-integrations.sh` asks Herdr to install its own agent hooks.
 - `scripts/setup-omp-agent.sh` converges the desired Oh My Pi settings from `scripts/omp-agent-settings.json`.
@@ -281,6 +287,8 @@ The repository keeps configuration in the native declarative format of the tool 
 - `scripts/setup-composio.sh` installs the Composio CLI and converges the Claude Code and Codex plugins.
 - `scripts/install-mas-apps.sh` installs the declared Mac App Store applications and gates account interaction.
 - `scripts/setup-ssh-agent.sh` keeps ssh-agent on `~/.ssh/agent.sock` and points `~/.ssh/config` at that socket so coding agents can SSH without the private key.
+- `scripts/setup-autoupdate.sh` installs the daily tool updater.
+- `scripts/sync-dock.sh` applies and exports the managed Dock from `dock.txt`.
 
 The read-only `scripts/doctor.sh` inspects the result without configuring the Mac.
 
@@ -382,6 +390,7 @@ Homebrew installs these applications:
 - Raycast v1
 - Spark
 - Tailscale
+- T3 Code
 - TextMate
 - Tower
 - Visual Studio Code
@@ -389,9 +398,9 @@ Homebrew installs these applications:
 - WezTerm
 - WhatsApp
 
-Homebrew also installs Claude Code, the Codex CLI, and the Cursor CLI as casks.
+Homebrew also installs Claude Code, the Codex CLI, the Cursor CLI, and Grok Build as casks.
 
-Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, CocoaPods, Fallow, Fastlane, fd, Git LFS, Gitleaks, jq, LazyGit, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, OpenCode, the Resend CLI, ripgrep, the Sentry CLI, the Sentry Wizard, Tmux, Watchman, and YouTube-DLP.
+Homebrew installs these command-line tools: Agent Browser, App Store Connect CLI, AXe, BFG, CocoaPods, Fallow, Fastlane, fd, ffmpeg, GitHub CLI, Git LFS, Gitleaks, jq, LazyGit, the Linear CLI, the Maestro CLI, Mole, Oh My Pi, OpenCode, the Resend CLI, ripgrep, the Sentry CLI, the Sentry Wizard, Tmux, Watchman, and YouTube-DLP.
 
 The interactive shell tools Antidote, bat, eza, fd, FZF, ripgrep, Starship, and Zoxide are covered in the shell section below.
 
@@ -611,6 +620,8 @@ VS Code is the primary editor.
 
 `EDITOR` and `VISUAL` point at `code --wait`, so Git and other command-line tools open VS Code and wait for the file to close.
 
+Cursor stays installed as a secondary editor and keeps mirroring the shared settings.
+
 Neovim is intentionally not part of this setup.
 
 Homebrew installs both Visual Studio Code and Cursor.
@@ -680,7 +691,7 @@ The following paths are Machine State and stay outside this repository:
 
 OpenCode is installed as a Homebrew formula and reads the Shared Core through the `~/.config/opencode/AGENTS.md` symlink.
 
-It gets no configuration beyond those shared instructions.
+It gets no configuration beyond the Shared Core.
 
 The Cursor CLI has no global instruction surface and is deliberately out of scope.
 
@@ -718,7 +729,7 @@ Fallback chains:
 - `smol` falls back to `anthropic/claude-sonnet-4-6:medium`
 - `task` has no chain entry and inherits the default chain
 
-The global instructions also name the command-line wrappers that agents must prefer over their built-in tools: `gh-axi` instead of `gh`, `lavish-axi` for visual review surfaces, `chrome-devtools-axi` for driving Chrome, `ctx7` for library documentation, and `nlm` for Gemini Notebook.
+The Shared Core also names the command-line wrappers that agents must prefer over their built-in tools: `gh-axi` instead of `gh`, `lavish-axi` for visual review surfaces, `chrome-devtools-axi` for driving Chrome, `ctx7` for library documentation, `nlm` for Gemini Notebook, and `composio` for connected third-party apps.
 
 Every one of those tools is installed by this setup, and `home/.claude/settings.json` starts `gh-axi`, `chrome-devtools-axi`, and `lavish-axi` as session-start hooks.
 
@@ -878,3 +889,4 @@ A setting that would otherwise land in a local override belongs in the managed f
 Git is the deliberate exception. `~/.gitconfig`, `~/.ssh/config`, and anything under `~/.config/git/` are not managed at all, so they need no override layer. See [Declarative Ownership](#declarative-ownership).
 
 The matching `.gitignore` entries stay as a safety net against accidental commits, not as an invitation to create such files.
+

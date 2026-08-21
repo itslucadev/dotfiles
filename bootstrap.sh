@@ -9,10 +9,10 @@
 #   2. Homebrew, which owns native binaries, casks, and fonts
 #   3. mise, which owns runtimes, global CLIs, dotfiles, and the setup tasks
 #
-# It then trusts the repository configuration and links the two shell dotfiles
-# that put Homebrew and mise on PATH, so both end up reachable as ordinary
-# commands. Then it stops. The actual setup is `mise run setup`, run by hand as
-# the second and last command.
+# It then trusts the repository configuration and links the three shell
+# files that put Homebrew and mise on PATH and that the shell configuration
+# reads, so both end up reachable as ordinary commands. Then it stops. The
+# actual setup is `mise run setup`, run by hand as the second and last command.
 
 set -Eeuo pipefail
 
@@ -189,9 +189,9 @@ fi
 log "Trusting the repository mise configuration"
 run "$MISE_BIN" trust "$REPO_ROOT/mise.toml"
 
-# Neither Homebrew nor mise is on a fresh Mac's default PATH, and the two files
-# that put them there are managed by this repository. Linking just those two
-# ends the initialization with both tools reachable as ordinary commands.
+# Neither Homebrew nor mise is on a fresh Mac's default PATH, and the three
+# files that put them there are managed by this repository. Linking just those
+# three ends the initialization with both tools reachable as ordinary commands.
 #
 # This deliberately runs without --force. mise refuses to replace a dotfile it
 # does not own, so a Mac with a hand-written ~/.zshrc keeps it and falls back to

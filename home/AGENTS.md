@@ -1,4 +1,4 @@
-# Lucas's Global Agent Instructions
+# Lucas's Agent Instructions
 
 These instructions apply to Lucas's agents across projects.
 
@@ -85,8 +85,7 @@ How to apply:
 - Oh My Pi is the primary agent.
   It reaches every model in the table directly, so work that wants a non-Claude model or mixed-model orchestration belongs there.
 - Claude Code is the fallback for Claude-only work.
-  Inside Claude Code, gpt-5.6 is reachable through the Codex CLI via the `codex` plugin: the `codex-cli-runtime` and `codex-result-handling` skills and the `/review` and `/adversarial-review` commands.
-- Codex, OpenCode, and Grok Build are secondary agents; they read this file and need no extra mechanics.
+- Codex, OpenCode, and Grok Build are secondary agents.
   The Cursor CLI reads instructions per project only.
 
 ## Sentry

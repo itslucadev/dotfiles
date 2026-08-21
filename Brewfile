@@ -53,6 +53,7 @@ cask "grok-build"
 # Agents Desktop Apps
 cask "chatgpt"
 cask "claude"
+cask "t3-code"
 
 # Browsers and communication
 cask "google-chrome"

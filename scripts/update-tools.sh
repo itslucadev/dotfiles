@@ -40,11 +40,12 @@ stage() {
 
 stage "Updating Homebrew" brew update
 stage "Upgrading Homebrew formulae" brew upgrade --formula
-# Casks are upgraded without --greedy on purpose. A cask marked auto_updates
-# has an application updater of its own, which the managed macOS defaults in
-# mise.toml switch to silent automatic installs, so Homebrew only needs to
-# cover the casks that cannot update themselves. That set includes the coding
-# agent casks, whose binaries never self-update in the Homebrew layout.
+# Casks are upgraded without --greedy on purpose. A Sparkle-based cask marked
+# auto_updates has an application updater of its own, which the managed macOS
+# defaults in mise.toml switch to silent automatic installs, so Homebrew only
+# needs to cover the casks that cannot update themselves. Electron and Squirrel
+# casks are not in that Sparkle set. Homebrew still upgrades the coding agent
+# casks, whose binaries never self-update in the Homebrew layout.
 #
 # A cask that installs through a pkg runs `sudo installer`. An interactive run
 # has a terminal to answer the password prompt, so it upgrades everything. The
