@@ -2400,6 +2400,41 @@ echo "$PATH" | tr ':' '\n' | grep "$ANDROID_HOME"</code></pre>
                   </div>
                 </article>
 
+                <article class="task" data-task-id="apps-openlogi">
+                  <input class="task-check" type="checkbox" aria-label="OpenLogi eingerichtet" />
+                  <div class="task-content">
+                    <div class="task-topline">
+                      <h3 class="task-title">OpenLogi freigeben und Maus verbinden</h3>
+                      <span class="badge manual">Manuell</span>
+                    </div>
+                    <p class="task-note">
+                      OpenLogi ersetzt Logi Options+. Options+ vorher beenden und
+                      deinstallieren, denn nur eine App kann einen Empfänger gleichzeitig
+                      besitzen.
+                    </p>
+                    <p class="task-note">
+                      Systemeinstellungen → Datenschutz &amp; Sicherheit → Bedienungshilfen
+                      für OpenLogi einschalten; das Umlegen von Zurück, Vorwärts und
+                      Mittelklick läuft über einen CGEventTap und braucht diese Freigabe.
+                      Eine direkt per Bluetooth gekoppelte Maus braucht zusätzlich
+                      Eingabeüberwachung. DPI, SmartShift und Daumenrad laufen über HID++
+                      und brauchen keine der beiden.
+                    </p>
+                    <div class="command">
+                      <pre><code>openlogi list</code></pre>
+                      <button class="copy-button" type="button">Kopieren</button>
+                    </div>
+                    <p class="task-note">
+                      Listet die App kein Gerät, ist die Maus nicht gekoppelt oder eine
+                      Freigabe fehlt. Die Belegungen landen in
+                      <code>~/.config/openlogi/config.toml</code>. Die Datei ist
+                      maschinengebunden, weil ihre Geräteschlüssel Empfänger-Seriennummer
+                      und Slot enthalten, und wird deshalb nicht verlinkt, sondern bei
+                      Bedarf von Hand auf den anderen Mac kopiert.
+                    </p>
+                  </div>
+                </article>
+
                 <article class="task" data-task-id="apps-vpn">
                   <input class="task-check" type="checkbox" aria-label="VPNs und Netzwerk-Apps freigegeben" />
                   <div class="task-content">
