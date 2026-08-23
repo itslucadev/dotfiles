@@ -385,6 +385,7 @@ Homebrew installs these applications:
 - Minecraft
 - MultiViewer
 - Obsidian
+- OpenLogi
 - Pear Desktop for YouTube Music
 - Proton VPN
 - Raycast v1
@@ -417,6 +418,11 @@ The setup does not install Rosetta 2. No managed cask declares an Intel requirem
 Maestro Studio, Recordly, and Raycast v2 Beta have no suitable Homebrew cask or Mac App Store entry and are downloaded by hand in [the setup guide](setup-guide.html).
 
 Sentry Spotlight is excluded as well.
+
+OpenLogi replaces Logi Options+ and drives the Logitech mouse and keyboard over HID++ without a Logitech account.
+Options+ itself is deliberately not installed, because only one application can own a receiver at a time.
+Its settings live in `~/.config/openlogi/config.toml`, which the GUI rewrites on every change and whose `[devices."..."]` keys are physical receiver serials and slots, so the file is per-machine state and is not a managed dotfile.
+Copy it by hand when a second Mac should inherit the bindings.
 
 ## Managed Runtimes and Global CLIs
 
@@ -807,6 +813,7 @@ A launchd agent, installed by `scripts/setup-autoupdate.sh` as a final bootstrap
 It upgrades Homebrew formulae, the casks that cannot update themselves, Mac App Store applications, mise, and the mise-managed tools, and never installs or removes anything the inventories declare or dropped.
 It also clears Gatekeeper quarantine from every installed cask app, including the ones Sparkle updated since the previous run, so nested helpers such as Codex Computer Use.app stop asking "Are you sure you want to open it?" after each update.
 Casks marked `auto_updates` are left to the applications' own updaters, which the managed macOS defaults switch to silent automatic installs for every Sparkle-based app.
+A short list inside the script is the exception: OpenLogi is marked `auto_updates` but its in-app update check is opt-in and off by default, so it gets an explicit `brew upgrade --cask --greedy` pass and would otherwise stay at whatever version the first install fetched.
 
 A second launchd agent, installed by `scripts/setup-omp-sync.sh`, runs `scripts/sync-omp-agent-settings.sh` every evening at 20:00 and logs to `~/Library/Logs/dotfiles-omp-sync.log`.
 It copies drifted tracked Oh My Pi settings from this Mac into `scripts/omp-agent-settings.json` and never commits.

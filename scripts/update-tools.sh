@@ -78,6 +78,31 @@ upgrade_casks() {
 }
 
 stage "Upgrading Homebrew casks" upgrade_casks
+
+# Casks that Homebrew marks auto_updates but that never actually update
+# themselves in this setup. OpenLogi ships an in-app update check that is
+# opt-in and off by default, and its documented channel is
+# `brew upgrade --cask openlogi`, so without a greedy pass it would freeze at
+# the version the first install happened to fetch. Keep this list to casks
+# whose own updater is genuinely inert; a Sparkle cask belongs in the managed
+# macOS defaults instead.
+readonly GREEDY_CASKS=(openlogi)
+
+upgrade_greedy_casks() {
+  local cask installed=()
+  for cask in "${GREEDY_CASKS[@]}"; do
+    if brew list --cask "$cask" >/dev/null 2>&1; then
+      installed+=("$cask")
+    fi
+  done
+  if [[ "${#installed[@]}" -eq 0 ]]; then
+    printf 'No greedy-upgraded cask is installed.\n'
+    return 0
+  fi
+  brew upgrade --cask --greedy "${installed[@]}"
+}
+
+stage "Upgrading self-updating casks Homebrew skips" upgrade_greedy_casks
 # Sparkle-updated casks never go through `brew upgrade --cask`, but their
 # own updater still leaves a fresh quarantine flag. Run this every morning
 # even when Homebrew had nothing to upgrade.
