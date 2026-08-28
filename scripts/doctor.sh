@@ -341,6 +341,7 @@ for application_name in \
   "MultiViewer" \
   "Obsidian" \
   "Obsidian Web Clipper" \
+  "OpenLogi" \
   "ProtonVPN" \
   "Raycast" \
   "RocketSim" \
