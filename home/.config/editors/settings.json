@@ -24,7 +24,7 @@
     "errorLens.messageMaxChars": 160,
     "explorer.confirmDelete": false,
     "explorer.confirmDragAndDrop": false,
-    "files.autoSave": "afterDelay",
+    "files.autoSave": "onFocusChange",
     "git.enableSmartCommit": true,
     "python-envs.alwaysUseUv": true,
     "ruff.configurationPreference": "filesystemFirst",
@@ -54,5 +54,11 @@
     "totalTypeScript.hideAllTips": false,
     "totalTypeScript.hideBasicTips": false,
     "editor.accessibilitySupport": "off",
-    "security.workspace.trust.untrustedFiles": "open"
+    "security.workspace.trust.untrustedFiles": "open",
+    "claudeCode.preferredLocation": "panel",
+    "cursor.cpp.enablePartialAccepts": true,
+    "editor.codeActions.triggerOnFocusChange": true,
+    "cursor.composer.conversationDensity": "compact-ungrouped",
+    "cursor.composer.codeBlockWordWrap": true,
+    "cursor.general.emailPrivacyEnabled": true
 }
