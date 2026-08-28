@@ -117,3 +117,4 @@ fi
 alias mbp="ssh lucabecker@mbp"
 alias mini="ssh lucabecker@mini"
 alias nas="ssh phoenix-error@nas"
+alias vps="ssh lucabecker@vps"
